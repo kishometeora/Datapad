@@ -56,6 +56,9 @@ svg{display:block;overflow:visible}
 /* flip text: alternates English (Orbitron) <-> Aurebesh */
 .flip{display:inline-block;transition:opacity .08s}
 /* one global switch: body.aurOn = everything Aurebesh, otherwise everything English */
+#info.aurOn .flip2{font-family:Aur;font-weight:400;font-size:.86em;letter-spacing:.03em}
+#info.glitch .flip2{opacity:.15}
+.flip2{display:inline-block;transition:opacity .08s}
 body.aurOn .flip{font-family:Aur;font-weight:400;font-size:.86em;letter-spacing:.03em}
 body.glitch .flip{opacity:.15}
 
@@ -266,7 +269,7 @@ body.aurOn .headline .flip{font-size:.74em}
 #info .track{position:absolute;inset:0;display:flex;transition:transform .32s cubic-bezier(.2,.7,.2,1)}
 #info .card2{flex:0 0 100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:22px 20px;text-align:center}
 #info .ctitle{font-size:26px;line-height:1.15;min-height:72px;display:flex;align-items:center}
-#info .cline{font-size:15px;letter-spacing:.06em;line-height:1.55;opacity:.85;max-width:330px}
+#info .cline{font-size:17px;letter-spacing:.05em;line-height:1.8;opacity:.85;max-width:330px}
 #info .csym{width:170px;height:170px}
 #info .qrbox{width:300px;height:300px;padding:14px;background:#000;border:3px solid var(--c);border-radius:6px;box-shadow:0 0 8px rgba(var(--rgb),.4)}
 #info .qrbox svg{width:100%;height:100%;display:block}
@@ -435,7 +438,7 @@ body.aurOn .headline .flip{font-size:.74em}
 <section id="info" class="screen">
   <div class="top">
     <button class="home" data-home><img class="emb" src="emblems/imperial.png" alt=""></button>
-    <div class="box amb en" style="flex:1;height:86px;display:flex;align-items:center;justify-content:center;font-size:20px"><span class="flip" data-t="CONNECT">CONNECT</span></div>
+    <div class="box amb en" style="flex:1;height:86px;display:flex;align-items:center;justify-content:center;font-size:20px"><span class="flip2" data-t="CONNECT">CONNECT</span></div>
   </div>
   <div class="box deck" id="ideck"><div class="track" id="itrack"></div></div>
   <div id="idots"></div>
@@ -859,21 +862,17 @@ const SYM={
  book:`<path class="ln" d="M20 66h86"/><path class="ln" d="M86 44l24 22-24 22"/><rect class="md" x="122" y="44" width="40" height="44"/><rect class="fl" x="128" y="50" width="10" height="10"/><rect class="fl" x="146" y="50" width="10" height="10"/><rect class="fl" x="128" y="72" width="10" height="10"/><rect class="fl" x="148" y="74" width="6" height="6"/><path class="md" d="M2 16V2h14M154 2h14v14M168 116v14h-14M16 130H2V116"/>`
 };
 const DECK=[
- {t:"THE CAUSEWAY LEGIONS",l:"Star Wars costuming clubs serving Northern Ireland",s:"who"},
- {t:"ALL VOLUNTEERS",l:"We never charge for appearances",s:"vol"},
- {t:"FOR GOOD CAUSES",l:"No charity too big or too small",s:"cause"},
- {t:"SCREEN-ACCURATE COSTUMES",l:"Built by our members, worn for good causes",s:"cost"},
- {t:"BOOK US OR JOIN US",l:"Scan a code \u2192",s:"book"},
+ {t:"CAUSEWAY LEGIONS",l:"Star Wars costumers<br>Northern Ireland<br>All volunteers<br>Always for charity<br><br>Scan to book us or join us \u2192",s:"who"},
  {t:"FACEBOOK",q:"facebook",u:"https://www.facebook.com/501stni",j:"FB"},
  {t:"INSTAGRAM",q:"instagram",u:"https://www.instagram.com/501stcausewaygarrison/",j:"IG"},
  {t:"TIKTOK",q:"tiktok",u:"https://www.tiktok.com/@causeway.legions",j:"TIKTOK"},
  {t:"JOIN US",q:"join",u:"https://www.causewaylegions.com/forums/index.php?/register/",j:"JOIN"},
  {t:"REQUEST US",q:"request",u:"https://www.501stni.com",j:"BOOK"}
 ];
-const START=5;   /* Facebook */
+const START=1;   /* Facebook */
 let ipos=START;
 (function buildDeck(){
-  const fl=t=>`<span class="flip" data-t="${t}">${t}</span>`;
+  const fl=t=>`<span class="flip2" data-t="${t}">${t}</span>`;
   const card=c=>c.q
     ?`<div class="card2"><div class="en ctitle">${fl(c.t)}</div><div class="qrbox">${qrSvg(c.q)}</div><div class="url">${c.u.replace(/^https:\/\//,"")}</div></div>`
     :`<div class="card2"><svg class="csym" viewBox="0 0 170 132">${SYM[c.s]}</svg><div class="en ctitle">${fl(c.t)}</div><div class="cline">${c.l}</div></div>`;
@@ -883,6 +882,13 @@ let ipos=START;
   $("#idots").innerHTML="<i></i>".repeat(DECK.length);
   $("#ijump").innerHTML=DECK.map((c,i)=>c.q?`<button data-i="${i}">${c.j}</button>`:"").join("");
   $$("#ijump button").forEach(b=>b.addEventListener("click",()=>{SFX.tap();ishow(+b.dataset.i,true)}));
+})();
+(function connectFlip(){
+  const el=$("#info");
+  const step=()=>{const aur=el.classList.contains("aurOn");
+    el.classList.add("glitch");setTimeout(()=>{el.classList.toggle("aurOn");el.classList.remove("glitch")},90);
+    setTimeout(step,aur?2500:1500)};   /* after switching to English wait 2.5 s; after Aurebesh 1.5 s */
+  setTimeout(step,2500);
 })();
 function ishow(i,anim){
   const tr=$("#itrack");tr.style.transition=anim?"":"none";
