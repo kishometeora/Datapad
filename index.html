@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Datapad">
+<meta name="theme-color" content="#000000">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Datapad</title>
+<style>
+/* ============================================================
+   DATAPAD — Imperial build v2
+   Look: Star Wars Rebels datapad + Squadrons / OT terminal symbols
+   ============================================================ */
+@font-face{font-family:Orb;src:url(fonts/orbitron-900.woff2) format("woff2");font-weight:900}
+@font-face{font-family:Orb;src:url(fonts/orbitron-700.woff2) format("woff2");font-weight:700}
+@font-face{font-family:Aur;src:url(fonts/aurebesh-canon.otf) format("opentype")}
+
+:root{
+  /* faction colour (Imperial) */
+  --c:#e6eaee; --rgb:230,234,238;
+  /* status colours — same in every theme */
+  --red:#FF3B30; --red-rgb:255,59,48; --red-flash:#D92B21;
+  --grn:#34D058; --grn-rgb:52,208,88; --grn-flash:#22A843;
+  --amb:#FFB020; --amb-rgb:255,176,32;
+  /* CALIBRATION — extra margins (px) so nothing hides under the frame bezel.
+     Set once after fitting the phone in the frame. */
+  --cal-top:0px; --cal-bottom:0px; --cal-left:0px; --cal-right:0px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#000;overflow:hidden;overscroll-behavior:none}
+body{position:fixed;inset:0;color:var(--c);font-family:Orb,sans-serif;font-weight:700;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+
+/* colour scopes — anything inside recolours itself */
+.fail{--c:var(--red);--rgb:var(--red-rgb)}
+.pass{--c:var(--grn);--rgb:var(--grn-rgb)}
+.amb{--c:var(--amb);--rgb:var(--amb-rgb);color:var(--c)}
+svg{display:block;overflow:visible}
+.ln{stroke:var(--c);fill:none;stroke-width:4;stroke-linejoin:round;filter:drop-shadow(0 0 2px rgba(var(--rgb),.55))}
+.md{stroke:var(--c);fill:none;stroke-width:2.5;filter:drop-shadow(0 0 2px rgba(var(--rgb),.5))}
+.dm{stroke:rgba(var(--rgb),.35);fill:none;stroke-width:2}
+.gr{stroke:rgba(var(--rgb),.12);fill:none;stroke-width:1}
+.fl{fill:var(--c);filter:drop-shadow(0 0 2px rgba(var(--rgb),.5))}
+.fd{fill:rgba(var(--rgb),.3)}
+.box{border:4px solid var(--c);border-radius:6px;position:relative;box-shadow:0 0 6px rgba(var(--rgb),.35),inset 0 0 6px rgba(var(--rgb),.15)}
+.en{font-weight:900;letter-spacing:.05em;text-shadow:0 0 7px rgba(var(--rgb),.55)}
+.aur{font-family:Aur;font-weight:400;letter-spacing:.04em;text-shadow:0 0 6px rgba(var(--rgb),.45)}
+.aur.dimtxt{color:rgba(var(--rgb),.4);text-shadow:none}
+
+/* flip text: alternates English (Orbitron) <-> Aurebesh */
+.flip{display:inline-block;transition:opacity .08s}
+.flip.isAur{font-family:Aur;font-weight:400;font-size:.86em;letter-spacing:.03em}
+.flip.glitch{opacity:.15}
+
+/* ---------- screens ---------- */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;gap:14px;
+  padding:calc(max(env(safe-area-inset-top),20px) + 12px + var(--cal-top)) calc(18px + var(--cal-right))
+          calc(max(env(safe-area-inset-bottom),12px) + 10px + var(--cal-bottom)) calc(18px + var(--cal-left))}
+.screen.on{display:flex}
+.screen.enter{animation:wipe .45s cubic-bezier(.2,.7,.2,1)}
+.screen.enter .box{animation:draw .5s ease-out both}
+@keyframes wipe{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes draw{from{transform:scaleY(.92);opacity:0}to{transform:none;opacity:1}}
+@keyframes flick{0%,100%{opacity:1}30%{opacity:.75}34%{opacity:1}60%{opacity:.88}63%{opacity:1}}
+.screen.enter > *{animation:flick .5s steps(1)}
+
+/* ---------- top bar (feature screens) ---------- */
+.top{display:flex;align-items:center;gap:14px;height:86px;flex:none}
+.home{width:64px;height:64px;flex:none;display:flex;align-items:center;justify-content:center;background:none;border:0}
+.emb{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 3px rgba(var(--rgb),.6))}
+.btn{background:none;color:var(--c);font:inherit;display:flex;align-items:center;justify-content:center;gap:16px}
+.btn:active{background:rgba(var(--rgb),.15)}
+.btn[disabled]{opacity:.28;pointer-events:none;box-shadow:none}
+
+/* ============ MENU ============ */
+#menu .head{height:360px;flex:none;padding:16px;display:flex;flex-direction:column}
+#menu .h-aur{font-size:30px;white-space:nowrap;overflow:hidden;height:40px}
+#menu .mid{display:flex;gap:16px;margin-top:18px}
+#menu .bars{flex:1;display:flex;flex-direction:column;gap:12px;padding-top:6px;min-width:0}
+.brow{display:flex;gap:10px;height:14px}
+.bar{height:14px;border-radius:2px;background:var(--c);box-shadow:0 0 4px rgba(var(--rgb),.5);transition:width 1.4s ease-in-out,opacity .2s}
+.bar.d{background:rgba(var(--rgb),.3);box-shadow:none}
+.bar.ping{background:#fff;box-shadow:0 0 10px #fff}
+#menu .embwrap{width:170px;height:170px;flex:none;animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.82}}
+#menu .low{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px}
+#menu .low .aur{font-size:20px;white-space:nowrap;overflow:hidden}
+.pips{display:flex;gap:8px}.pips i{width:14px;height:14px;border-radius:2px;background:rgba(var(--rgb),.3)}.pips i.on{background:var(--c);box-shadow:0 0 4px rgba(var(--rgb),.6)}
+#grid{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);gap:1px;background:rgba(var(--rgb),.22)}
+.tile{background:#000;display:flex;align-items:center;justify-content:center;border:0}
+.tile svg{width:86px;height:86px}
+.tile.off svg{opacity:.22}
+.tile.live:active{background:rgba(var(--rgb),.12)}
+
+/* ============ SCANNER ============ */
+#status{flex:1;height:86px;font-size:24px}
+#ss .main{flex:1;min-height:0;overflow:hidden}
+#ss .view{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center}
+#ss .view.on{display:flex}
+#scanSvg{position:absolute;inset:0;width:100%;height:100%}
+.rA,.rB,.sonar{transform-box:view-box}
+.rA{transform-origin:193px 285px}.rB{transform-origin:193px 285px}
+#ss.scanning .rA{animation:spin 9s linear infinite}
+#ss.scanning .rB{animation:spin 6s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rings{opacity:.55;transition:opacity .3s}#ss.scanning .rings{opacity:1}
+.sweepg{display:none}#ss.scanning .sweepg{display:inline}
+.sweep{animation:sweep 2.4s ease-in-out infinite alternate}
+@keyframes sweep{from{transform:translateY(0)}to{transform:translateY(400px)}}
+#vbtn{fill:var(--c);opacity:.25;transition:opacity .3s,filter .3s}
+#ss.scanning #vbtn{opacity:1;filter:drop-shadow(0 0 14px rgba(var(--rgb),.75));cursor:pointer}
+#ss.scanning #vbtn:active{opacity:.75}
+#vtap{position:absolute;left:50%;top:50%;width:150px;height:150px;transform:translate(-50%,-50%);border-radius:50%;background:none;border:0;z-index:3}
+/* complications */
+.cx{position:absolute;height:48px;opacity:.45;transition:opacity .3s}
+#ss.scanning .cx{opacity:1}
+.cx .br{position:absolute;inset:0;width:100%;height:100%}
+.cx-tl{left:12px;top:12px;width:56px}.cx-tr{right:12px;top:12px;width:160px}
+.cx-bl{left:12px;bottom:12px;width:160px}.cx-br{right:12px;bottom:12px;width:76px}
+.sonar .p{transform-box:fill-box;transform-origin:center}
+#ss.scanning .sonar .p{animation:ping 1.6s ease-out infinite}
+#ss.scanning .sonar .p2{animation-delay:.8s}
+@keyframes ping{from{transform:scale(.3);opacity:1}to{transform:scale(1.25);opacity:0}}
+#cxAur{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:.06em;color:rgba(var(--rgb),.75);white-space:nowrap;overflow:hidden}
+.tally{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
+.trow{display:flex;align-items:center;gap:3px}
+.trow img{width:14px;height:14px;margin-right:5px}
+.dot{width:6px;height:8px;border-radius:1px;background:rgba(var(--rgb),.25)}
+.trow.g .dot.on{background:var(--grn);box-shadow:0 0 4px var(--grn)}
+.trow.r .dot.on{background:var(--red);box-shadow:0 0 4px var(--red)}
+.counter{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.counter .en{font-size:20px}.counter .aur{font-size:8px}
+/* verdict processing */
+#vProc{padding:18px;justify-content:flex-start;gap:22px}
+.card{width:100%;height:330px;border:3px solid var(--c);border-radius:8px;position:relative;padding:18px;overflow:hidden;box-shadow:0 0 6px rgba(var(--rgb),.3)}
+.card .row{display:flex;gap:18px}
+.card .info{flex:1;display:flex;flex-direction:column;gap:12px;padding-top:6px}
+.card .info .aur{font-size:22px}
+.csweep{position:absolute;left:0;right:0;height:30px;background:linear-gradient(rgba(var(--rgb),0),rgba(var(--rgb),.22));border-bottom:3px solid var(--c);animation:csw 1s ease-in-out infinite alternate}
+@keyframes csw{from{top:-30px}to{top:300px}}
+.proc-t{font-size:30px;height:40px;text-align:center}
+.segs{display:flex;gap:6px;width:100%}
+.segs i{flex:1;height:18px;border-radius:2px;border:2px solid rgba(var(--rgb),.35)}
+.segs i.on{background:var(--c);border-color:var(--c);box-shadow:0 0 4px rgba(var(--rgb),.6)}
+/* result */
+#vRes{gap:36px;text-align:center}
+#vRes .sym{width:190px;height:190px}
+.headline{font-size:46px;line-height:1.15;min-height:110px;display:flex;flex-direction:column;justify-content:center}
+.headline .flip.isAur{font-size:38px}
+.meter rect{transition:fill .15s}
+.meter rect.e{fill:transparent;stroke:rgba(var(--rgb),.35);stroke-width:1.2}
+#panel{color:var(--c)}
+/* bottom row */
+#ss .bot{display:flex;gap:12px;height:96px;flex:none}
+#lights{width:120px;gap:16px}
+#lights i{width:28px;height:28px;border-radius:3px;border:2px solid rgba(var(--rgb),.35)}
+#lights i.on{background:var(--c);border-color:var(--c);box-shadow:0 0 6px rgba(var(--rgb),.7)}
+#bStart{flex:1}
+#catch{position:absolute;inset:0;z-index:20;display:none}
+#ss.result #catch{display:block}
+#ss.busy .bot .btn,#ss.busy .home{pointer-events:none}
+
+/* full-screen flash */
+#flash{position:fixed;inset:0;z-index:50;pointer-events:none;opacity:0}
+#flash.go{animation:blinks .72s steps(1)}
+@keyframes blinks{0%{opacity:1}17%{opacity:0}33%{opacity:1}50%{opacity:0}67%{opacity:1}84%,100%{opacity:0}}
+
+/* ============ SETTINGS ============ */
+#set .ttl{flex:1;height:70px;display:flex;flex-direction:column;justify-content:center;padding:0 16px;gap:4px}
+#set .ttl .en{font-size:20px}#set .ttl .aur{font-size:15px}
+#set .top{height:70px}#set .home{width:56px;height:56px}
+#set .body{flex:1;padding:16px;display:flex;flex-direction:column;gap:16px;overflow:auto}
+.sec{font-size:12px;letter-spacing:.18em;opacity:.7;margin:0 0 8px 2px;display:flex;justify-content:space-between}
+.facs{display:flex;flex-direction:column;gap:8px}
+.fac{display:flex;align-items:center;gap:14px;height:50px;padding:0 14px;border:2px solid rgba(var(--rgb),.35);border-radius:4px;font-size:17px;letter-spacing:.12em;background:none;color:inherit;font-family:Orb;font-weight:700}
+.fac img{width:30px;height:30px;object-fit:contain}
+.fac.sel{border:3px solid var(--c);box-shadow:inset 0 0 14px rgba(var(--rgb),.15)}
+.fac .tick{margin-left:auto;width:14px;height:14px;background:var(--c)}
+.fac.locked{opacity:.3}
+.fac .lock{margin-left:auto;font-size:10px;letter-spacing:.15em}
+.seg{display:flex;border:2px solid rgba(var(--rgb),.35);border-radius:4px;overflow:hidden}
+.seg button{flex:1;height:46px;font-family:Orb;font-weight:700;font-size:12px;letter-spacing:.08em;color:var(--c);background:none;border:0;border-right:2px solid rgba(var(--rgb),.35)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--c);color:#000}
+.seg.locked{opacity:.3;pointer-events:none}
+.cntrow{display:flex;align-items:center;gap:12px}
+.cntrow .en{font-size:22px;flex:1}
+#bReset{height:46px;padding:0 18px;border:2px solid rgba(var(--rgb),.35);border-radius:4px;font-family:Orb;font-weight:700;font-size:12px;letter-spacing:.08em;color:var(--c);background:none}
+#bReset:active{background:rgba(var(--rgb),.2)}
+#bSave{height:76px;flex:none;font-size:22px}
+#bSave.saved{background:rgba(var(--rgb),.2)}
+</style>
+</head>
+<body>
+
+<!-- colour tints for the emblem files (stored pale, tinted here) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="tGrn"><feFlood flood-color="#34D058"/><feComposite in2="SourceAlpha" operator="in"/></filter>
+  <filter id="tRed"><feFlood flood-color="#FF3B30"/><feComposite in2="SourceAlpha" operator="in"/></filter>
+</svg>
+
+<!-- ======================= MENU ======================= -->
+<section id="menu" class="screen on">
+  <div class="box head">
+    <div class="aur h-aur">IMPERIAL SECURITY</div>
+    <div class="mid">
+      <div class="bars" id="mBars">
+        <div class="brow"><div class="bar" id="setBar" style="width:150px"></div></div>
+        <div class="brow"><div class="bar" style="width:70px"></div><div class="bar d" style="width:40px"></div></div>
+        <div class="brow"><div class="bar d" style="width:110px"></div></div>
+        <div class="brow"><div class="bar" style="width:40px"></div><div class="bar" style="width:40px"></div><div class="bar d" style="width:50px"></div></div>
+        <div class="aur dimtxt" id="mAur2" style="font-size:22px;margin-top:10px;white-space:nowrap;overflow:hidden">ID 7</div>
+      </div>
+      <div class="embwrap"><img class="emb" src="emblems/imperial.png" alt=""></div>
+    </div>
+    <div class="low"><div class="aur dimtxt" id="mAur3">SECTOR SEVEN</div><div class="pips" id="mPips"><i class="on"></i><i></i><i class="on"></i></div></div>
+  </div>
+  <div id="grid"></div>
+</section>
+
+<!-- ======================= ID SCANNER ======================= -->
+<section id="ss" class="screen">
+  <div class="top">
+    <button class="home" data-home><img class="emb" src="emblems/imperial.png" alt=""></button>
+    <div class="box amb en" id="status" style="display:flex;align-items:center;justify-content:center"><span class="flip" id="statusTxt" data-t="READY">READY</span></div>
+  </div>
+
+  <div class="box main" id="panel">
+    <!-- ready + scanning -->
+    <div class="view on" id="vRet">
+      <svg id="scanSvg" viewBox="0 0 386 570" preserveAspectRatio="xMidYMid meet">
+        <path class="gr" id="bgGrid"/>
+        <rect x="40" y="76" width="306" height="418" rx="24" style="fill:none;stroke-width:2.5;stroke:rgba(var(--rgb),.4)"/>
+        <g class="sweepg"><g class="sweep">
+          <rect x="40" y="46" width="306" height="44" fill="url(#sg)"/><path class="ln" d="M40 90h306" style="stroke-width:3"/>
+        </g></g>
+        <g class="rings">
+          <path class="dm" id="ticks"/>
+          <g class="rA"><path class="ln" id="ringA"/></g>
+          <g class="rB"><path class="md" id="ringB" style="stroke-width:6"/></g>
+          <circle class="dm" cx="193" cy="285" r="76" stroke-dasharray="4 8"/>
+        </g>
+        <circle id="vbtn" cx="193" cy="285" r="58"/>
+        <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--c)" stop-opacity="0"/><stop offset="1" stop-color="var(--c)" stop-opacity=".25"/></linearGradient></defs>
+      </svg>
+      <button id="vtap" aria-label="verdict"></button>
+
+      <!-- complications -->
+      <div class="cx cx-tl">
+        <svg class="br" viewBox="0 0 56 48"><path class="md" d="M2 12V2h12M42 2h12v10M54 36v10H42M14 46H2V36"/></svg>
+        <svg class="sonar" viewBox="0 0 56 48" style="position:absolute;inset:0;width:100%;height:100%">
+          <circle class="fl" cx="28" cy="24" r="3.5"/><circle class="md p" cx="28" cy="24" r="14"/><circle class="dm p p2" cx="28" cy="24" r="14"/>
+        </svg>
+      </div>
+      <div class="cx cx-tr">
+        <svg class="br" viewBox="0 0 160 48" preserveAspectRatio="none"><path class="md" d="M2 12V2h12M146 2h12v10M158 36v10h-12M14 46H2V36"/></svg>
+        <div class="aur" id="cxAur">ISB 7 K4 TR</div>
+      </div>
+      <div class="cx cx-bl">
+        <svg class="br" viewBox="0 0 160 48" preserveAspectRatio="none"><path class="md" d="M2 12V2h12M146 2h12v10M158 36v10h-12M14 46H2V36"/></svg>
+        <div class="tally">
+          <div class="trow g" id="tPass"><img src="emblems/imperial.png" alt="" style="filter:url(#tGrn) drop-shadow(0 0 3px #34D058)"></div>
+          <div class="trow r" id="tFail"><img src="emblems/rebel.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)"></div>
+        </div>
+      </div>
+      <div class="cx cx-br">
+        <svg class="br" viewBox="0 0 76 48"><path class="md" d="M2 12V2h12M62 2h12v10M74 36v10H62M14 46H2V36"/></svg>
+        <div class="counter"><div class="en" id="cnt">000</div><div class="aur">SCANNED</div></div>
+      </div>
+    </div>
+
+    <!-- verdict processing: ID card -->
+    <div class="view" id="vProc">
+      <div class="card">
+        <div class="row">
+          <svg width="120" height="150" viewBox="0 0 120 150" id="portrait"></svg>
+          <div class="info">
+            <div class="aur">IDENT</div>
+            <svg width="150" height="12"><rect class="fl" width="150" height="12" rx="2"/></svg>
+            <svg width="150" height="12"><rect class="fd" width="100" height="12" rx="2"/></svg>
+            <svg width="150" height="12"><rect class="fl" width="60" height="12" rx="2"/><rect class="fd" x="70" width="50" height="12" rx="2"/></svg>
+            <div class="aur dimtxt" style="font-size:18px">CODE</div>
+          </div>
+        </div>
+        <svg width="320" height="70" id="blocks" style="margin-top:22px"></svg>
+        <div class="csweep"></div>
+      </div>
+      <div class="en proc-t"><span class="flip" data-t="PROCESSING">PROCESSING</span></div>
+      <div class="segs" id="segs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+
+    <!-- result -->
+    <div class="view" id="vRes">
+      <svg class="sym" viewBox="0 0 100 100" id="resSym"></svg>
+      <div class="en headline" id="resHead"></div>
+    </div>
+  </div>
+
+  <div class="bot">
+    <button class="box btn" id="lights" aria-label="next result"><i id="lPass"></i><i id="lFail"></i></button>
+    <button class="box btn" id="bStart" aria-label="start / stop">
+      <svg width="40" height="40" viewBox="0 0 40 40" id="icStart">
+        <path class="ln" d="M8 22a12 12 0 0 1 24 0"/><path class="md" d="M2 22a18 18 0 0 1 36 0"/><rect class="fl" x="16" y="26" width="8" height="8"/>
+      </svg>
+      <svg width="36" height="36" viewBox="0 0 36 36" id="icStop" style="display:none">
+        <rect class="ln" x="3" y="3" width="30" height="30" rx="2"/><rect class="fl" x="11" y="11" width="14" height="14"/>
+      </svg>
+    </button>
+  </div>
+  <div id="catch"></div>
+</section>
+
+<!-- ======================= SETTINGS ======================= -->
+<section id="set" class="screen">
+  <div class="top">
+    <button class="home" data-home><img class="emb" src="emblems/imperial.png" alt=""></button>
+    <div class="box ttl"><div class="en">SYS CONFIG</div><div class="aur dimtxt">CONFIG</div></div>
+  </div>
+  <div class="box body">
+    <div><div class="sec">FACTION</div>
+      <div class="facs">
+        <button class="fac sel"><img src="emblems/imperial.png" alt="">IMPERIAL<span class="tick"></span></button>
+        <button class="fac locked" style="color:#5fb8ff"><img src="emblems/republic.svg" alt="">REPUBLIC<span class="lock">LOCKED</span></button>
+        <button class="fac locked" style="color:#ffc24a"><img src="emblems/rebel.png" alt="">REBEL<span class="lock">LOCKED</span></button>
+        <button class="fac locked" style="color:#bfe6ff"><img src="emblems/jedi.svg" alt="">JEDI<span class="lock">LOCKED</span></button>
+      </div>
+    </div>
+    <div><div class="sec">VOLUME</div><div class="seg" id="sVol"></div></div>
+    <div><div class="sec"><span>HOLO-COMMS</span><span>LOCKED</span></div>
+      <div class="seg locked" style="margin-bottom:8px"><button class="on">ON</button><button>OFF</button></div>
+      <div class="seg locked"><button class="on" style="font-size:11px">FREQUENT</button><button style="font-size:11px">OCCASIONAL</button><button style="font-size:11px">RARE</button></div>
+    </div>
+    <div><div class="sec">SCAN COUNTER</div>
+      <div class="cntrow"><div class="en" id="setCnt">000</div><button id="bReset">RESET</button></div>
+    </div>
+  </div>
+  <button class="box btn en" id="bSave">
+    <svg width="34" height="34" viewBox="0 0 34 34"><path class="ln" d="M6 18l8 8 14-18"/></svg>SAVE
+  </button>
+</section>
+
+<div id="flash"></div>
+
+<script>
+/* ============================================================
+   CONTENT (Imperial)
+   ============================================================ */
+const T={
+  failHead:["REBEL","DETECTED"],
+  passHead:["APPROVED"],
+  aurWords:["IMPERIAL SECURITY","SECTOR SEVEN","CHECKPOINT","IDENT CHECK","AUTHORISED","GARRISON","PATROL","CLEARANCE","DATA LINK","ARCHIVE"],
+  codes:["ISB","TK","K4","TR","VX","SEC","GAR","ID","AX","RZ"]
+};
+const FAIL_ODDS=1/3;
+
+/* ---------- state (saved on the phone) ---------- */
+const S={vol:2,count:0,tp:0,tf:0};      // vol: 0 off,1 low,2 med,3 high
+try{Object.assign(S,JSON.parse(localStorage.getItem("datapad")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("datapad",JSON.stringify(S))}catch(e){}};
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+
+/* ============================================================
+   AUDIO — Imperial sound set (synthesised, original)
+   ============================================================ */
+let AC=null,master=null;
+const VOL=[0,.25,.55,1];
+function ac(){
+  if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.connect(AC.destination)}catch(e){return null}}
+  if(AC.state==="suspended")AC.resume();
+  master.gain.value=VOL[S.vol];
+  return AC;
+}
+document.addEventListener("pointerdown",ac,{passive:true});
+function tone(f,d,{type="square",v=.06,at=0,f2=null,attack=.004}={}){
+  const a=ac();if(!a||!S.vol)return;const t=a.currentTime+at;
+  const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
+  if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+attack);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g).connect(master);o.start(t);o.stop(t+d+.05);
+}
+const SFX={
+  tap:()=>tone(2200,.035,{v:.03}),
+  armed:()=>tone(620,.09,{v:.05,f2:900}),
+  chirp:(at=0)=>tone(1400+Math.random()*1200,.045,{v:.045,at,f2:1800+Math.random()*1200}),
+  pass1:()=>tone(1500,.09,{type:"sine",v:.09,f2:1900}),
+  pass2:()=>tone(1800,.09,{type:"sine",v:.09,f2:2300}),
+  calm:()=>{tone(880,.9,{type:"sine",v:.12,attack:.04});tone(1320,.9,{type:"sine",v:.05,attack:.06})},
+  klaxon:()=>{const a=ac();if(!a||!S.vol)return;const lp=a.createBiquadFilter();lp.type="lowpass";lp.frequency.value=2200;lp.connect(master);
+    for(let i=0;i<8;i++){const t=a.currentTime+i*.32,o=a.createOscillator(),g=a.createGain();o.type="square";o.frequency.value=i%2?390:520;
+      g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.09,t+.01);g.gain.setValueAtTime(.09,t+.27);g.gain.exponentialRampToValueAtTime(.0001,t+.31);
+      o.connect(g).connect(lp);o.start(t);o.stop(t+.33)}}
+};
+/* continuous scanning hum / warble */
+let hum=null;
+function humStart(){
+  const a=ac();if(!a||!S.vol||hum)return;const t=a.currentTime;
+  const out=a.createGain();out.gain.setValueAtTime(.0001,t);out.gain.exponentialRampToValueAtTime(.12,t+.25);out.connect(master);
+  const lp=a.createBiquadFilter();lp.type="lowpass";lp.frequency.value=800;lp.Q.value=6;lp.connect(out);
+  const o1=a.createOscillator();o1.type="sawtooth";o1.frequency.value=98;o1.connect(lp);
+  const l1=a.createOscillator(),lg1=a.createGain();l1.frequency.value=5.5;lg1.gain.value=14;l1.connect(lg1).connect(o1.frequency);
+  const o2=a.createOscillator(),g2=a.createGain();o2.type="triangle";o2.frequency.value=1240;g2.gain.value=.12;o2.connect(g2).connect(out);
+  const l2=a.createOscillator(),lg2=a.createGain();l2.frequency.value=.9;lg2.gain.value=60;l2.connect(lg2).connect(o2.frequency);
+  [o1,l1,o2,l2].forEach(o=>o.start(t));hum={out,os:[o1,l1,o2,l2]};
+}
+function humStop(){
+  if(!hum||!AC)return;const t=AC.currentTime,h=hum;hum=null;
+  h.out.gain.cancelScheduledValues(t);h.out.gain.setValueAtTime(h.out.gain.value,t);h.out.gain.exponentialRampToValueAtTime(.0001,t+.15);
+  h.os.forEach(o=>o.stop(t+.2));
+}
+
+/* ============================================================
+   FLIP TEXT — English <-> Aurebesh every ~2.2s
+   ============================================================ */
+setInterval(()=>{
+  $$(".flip").forEach(el=>{
+    if(!el.offsetParent)return;
+    el.classList.add("glitch");
+    setTimeout(()=>{el.classList.toggle("isAur");el.classList.remove("glitch")},90);
+  });
+},2200);
+function setHeadline(lines){$("#resHead").innerHTML=lines.map(l=>`<div><span class="flip" data-t="${l}">${l}</span></div>`).join("")}
+function setStatus(t){const el=$("#statusTxt");el.dataset.t=t;el.textContent=t}
+
+/* ============================================================
+   NAVIGATION + TRANSITIONS
+   ============================================================ */
+let cur="menu";
+function go(id){
+  if(id===cur)return;
+  if(cur==="ss")resetScanner();
+  if(cur==="set")commitSettings();
+  $("#"+cur).classList.remove("on","enter");
+  const n=$("#"+id);n.classList.add("on","enter");setTimeout(()=>n.classList.remove("enter"),600);
+  cur=id;
+  if(id==="set")openSettings();
+}
+$$("[data-home]").forEach(b=>b.addEventListener("click",()=>{SFX.tap();go("menu")}));
+
+/* ============================================================
+   SHAPES
+   ============================================================ */
+const arc=(cx,cy,r,a0,a1)=>{const R=a=>[cx+r*Math.cos(a*Math.PI/180),cy+r*Math.sin(a*Math.PI/180)];const[p,q]=[R(a0),R(a1)];return `M${p[0].toFixed(1)} ${p[1].toFixed(1)}A${r} ${r} 0 0 1 ${q[0].toFixed(1)} ${q[1].toFixed(1)}`};
+const segs=(cx,cy,r,n,gap,off=0)=>{let d="";const st=360/n;for(let i=0;i<n;i++)d+=arc(cx,cy,r,off+i*st+gap/2,off+(i+1)*st-gap/2);return d};
+function ticks(cx,cy,r,n,len){let d="";for(let i=0;i<n;i++){const a=i*2*Math.PI/n;d+=`M${(cx+r*Math.cos(a)).toFixed(1)} ${(cy+r*Math.sin(a)).toFixed(1)}L${(cx+(r+len)*Math.cos(a)).toFixed(1)} ${(cy+(r+len)*Math.sin(a)).toFixed(1)}`}return d}
+
+/* ============================================================
+   MENU
+   ============================================================ */
+const IC={
+ scan:`<path class="ln" d="${segs(40,40,24,4,34,-45)}"/><path class="md" d="M8 18V8h10M62 8h10v10M72 62v10H62M18 72H8V62"/><rect class="fl" x="36" y="36" width="8" height="8"/>`,
+ droid:`<path class="ln" d="M6 46h10V30h10v24h10V22h10v32h10V38h10v8h8"/><path class="dm" d="M6 66h68M10 62v8M24 62v8M38 62v8M52 62v8M66 62v8"/><path class="md" d="M6 14h20M54 14h20"/>`,
+ alert:`<path class="ln" d="M12 56 40 28 68 56"/><path class="ln" d="M22 70 40 52 58 70"/><path class="md" d="M28 22 40 10 52 22"/>`,
+ comms:`<rect class="fl" x="12" y="34" width="12" height="12"/><path class="md" d="${arc(18,40,18,-50,50)}"/><path class="ln" d="${arc(18,40,32,-45,45)}"/><path class="md" d="${arc(18,40,46,-38,38)}"/><path class="dm" d="M10 72h60"/>`,
+ wanted:`<path class="ln" d="M40 18 58 40 40 62 22 40Z"/><rect class="fl" x="36" y="36" width="8" height="8"/><path class="md" d="M6 22V6h16M58 6h16v16M74 58v16H58M22 74H6V58"/><path class="dm" d="M40 2v8M40 70v8"/>`,
+ qr:`<path class="md" d="M8 8h24v24H8ZM48 8h24v24H48ZM8 48h24v24H8Z"/><rect class="fl" x="15" y="15" width="10" height="10"/><rect class="fl" x="55" y="15" width="10" height="10"/><rect class="fl" x="15" y="55" width="10" height="10"/><rect class="fl" x="48" y="48" width="8" height="8"/><rect class="fl" x="64" y="48" width="8" height="8"/><rect class="fl" x="56" y="56" width="8" height="8"/><rect class="fl" x="48" y="64" width="8" height="8"/><rect class="fl" x="64" y="64" width="8" height="8"/>`,
+ signup:`<path class="ln" d="M8 14 18 24 8 34"/><rect class="fl" x="26" y="20" width="46" height="8"/><rect class="fd" x="26" y="38" width="34" height="8"/><rect class="fd" x="26" y="56" width="40" height="8"/><path class="md" d="M10 50h8M10 60h8"/>`,
+ holo:`<path class="ln" d="M24 72h32"/><path class="md" d="M34 66h12v6H34Z"/><path class="md" d="M40 64 16 14M40 64 64 14"/><path class="ln" d="M22 26h36M26 36h28M30 46h20"/><path class="dm" d="M16 14h48"/>`
+};
+const TILES=[["scan","ss"],["droid"],["alert"],["comms"],["wanted"],["qr"],["signup"],["holo"]];
+$("#grid").innerHTML=TILES.map(([k,to])=>`<button class="tile ${to?"live":"off"}" ${to?`data-to="${to}"`:""}><svg viewBox="0 0 80 80">${IC[k]}</svg></button>`).join("");
+$$(".tile.live").forEach(t=>t.addEventListener("click",()=>{SFX.tap();go(t.dataset.to)}));
+
+setInterval(()=>{
+  if(cur!=="menu")return;
+  $$("#mBars .bar").forEach(b=>{if(b.id==="setBar")return;if(Math.random()<.5)b.style.width=(30+Math.random()*90|0)+"px"});
+  $$("#mPips i").forEach(p=>{if(Math.random()<.4)p.classList.toggle("on")});
+},1800);
+setInterval(()=>{if(cur!=="menu")return;const el=Math.random()<.5?$("#mAur3"):$("#mAur2");el.style.opacity=.2;setTimeout(()=>{el.textContent=rnd(T.aurWords);el.style.opacity=""},120)},5200);
+
+/* hidden control: long-press top-left data bar -> settings */
+(function(){
+  const bar=$("#setBar"),hit=bar.parentElement;let tm=null;
+  hit.style.cssText+="padding:14px 0;margin:-14px 0;height:42px";
+  const cancel=()=>{clearTimeout(tm);tm=null;bar.classList.remove("ping")};
+  hit.addEventListener("pointerdown",()=>{bar.classList.add("ping");tm=setTimeout(()=>{tm=null;SFX.armed();setTimeout(()=>{bar.classList.remove("ping");go("set")},150)},750)});
+  ["pointerup","pointerleave","pointercancel"].forEach(ev=>hit.addEventListener(ev,()=>{if(tm)cancel()}));
+})();
+
+/* ============================================================
+   ID SCANNER
+   ============================================================ */
+/* draw the static scanner geometry */
+(function(){
+  let g="";for(let x=40;x<=346;x+=19)g+=`M${x} 76V494`;for(let y=76;y<=494;y+=19)g+=`M40 ${y}H346`;$("#bgGrid").setAttribute("d",g);
+  $("#ticks").setAttribute("d",ticks(193,285,126,48,7));
+  $("#ringA").setAttribute("d",segs(193,285,112,6,16,0));
+  $("#ringB").setAttribute("d",segs(193,285,92,4,40,45));
+  $("#tPass").insertAdjacentHTML("beforeend",'<i class="dot"></i>'.repeat(10));
+  $("#tFail").insertAdjacentHTML("beforeend",'<i class="dot"></i>'.repeat(10));
+})();
+function paintTally(){
+  $$("#tPass .dot").forEach((d,i)=>d.classList.toggle("on",i<S.tp));
+  $$("#tFail .dot").forEach((d,i)=>d.classList.toggle("on",i<S.tf));
+  const c=String(S.count).padStart(3,"0");$("#cnt").textContent=c;$("#setCnt").textContent=c;
+}
+paintTally();
+
+let state="idle",next=Math.random()<FAIL_ODDS?"fail":"pass",timers=[],aurT=null;
+const later=(fn,ms)=>timers.push(setTimeout(fn,ms));
+const clearTimers=()=>{timers.forEach(clearTimeout);timers=[]};
+function showLights(){$("#lPass").classList.toggle("on",next==="pass");$("#lFail").classList.toggle("on",next==="fail")}
+showLights();
+$("#lights").addEventListener("click",()=>{if(state==="processing")return;next=next==="pass"?"fail":"pass";showLights();SFX.tap()});
+
+function view(id){$$("#ss .view").forEach(v=>v.classList.toggle("on",v.id===id))}
+function setPanel(cls){const p=$("#panel");p.classList.remove("fail","pass");if(cls)p.classList.add(cls)}
+function resetScanner(){
+  clearTimers();humStop();clearInterval(aurT);state="idle";
+  $("#ss").classList.remove("result","busy","scanning");setPanel(null);view("vRet");
+  $("#icStart").style.display="";$("#icStop").style.display="none";
+  setStatus("READY");
+}
+function startScan(){
+  /* tallies: when either row filled up last time, both rows start again */
+  if(S.tp>=10||S.tf>=10){S.tp=0;S.tf=0;save();paintTally()}
+  state="scanning";$("#ss").classList.add("scanning");
+  $("#icStart").style.display="none";$("#icStop").style.display="";
+  setStatus("SCANNING");humStart();
+  aurT=setInterval(()=>{$("#cxAur").textContent=Array.from({length:2},()=>rnd(T.codes)+" "+(Math.random()*90+10|0)).join(" ")},650);
+}
+$("#bStart").addEventListener("click",()=>{SFX.tap();if(state==="scanning")resetScanner();else if(state==="idle")startScan()});
+
+/* ID card details */
+$("#portrait").innerHTML=`<path class="md" d="M2 22V2h22M96 2h22v22M118 128v20H96M24 148H2V128"/><path class="ln" d="${segs(60,62,34,6,22,-90)}"/><path class="md" d="M60 40l20 22-20 22-20-22Z"/><rect class="fl" x="56" y="58" width="8" height="8"/><path class="dm" d="M8 40v44M4 44h8M4 54h8M4 64h8M4 74h8"/>`;
+function paintBlocks(){let b="";for(let r=0;r<3;r++)for(let i=0;i<16;i++){const on=Math.random()<.55;b+=`<rect class="${on?"fl":"fd"}" x="${i*20}" y="${r*24}" width="${[14,8,14,10][(i+r)%4]}" height="14" rx="1"/>`}$("#blocks").innerHTML=b}
+
+/* result graphics */
+const FAILSYM=`<path class="ln" d="${segs(50,50,40,8,14,-90)}"/><path class="md" d="M2 14V2h12M86 2h12v12M98 86v12H86M14 98H2V86"/><image href="emblems/rebel.png" x="27" y="27" width="46" height="46" filter="url(#tRed)" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)"/>`;
+const METER=`<g class="meter"><path class="md" d="M2 14V2h12M86 2h12v12M98 86v12H86M14 98H2V86"/><rect class="e" id="m3" x="16" y="18" width="68" height="15" rx="2"/><rect class="e" id="m2" x="16" y="42" width="68" height="15" rx="2"/><rect class="e" id="m1" x="16" y="66" width="68" height="15" rx="2"/><path class="dm" d="M9 18v63M6 25h3M6 49h3M6 73h3"/></g>`;
+function fillBar(id){const r=$("#"+id);r.classList.remove("e");r.classList.add("fl")}
+
+/* VERDICT — the glowing centre button */
+$("#vtap").addEventListener("click",()=>{
+  if(state!=="scanning")return;
+  SFX.tap();humStop();clearInterval(aurT);
+  state="processing";$("#ss").classList.remove("scanning");$("#ss").classList.add("busy");
+  setStatus("ANALYSING");
+  const result=next;
+  paintBlocks();view("vProc");
+  const sg=$$("#segs i");sg.forEach(s=>s.classList.remove("on"));
+  sg.forEach((s,i)=>later(()=>s.classList.add("on"),(i+1)*230));
+  let t=0,gap=.24;while(t<1.75){SFX.chirp(t);t+=gap;gap=Math.max(.05,gap*.8)}
+  later(()=>reveal(result),2000);
+});
+
+function reveal(result){
+  state="result";
+  const f=$("#flash");f.style.background=result==="fail"?"var(--red-flash)":"var(--grn-flash)";
+  f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
+  setPanel(result);view("vRes");setStatus("COMPLETE");
+  /* counter + tally */
+  S.count++;if(result==="pass")S.tp=Math.min(10,S.tp+1);else S.tf=Math.min(10,S.tf+1);save();paintTally();
+  if(result==="fail"){
+    $("#resSym").innerHTML=FAILSYM;setHeadline(T.failHead);SFX.klaxon();
+  }else{
+    $("#resSym").innerHTML=METER;setHeadline(T.passHead);
+    later(()=>{fillBar("m1");SFX.pass1()},750);
+    later(()=>{fillBar("m2");SFX.pass2()},1100);
+    later(()=>{fillBar("m3");SFX.calm()},1450);
+  }
+  next=Math.random()<FAIL_ODDS?"fail":"pass";showLights();
+  $("#ss").classList.remove("busy");
+  later(()=>$("#ss").classList.add("result"),700);
+}
+/* tap anywhere: clear the result and go straight into the next scan */
+$("#catch").addEventListener("click",()=>{SFX.tap();resetScanner();startScan()});
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+let pending={};
+function openSettings(){pending={vol:S.vol};paintVol();paintTally();$("#bSave").classList.remove("saved");$("#bReset").textContent="RESET"}
+function paintVol(){
+  const el=$("#sVol");el.innerHTML="";
+  ["OFF","LOW","MED","HIGH"].forEach((l,i)=>{const b=document.createElement("button");b.textContent=l;if(pending.vol===i)b.classList.add("on");
+    b.onclick=()=>{pending.vol=i;paintVol();SFX.tap()};el.appendChild(b)});
+}
+function commitSettings(){Object.assign(S,pending);save();if(master)master.gain.value=VOL[S.vol]}
+$("#bSave").addEventListener("click",()=>{commitSettings();$("#bSave").classList.add("saved");SFX.armed()});
+$("#bReset").addEventListener("click",()=>{S.count=0;save();paintTally();$("#bReset").textContent="DONE";SFX.armed()});
+
+/* ============================================================
+   MISC
+   ============================================================ */
+let wl=null;async function wake(){try{if("wakeLock" in navigator&&!wl){wl=await navigator.wakeLock.request("screen");wl.addEventListener("release",()=>wl=null)}}catch(e){}}
+document.addEventListener("pointerdown",wake,{once:true});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")wake();else humStop()});
+document.addEventListener("gesturestart",e=>e.preventDefault());
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>

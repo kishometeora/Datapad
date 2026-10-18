@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Datapad">
+<meta name="theme-color" content="#000000">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Datapad</title>
+<style>
+/* =========================================================
+   DATAPAD — VISUAL SYSTEM (locked)
+   Original-trilogy vector look: black field, single-colour
+   phosphor linework, cut-corner brackets, glyph lines,
+   status lights, scanlines. Themes change ONLY colour + words.
+   ========================================================= */
+:root{
+  --c:#5cff8a;--bg:#010a04;--alert:#ff2b2b;
+  --dim:color-mix(in srgb, var(--c) 35%, transparent);
+  --faint:color-mix(in srgb, var(--c) 14%, transparent);
+  --glow:0 0 6px color-mix(in srgb, var(--c) 70%, transparent);
+  --st:env(safe-area-inset-top,47px);
+  --sb:env(safe-area-inset-bottom,34px);
+  --font:"SF Mono",Menlo,ui-monospace,"Courier New",monospace;
+}
+:root[data-theme="imperial"]{--c:#5cff8a;--bg:#010a04}
+:root[data-theme="republic"]{--c:#6fd6ff;--bg:#01060b}
+:root[data-theme="rebel"]{--c:#ff9a2e;--bg:#0b0501}
+:root[data-theme="jedi"]{--c:#f0e2a2;--bg:#090801}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#000;overflow:hidden;overscroll-behavior:none}
+body{
+  position:fixed;inset:0;color:var(--c);font-family:var(--font);
+  text-transform:uppercase;letter-spacing:.14em;font-size:13px;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;
+  background:radial-gradient(ellipse at 50% 40%, var(--bg) 0%, #000 75%);
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:100;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px),
+             radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.65) 100%);
+  animation:flicker 6s infinite steps(1);
+}
+@keyframes flicker{0%,100%{opacity:1}47%{opacity:.92}48%{opacity:1}83%{opacity:.95}}
+@keyframes blink{50%{opacity:.15}}
+
+.glow{text-shadow:var(--glow)}
+svg{display:block}
+svg .ln{stroke:var(--c);fill:none;stroke-width:1.5;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 2px var(--c))}
+svg .dm{stroke:var(--dim);fill:none;stroke-width:1;vector-effect:non-scaling-stroke}
+svg .fl{fill:var(--c)}
+.glyphs{height:10px;opacity:.55}
+.glyphs path{stroke:var(--c);stroke-width:1.2;fill:none;stroke-linecap:square}
+
+/* ---------- screens ---------- */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;padding:calc(var(--st) + 6px) 16px calc(var(--sb) + 8px)}
+.screen.on{display:flex;animation:power .35s ease-out}
+@keyframes power{0%{opacity:0;transform:scaleY(.02)}40%{opacity:1;transform:scaleY(.02)}100%{transform:scaleY(1)}}
+
+/* ---------- bracket panel ---------- */
+.panel{position:relative;border:1px solid var(--faint);padding:14px}
+.panel::before,.panel::after,.panel .tr,.panel .bl{content:"";position:absolute;width:14px;height:14px;pointer-events:none;border:2px solid var(--c);filter:drop-shadow(0 0 3px var(--c))}
+.panel::before{top:-2px;left:-2px;border-right:0;border-bottom:0}
+.panel::after{bottom:-2px;right:-2px;border-left:0;border-top:0}
+.panel .tr{top:-2px;right:-2px;border-left:0;border-bottom:0}
+.panel .bl{bottom:-2px;left:-2px;border-right:0;border-top:0}
+
+/* ---------- status lights (also the hidden controls) ---------- */
+.lights{display:flex;justify-content:space-between;align-items:center;height:40px;flex:none;border-top:1px solid var(--faint);border-bottom:1px solid var(--faint);padding:0 2px}
+.lt{width:44px;height:40px;display:flex;align-items:center;justify-content:center;gap:4px;background:none;border:0}
+.lt i{display:block;width:9px;height:9px;border:1px solid var(--dim)}
+.lt i.on{background:var(--c);border-color:var(--c);box-shadow:var(--glow)}
+.lt i.hold{background:var(--c);border-color:var(--c);box-shadow:0 0 8px var(--c)}
+.lt b{display:block;width:14px;height:2px;background:var(--dim)}
+.lt.wide i:first-child{width:16px}
+.lights.mini{height:30px;border:0;justify-content:center;gap:2px}
+.lights.mini .lt{width:30px;height:30px}
+
+/* ---------- header ---------- */
+.hdr{display:flex;align-items:center;gap:10px;height:44px;border-bottom:1px solid var(--dim);margin-bottom:12px;flex:none;position:relative}
+.hdr .sig{width:30px;height:30px;flex:none}
+.hdr .ttl{flex:1;min-width:0}
+.hdr .ttl b{display:block;font-size:17px;letter-spacing:.2em;text-shadow:var(--glow);white-space:nowrap;overflow:hidden;text-overflow:clip}
+.hdr .ttl small{display:block;font-size:9px;opacity:.6;letter-spacing:.2em;margin-top:2px;white-space:nowrap;overflow:hidden}
+.hdr .clk{font-size:12px;text-align:right;opacity:.85;line-height:1.3}
+.back{font:inherit;color:inherit;background:none;border:1px solid var(--dim);padding:8px 10px;letter-spacing:.14em;font-size:11px;flex:none}
+.back:active{background:var(--faint)}
+
+/* ---------- buttons ---------- */
+.btn{
+  font:inherit;color:var(--c);background:transparent;border:1.5px solid var(--c);
+  letter-spacing:.24em;font-size:16px;padding:0 10px;height:64px;width:100%;
+  position:relative;text-shadow:var(--glow);box-shadow:inset 0 0 14px var(--faint),0 0 8px var(--faint);
+  clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
+}
+.btn:active{background:var(--c);color:#000;text-shadow:none}
+.btn[disabled]{opacity:.25}
+.btn.alt{border-color:var(--dim);box-shadow:none}
+.btn.red{--c:var(--alert);color:var(--alert)}
+
+/* ---------- boot ---------- */
+#boot{justify-content:center;align-items:center;text-align:center}
+#boot .big{width:120px;height:120px;margin-bottom:26px}
+#boot .log{font-size:11px;line-height:1.9;opacity:.8;min-height:140px;text-align:left;width:280px}
+#boot .tap{margin-top:30px;font-size:14px;letter-spacing:.3em;animation:blink 1.2s infinite steps(1)}
+
+/* ---------- menu ---------- */
+#menu .op{display:flex;justify-content:space-between;align-items:center;font-size:10px;opacity:.75;margin-bottom:8px;flex:none}
+.mods{display:flex;flex-direction:column;gap:8px;flex:none;margin-top:10px}
+.mod{
+  display:flex;align-items:center;gap:12px;height:62px;padding:0 14px 0 12px;
+  border:1px solid var(--dim);background:linear-gradient(90deg,var(--faint),transparent 70%);
+  position:relative;font:inherit;color:inherit;text-align:left;width:100%;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px));
+}
+.mod:active{background:var(--c);color:#000}
+.mod:active .glyphs path{stroke:#000}
+.mod .n{font-size:20px;width:30px;opacity:.55;letter-spacing:0}
+.mod .t{flex:1;min-width:0}
+.mod .t b{display:block;font-size:15px;letter-spacing:.17em;margin-bottom:5px;text-shadow:var(--glow);white-space:nowrap}
+.mod .s{font-size:9px;letter-spacing:.16em;text-align:right}
+.mod .s.off{color:var(--alert);opacity:.8}
+.mod .s.ok::before{content:"";display:inline-block;width:6px;height:6px;background:var(--c);margin-right:6px;box-shadow:var(--glow);animation:blink 1.6s infinite steps(1)}
+.mod.off{opacity:.55}
+.mod .glyphs{width:100%;max-width:170px}
+.mod.red{--c:var(--alert);color:var(--alert)}
+#grid{flex:1;min-height:40px;width:100%;margin-top:8px}
+.foot{display:flex;gap:10px;flex:none}
+.foot .btn{height:50px;font-size:13px}
+
+/* ---------- scanner (ID + droid) ---------- */
+#scanner .win{flex:1;min-height:0;display:flex;gap:8px;padding:10px}
+#scanner .col{width:44px;font-size:9px;line-height:1.55;opacity:.6;overflow:hidden;letter-spacing:.05em;flex:none}
+#scanner .col.r{text-align:right}
+#scanner .view{flex:1;position:relative;min-width:0}
+#scanner .view svg{width:100%;height:100%}
+#sweep{opacity:0}
+.scanning #sweep{opacity:1}
+#scanner[data-mode="id"] #droidG,#scanner[data-mode="droid"] #card{display:none}
+.stat{font-size:13px;text-align:center;height:20px;margin:10px 0 6px;text-shadow:var(--glow);flex:none}
+.prog{display:flex;gap:3px;height:12px;margin-bottom:6px;flex:none}
+.prog i{flex:1;border:1px solid var(--dim)}
+.prog i.on{background:var(--c);box-shadow:var(--glow)}
+.ctrls{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:none;margin-top:10px}
+
+/* ---------- alarm page ---------- */
+#alarm .list{flex:1;display:flex;flex-direction:column;gap:14px;justify-content:center}
+#alarm .btn{height:84px;font-size:18px}
+#alarm .btn small{display:block;font-size:10px;opacity:.7;margin-top:6px;letter-spacing:.2em}
+
+/* ---------- verdict / alarm overlay ---------- */
+#verdict{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:calc(var(--st) + 20px) 24px calc(var(--sb) + 20px);overflow:hidden}
+#verdict.on{display:flex}
+#verdict > *{position:relative;z-index:2}
+#verdict .vic{width:150px;height:150px;margin-bottom:24px}
+#verdict h1{font-size:40px;letter-spacing:.14em;line-height:1.08;font-weight:700}
+#verdict h2{font-size:19px;letter-spacing:.18em;margin-top:18px;line-height:1.35}
+#verdict .lst{margin-top:26px;font-size:12px;line-height:2;opacity:.9;border-top:1px solid currentColor;border-bottom:1px solid currentColor;padding:10px 0;width:100%}
+#verdict .lst:empty{display:none}
+#verdict .id{margin-top:20px;font-size:12px;opacity:.7}
+#verdict .dis{position:absolute;bottom:calc(var(--sb) + 14px);font-size:10px;opacity:.5;animation:blink 1.4s infinite steps(1)}
+#verdict .beam{position:absolute;inset:-50%;z-index:1;display:none;background:conic-gradient(from 0deg,transparent 0 300deg,rgba(255,43,43,.35) 340deg,rgba(255,43,43,.0) 360deg);animation:spin 1.6s linear infinite}
+#verdict.alarm .beam{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+#verdict.rej{color:var(--alert);background:#1a0000;--c:var(--alert)}
+#verdict.rej.strobe{animation:strobe .22s 8 steps(1)}
+@keyframes strobe{0%{background:var(--alert);color:#000}50%{background:#1a0000;color:var(--alert)}}
+#verdict.rej h1{text-shadow:0 0 18px var(--alert);animation:blink .7s infinite steps(1) .9s}
+#verdict.ok{background:color-mix(in srgb,var(--c) 10%,#000);color:var(--c)}
+#verdict.ok h1{text-shadow:0 0 18px var(--c)}
+#verdict.trick h1,#verdict.trick h2{animation:wave 2.4s ease-in-out infinite}
+@keyframes wave{0%,100%{transform:skewX(0) translateX(0);filter:blur(0)}25%{transform:skewX(-8deg) translateX(6px);filter:blur(.6px)}75%{transform:skewX(8deg) translateX(-6px);filter:blur(.6px)}}
+
+/* ---------- holo-comms overlay ---------- */
+#holo{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;justify-content:center;padding:calc(var(--st) + 20px) 22px calc(var(--sb) + 20px);background:rgba(0,0,0,.88);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#holo.on{display:flex;animation:power .45s ease-out}
+#holo .panel{padding:22px 18px;background:linear-gradient(180deg,var(--faint),transparent 60%)}
+#holo .in{font-size:18px;letter-spacing:.22em;text-shadow:var(--glow);animation:blink .8s infinite steps(1);margin-bottom:6px}
+#holo .meta{display:flex;justify-content:space-between;font-size:9px;opacity:.65;margin-bottom:16px;border-bottom:1px solid var(--dim);padding-bottom:10px}
+#holo .from{font-size:11px;opacity:.8;margin-bottom:14px}
+#holo .msg{font-size:22px;line-height:1.45;letter-spacing:.12em;min-height:130px;text-shadow:var(--glow)}
+#holo .msg .cur{display:inline-block;width:12px;height:20px;background:var(--c);vertical-align:-3px;animation:blink .6s infinite steps(1)}
+#holo .sig{display:flex;gap:3px;align-items:flex-end;height:26px;margin-top:18px}
+#holo .sig i{flex:1;background:var(--dim)}
+#holo .ack{margin-top:20px;font-size:11px;text-align:center;opacity:.6;animation:blink 1.4s infinite steps(1)}
+#holo .glyphs{width:100%;margin-bottom:12px}
+
+/* ---------- offline ---------- */
+#offline .panel{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px}
+#offline .x{width:110px;height:110px}
+#offline h1{font-size:22px;letter-spacing:.2em;color:var(--alert);text-shadow:0 0 10px var(--alert)}
+#offline p{font-size:11px;line-height:1.9;opacity:.7;max-width:280px}
+
+/* ---------- settings ---------- */
+#settings .body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:18px;padding-bottom:10px}
+.lbl{font-size:10px;opacity:.6;margin-bottom:8px}
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.th{font:inherit;background:#000;border:1px solid #333;height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:11px;letter-spacing:.18em}
+.th svg{width:32px;height:32px}
+.th svg .ln{stroke:currentColor;filter:drop-shadow(0 0 2px currentColor)}
+.th.sel{border:2px solid currentColor;box-shadow:0 0 12px currentColor inset}
+.seg{display:flex;border:1px solid var(--dim)}
+.seg button{flex:1;font:inherit;color:inherit;background:none;border:0;border-right:1px solid var(--dim);height:44px;font-size:12px;letter-spacing:.1em}
+.seg button:last-child{border-right:0}
+.seg button.sel{background:var(--c);color:#000}
+.inp{font:inherit;color:var(--c);background:transparent;border:1px solid var(--dim);height:46px;width:100%;padding:0 12px;font-size:16px;letter-spacing:.18em;text-transform:uppercase;-webkit-user-select:text;user-select:text;border-radius:0}
+.inp:focus{outline:none;border-color:var(--c);box-shadow:var(--glow)}
+.note{font-size:9px;opacity:.55;line-height:1.75;letter-spacing:.1em}
+.note b{opacity:1;color:var(--c)}
+</style>
+</head>
+<body>
+
+<!-- ============ BOOT ============ -->
+<section id="boot" class="screen on">
+  <svg class="big" viewBox="0 0 100 100" id="bootSig"></svg>
+  <div class="log glow" id="bootLog"></div>
+  <div class="tap glow" id="bootTap">Tap to initialise</div>
+</section>
+
+<!-- ============ MENU ============ -->
+<section id="menu" class="screen">
+  <div class="hdr">
+    <svg class="sig" viewBox="0 0 100 100" data-sig></svg>
+    <div class="ttl"><b>DATAPAD</b><small data-t="unit"></small></div>
+    <div class="clk" data-clock></div>
+  </div>
+  <div class="op"><span>OPR: <span data-op></span></span><span data-stardate></span></div>
+  <div class="lights" id="menuLights"></div>
+  <div class="mods" id="mods"></div>
+  <canvas id="grid"></canvas>
+  <div class="foot"><button class="btn alt" data-go="settings">SYS CONFIG</button></div>
+</section>
+
+<!-- ============ SCANNER (ID + DROID) ============ -->
+<section id="scanner" class="screen" data-mode="id">
+  <div class="hdr">
+    <button class="back" data-go="menu">&lt; MENU</button>
+    <div class="ttl"><b id="scanTitle"></b><small data-t="unit"></small></div>
+  </div>
+  <div class="panel win" id="scanWin"><i class="tr"></i><i class="bl"></i>
+    <div class="col" id="colL"></div>
+    <div class="view">
+      <svg viewBox="0 0 260 480" preserveAspectRatio="xMidYMid meet">
+        <g id="dots"></g>
+        <!-- ID card -->
+        <g id="card" transform="translate(0,60)">
+          <rect class="ln" x="20" y="60" width="220" height="240" rx="6"/>
+          <rect class="ln" x="36" y="80" width="84" height="104"/>
+          <circle class="dm" cx="78" cy="118" r="20"/>
+          <path class="dm" d="M44 184 Q 48 150 78 146 Q 108 150 112 184"/>
+          <path class="dm" d="M134 86h90M134 102h70M134 118h86M134 134h50M134 160h90M134 176h60"/>
+          <g id="bars"></g>
+          <path class="ln" d="M36 270h188"/>
+        </g>
+        <!-- droid signal analyser -->
+        <g id="droidG">
+          <rect class="ln" x="20" y="110" width="220" height="130"/>
+          <path class="dm" d="M20 175h220M75 110v130M130 110v130M185 110v130"/>
+          <path class="ln" id="wave" d="M20 175h220"/>
+          <text x="24" y="104" class="fl" font-size="9" letter-spacing="1.5" font-family="Menlo,monospace" opacity=".7">SIGNAL / BINARY BAND</text>
+          <rect class="ln" x="20" y="270" width="220" height="110"/>
+          <g id="spec"></g>
+          <text x="24" y="264" class="fl" font-size="9" letter-spacing="1.5" font-family="Menlo,monospace" opacity=".7">SERVO HARMONICS</text>
+          <path class="dm" d="M20 400h220M20 412h150M20 424h190"/>
+        </g>
+        <!-- reticle -->
+        <g>
+          <path class="ln" d="M8 8h28M8 8v28M252 8h-28M252 8v28M8 472h28M8 472v-28M252 472h-28M252 472v-28"/>
+          <circle class="dm" cx="130" cy="240" r="96" stroke-dasharray="4 6"/>
+          <path class="dm" d="M130 130v20M130 330v20M20 240h20M220 240h20"/>
+        </g>
+        <g id="sweep">
+          <rect x="0" y="-30" width="260" height="30" fill="url(#sg)"/>
+          <path class="ln" d="M0 0h260" stroke-width="2.5"/>
+        </g>
+        <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--c)" stop-opacity="0"/><stop offset="1" stop-color="var(--c)" stop-opacity=".35"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div class="col r" id="colR"></div>
+  </div>
+  <div class="stat" id="stat"></div>
+  <div class="prog" id="prog"></div>
+  <div class="lights" id="scanLights"></div>
+  <div class="ctrls">
+    <button class="btn" id="bScan">SCAN</button>
+    <button class="btn" id="bVerdict" disabled>VERDICT</button>
+  </div>
+</section>
+
+<!-- ============ ALARM ============ -->
+<section id="alarm" class="screen">
+  <div class="hdr">
+    <button class="back" data-go="menu">&lt; MENU</button>
+    <div class="ttl"><b id="alarmTitle"></b><small>SELECT ALERT CONDITION</small></div>
+  </div>
+  <div class="list" id="alarmList"></div>
+</section>
+
+<!-- ============ OFFLINE PLACEHOLDER ============ -->
+<section id="offline" class="screen">
+  <div class="hdr">
+    <button class="back" data-go="menu">&lt; MENU</button>
+    <div class="ttl"><b id="offTitle"></b><small>MODULE STATUS</small></div>
+  </div>
+  <div class="panel"><i class="tr"></i><i class="bl"></i>
+    <svg class="x" viewBox="0 0 100 100"><path class="ln" style="stroke:var(--alert);filter:drop-shadow(0 0 3px var(--alert))" d="M50 8 L94 88 H6 Z M50 36 V62 M50 72 V76"/></svg>
+    <h1>MODULE OFFLINE</h1>
+    <p>AWAITING DATA UPLOAD FROM COMMAND.<br>THIS MODULE WILL BE INSTALLED IN A FUTURE UPDATE.</p>
+    <svg class="glyphs" data-glyph="18" style="width:220px"></svg>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section id="settings" class="screen">
+  <div class="hdr">
+    <button class="back" data-go="menu">&lt; MENU</button>
+    <div class="ttl"><b>SYS CONFIG</b><small>OPERATOR SETTINGS</small></div>
+  </div>
+  <div class="body">
+    <div><div class="lbl">FACTION PROFILE</div><div class="themes" id="themes"></div></div>
+    <div><div class="lbl">OPERATOR DESIGNATION</div><input class="inp" id="opIn" maxlength="16" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+    <div><div class="lbl">ID SCANNER — REJECTION ODDS</div><div class="seg" id="odds"></div></div>
+    <div><div class="lbl">HOLO-COMMS — RANDOM TRANSMISSIONS</div><div class="seg" id="comms"></div></div>
+    <div><div class="lbl">AUDIO</div><div class="seg" id="snd"></div></div>
+    <div class="note">
+      <b>HIDDEN CONTROLS — STATUS LIGHTS</b><br>
+      ID SCANNER: FIRST LIGHT = FORCE NEXT APPROVE · LAST LIGHT = FORCE NEXT REJECT.<br>
+      DROID SCANNER: FIRST LIGHT = FORCE DROID FOUND · LAST LIGHT = "NOT THE DROIDS" MIND TRICK.<br>
+      MENU: FIRST LIGHT = SEND A HOLO-COMMS TRANSMISSION NOW.<br>
+      AN ARMED LIGHT STOPS BLINKING AND STAYS SOLID. TAP AGAIN TO DISARM.<br><br>
+      <b>FOR TROOPING</b><br>SET IPHONE AUTO-LOCK TO NEVER AND USE GUIDED ACCESS TO LOCK THE APP ON SCREEN.
+    </div>
+    <button class="btn alt" id="reboot" style="height:50px;font-size:13px">RE-RUN BOOT SEQUENCE</button>
+  </div>
+</section>
+
+<!-- ============ VERDICT / ALARM OVERLAY ============ -->
+<div id="verdict">
+  <div class="beam"></div>
+  <svg class="vic" viewBox="0 0 100 100" id="vIcon"></svg>
+  <h1 id="vH1"></h1>
+  <h2 id="vH2"></h2>
+  <div class="lst" id="vList"></div>
+  <div class="id" id="vId"></div>
+  <div class="dis">TAP TO CLEAR</div>
+</div>
+
+<!-- ============ HOLO-COMMS OVERLAY ============ -->
+<div id="holo">
+  <div class="panel"><i class="tr"></i><i class="bl"></i>
+    <div class="in">▸ INCOMING TRANSMISSION</div>
+    <div class="meta"><span id="hCode"></span><span>PRIORITY: HIGH</span></div>
+    <svg class="glyphs" data-glyph="26"></svg>
+    <div class="from" id="hFrom"></div>
+    <div class="msg" id="hMsg"></div>
+    <div class="sig" id="hSig"></div>
+  </div>
+  <div class="ack">TAP TO ACKNOWLEDGE</div>
+</div>
+
+<script>
+/* =========================================================
+   THEME CONTENT — wording changes per faction
+   ========================================================= */
+const THEMES={
+  imperial:{
+    name:"IMPERIAL",unit:"IMPERIAL SECURITY BUREAU",op:"TK-421",idp:"ISB",
+    sig:"M50 6 L94 50 L50 94 L6 50 Z M50 22 L78 50 L50 78 L22 50 Z M50 6 V22 M94 50 H78 M50 94 V78 M6 50 H22",
+    mods:{scanner:"ID SCANNER",droid:"DROID SCANNER",alarm:"ALERT CONTROL",wanted:"WANTED",links:"COMMS RELAY",recruit:"ENLISTMENT",trans:"PRIORITY TRANSMISSION"},
+    rej:{h1:"REBEL\nSYMPATHISER",h2:"DETAIN FOR\nQUESTIONING",list:["Suspected Rebel sympathies","Unauthorised smiling on duty","Possession of contraband sweets","Failure to salute a Stormtrooper","Hair exceeds Imperial regulation","Known associate of Wookiees","Forged identification","Whistling a Rebel tune"]},
+    ok:{h1:"CLEARANCE\nGRANTED",h2:["LOYAL CITIZEN\nOF THE EMPIRE","NO REBEL ACTIVITY\nDETECTED","CLEARED FOR\nTRANSIT"],list:["MOVE ALONG","MOVE ALONG","CARRY ON, CITIZEN"]},
+    droid:{h2:"REPORT FOR\nMEMORY WIPE",types:["ASTROMECH","PROTOCOL DROID","MOUSE DROID","POWER DROID","REPAIR DROID"],tag:"PROPERTY OF THE EMPIRE"},
+    alarms:[["INTRUDER ALERT","REBELS IN\nTHE AREA"],["LOCKDOWN","SEAL ALL\nBLAST DOORS"],["REBEL SIGHTED","ALL TROOPS\nTO STATIONS"],["EVACUATE","REACTOR\nOVERLOAD"]],
+    from:"IMPERIAL COMMAND",
+    orders:["Search this area for a missing astromech droid","Locate the youngest Rebel in this crowd","Collect five salutes from loyal citizens","Find someone wearing Rebel orange and question them","Teach a new cadet the Imperial salute","Lord Vader is on his way. Look busy","Report any Wookiee sightings immediately","A Rebel spy is hiding nearby. Find them","Inspect all toy blasters for Rebel markings","Recruit three new cadets for the Academy"]
+  },
+  republic:{
+    name:"REPUBLIC",unit:"GRAND ARMY OF THE REPUBLIC",op:"CT-7567",idp:"GAR",
+    sig:"M50 6 A44 44 0 1 1 49.9 6 Z M50 20 V80 M34 26 V74 M66 26 V74 M20 50 H80",
+    mods:{scanner:"CLEARANCE CHECK",droid:"DROID SCANNER",alarm:"ALERT CONTROL",wanted:"MOST WANTED",links:"COMMS RELAY",recruit:"ENLISTMENT",trans:"HOLO-TRANSMISSION"},
+    rej:{h1:"SEPARATIST\nAGENT",h2:"REPORT TO\nCOMMAND",list:["Suspected Separatist sympathies","Unregistered battle droid","Excessive roger-rogering","Smuggling Separatist propaganda","Unexplained droid parts","Failure to recognise a clone","Forged identification"]},
+    ok:{h1:"CLEARANCE\nGRANTED",h2:["CITIZEN OF THE\nREPUBLIC","CLEARED BY REPUBLIC\nINTELLIGENCE","FRIEND OF THE\nGRAND ARMY"],list:["PROCEED","PROCEED","GOOD SOLDIERS FOLLOW ORDERS"]},
+    droid:{h2:"SEPARATIST\nINFILTRATOR?",types:["BATTLE DROID","SUPER BATTLE DROID","ASTROMECH","PROTOCOL DROID","TACTICAL DROID"],tag:"ROGER ROGER"},
+    alarms:[["SEPARATIST ATTACK","BATTLE\nSTATIONS"],["LOCKDOWN","SEAL ALL\nBLAST DOORS"],["DROID ARMY INBOUND","ALL CLONES\nTO THE FRONT"],["EVACUATE","SHIELDS\nFAILING"]],
+    from:"REPUBLIC COMMAND",
+    orders:["Search the area for Separatist battle droids","Recruit three new cadets for the Grand Army","Practise marching drills with the younglings","Find a Jedi General and request backup","A clone has lost his helmet. Help search","Teach a cadet to stand to attention","Count every droid in sight and report back","Find the bravest trooper in this crowd"]
+  },
+  rebel:{
+    name:"REBEL",unit:"ALLIANCE INTELLIGENCE",op:"SPECFORCE-7",idp:"ALL",
+    sig:"M50 8 L92 86 H8 Z M50 30 L72 74 H28 Z M50 8 V30",
+    mods:{scanner:"ID VERIFY",droid:"DROID SCANNER",alarm:"ALERT CONTROL",wanted:"BOUNTY BOARD",links:"COMMS RELAY",recruit:"JOIN THE ALLIANCE",trans:"ENCRYPTED MESSAGE"},
+    rej:{h1:"IMPERIAL\nSPY",h2:"ALERT HIGH\nCOMMAND",list:["Suspected Imperial informant","Boots suspiciously shiny","Humming the Imperial March","Concealed homing beacon","Knows too much about the Death Star","Forged identification"]},
+    ok:{h1:"IDENTITY\nVERIFIED",h2:["FRIEND OF THE\nALLIANCE","CLEARED BY ALLIANCE\nINTELLIGENCE","REBEL RECRUIT\nCANDIDATE"],list:["WELCOME, REBEL","MAY THE FORCE BE WITH YOU","REPORT TO THE HANGAR"]},
+    droid:{h2:"CHECK FOR A\nRESTRAINING BOLT",types:["ASTROMECH","PROTOCOL DROID","IMPERIAL PROBE DROID","MEDICAL DROID","POWER DROID"],tag:"POSSIBLE IMPERIAL TRACKER"},
+    alarms:[["IMPERIAL FLEET","EVACUATE\nTHE BASE"],["PROBE DROID","WE'VE BEEN\nDISCOVERED"],["LOCKDOWN","SEAL THE\nHANGAR DOORS"],["BATTLE STATIONS","ALL PILOTS\nTO FIGHTERS"]],
+    from:"ALLIANCE HIGH COMMAND",
+    orders:["Recruit two new pilots for the starfighter corps","An Imperial patrol is approaching. Act natural","Find someone brave enough to join the Rebellion","Collect high-fives to boost Rebel morale","Hide from the nearest Stormtrooper","Search for stolen Imperial plans in the crowd","Find a droid to carry a secret message","Teach a new recruit the Rebel salute"]
+  },
+  jedi:{
+    name:"JEDI",unit:"JEDI TEMPLE ARCHIVES",op:"PADAWAN",idp:"JTA",
+    sig:"M50 6 V94 M50 30 L80 14 M50 30 L20 14 M50 56 L84 44 M50 56 L16 44 M38 80 H62",
+    mods:{scanner:"FORCE READING",droid:"DROID SCANNER",alarm:"TEMPLE ALERT",wanted:"SITH ARCHIVE",links:"COMMS RELAY",recruit:"INITIATE INTAKE",trans:"HOLOCRON"},
+    rej:{h1:"DARK SIDE\nDETECTED",h2:"FURTHER TRAINING\nREQUIRED",list:["Anger leads to hate","Unsanctioned mind tricks","Excessive attachment to snacks","Midi-chlorian irregularities","Suspiciously red lightsaber","Ignored the Jedi Council"]},
+    ok:{h1:"THE FORCE\nIS STRONG",h2:["WITH THIS ONE","A JEDI IN\nTHE MAKING","FORCE SENSITIVE\nCONFIRMED"],list:["TRAINING RECOMMENDED","REPORT TO THE TEMPLE","MAY THE FORCE BE WITH YOU"],mc:true},
+    droid:{h2:"NOT FORCE\nSENSITIVE",types:["ASTROMECH","PROTOCOL DROID","ARCHIVE DROID","MAINTENANCE DROID"],tag:"MIDI-CHLORIAN COUNT: 0"},
+    alarms:[["TEMPLE ALERT","SITH PRESENCE\nDETECTED"],["LOCKDOWN","SEAL THE\nARCHIVES"],["DARK SIDE SURGE","ALL JEDI TO\nTHE COUNCIL"],["EVACUATE","PROTECT THE\nYOUNGLINGS"]],
+    from:"THE JEDI COUNCIL",
+    orders:["Test a youngling's Force powers","Find someone who can lift a pebble with the Force","Meditate for ten seconds with a young Padawan","Teach a youngling the Jedi bow","A disturbance in the Force. Investigate nearby","A Padawan is missing. Search the crowd","Find the calmest Jedi in this crowd","Practise lightsaber stances with a youngling"]
+  }
+};
+const MODS=[
+  {id:"scanner",live:true},{id:"droid",live:true},{id:"alarm",live:true,red:true},
+  {id:"wanted"},{id:"links"},{id:"recruit"},{id:"trans"}
+];
+
+/* ---------- state ---------- */
+const S={theme:"imperial",op:"",odds:3,sound:true,comms:5};
+try{Object.assign(S,JSON.parse(localStorage.getItem("datapad")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("datapad",JSON.stringify(S))}catch(e){}};
+const T=()=>THEMES[S.theme];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const nl=s=>s.replace(/\n/g,"<br>");
+const hex=()=>Math.floor(Math.random()*65536).toString(16).toUpperCase().padStart(4,"0");
+
+/* =========================================================
+   GLYPHS — invented alien script (decorative, original)
+   ========================================================= */
+const GL=(()=>{let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;const pts=[[0,0],[4,0],[0,3],[4,3],[0,7],[4,7],[2,0],[2,7],[2,3]];
+  return Array.from({length:30},()=>{let d="";const n=2+Math.floor(r()*2);for(let i=0;i<n;i++){const a=pts[Math.floor(r()*9)],b=pts[Math.floor(r()*9)];if(a!==b)d+=`M${a[0]} ${a[1]}L${b[0]} ${b[1]}`;else d+=`M0 ${a[1]}H4`}return d})})();
+function glyphLine(svg,n,seed){
+  let d="";let x=0;for(let i=0;i<n;i++){if((i+seed)%6===5){x+=4;continue}const g=GL[(i*7+seed*13)%GL.length];d+=g.replace(/([ML])(\d)\s(\d)/g,(m,c,a,b)=>`${c}${+a+x} ${+b+1}`).replace(/H4/g,`H${x+4}`);x+=7}
+  svg.setAttribute("viewBox",`0 0 ${x} 9`);svg.setAttribute("preserveAspectRatio","xMinYMid meet");svg.innerHTML=`<path d="${d}"/>`;
+}
+function paintGlyphs(){$$("[data-glyph]").forEach((el,i)=>glyphLine(el,+el.dataset.glyph,i+3))}
+
+/* =========================================================
+   AUDIO — synthesised, original
+   ========================================================= */
+let AC=null,klax=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==="suspended")AC.resume();return AC}
+function tone(f,d,type="square",v=.06,t0=0,f2){const a=ac();if(!a||!S.sound)return;const t=a.currentTime+t0;const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.02)}
+const SFX={
+  tap:()=>tone(1800,.04,"square",.03),
+  boot:()=>{[440,660,880,1320].forEach((f,i)=>tone(f,.09,"square",.04,i*.08))},
+  scanStart:()=>tone(300,.5,"sawtooth",.04,0,1400),
+  blip:()=>tone(1200+Math.random()*1600,.03,"square",.025),
+  droid:()=>{for(let i=0;i<6;i++)tone(600+Math.random()*2200,.06,"sine",.06,i*.07,600+Math.random()*2200)},
+  done:()=>{tone(1000,.08,"square",.05);tone(1500,.12,"square",.05,.1)},
+  ok:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,.18,"triangle",.09,i*.11))},
+  trick:()=>{[784,659,523,392].forEach((f,i)=>tone(f,.4,"sine",.08,i*.22))},
+  comms:()=>{[1320,990,1320,1760].forEach((f,i)=>tone(f,.07,"square",.05,i*.09));tone(200,.6,"sawtooth",.03,.4,90)},
+  type:()=>tone(2400+Math.random()*400,.015,"square",.015),
+};
+/* klaxon patterns: 0 two-tone, 1 whoop, 2 rapid pips. n = repeats (Infinity = until stopped) */
+function klaxon(kind=0,n=14){stopKlax();if(!S.sound)return;let i=0,on=true;
+  const step=()=>{
+    if(kind===0){tone(on?620:440,.32,"square",.08);on=!on;klax=setTimeout(next,340)}
+    else if(kind===1){tone(320,.6,"sawtooth",.07,0,980);klax=setTimeout(next,700)}
+    else {tone(1100,.09,"square",.07);tone(1100,.09,"square",.07,.15);tone(1100,.09,"square",.07,.3);klax=setTimeout(next,700)}
+  };
+  const next=()=>{if(++i<n)step()};step();
+}
+function stopKlax(){clearTimeout(klax);klax=null}
+
+/* =========================================================
+   STATUS LIGHTS — decorative blinking + hidden controls
+   ========================================================= */
+const lightRows=[];
+function makeLights(el,n,actions={}){
+  el.innerHTML="";const lts=[];
+  for(let i=0;i<n;i++){
+    const b=document.createElement("button");b.className="lt"+(i%3===1?" wide":"");
+    b.innerHTML=(i%4===2)?"<i></i><b></b>":"<i></i><i></i>";
+    if(actions[i])b.addEventListener("click",e=>{e.stopPropagation();actions[i]()});
+    el.appendChild(b);lts.push(b);
+  }
+  const row={el,lts,held:new Set()};lightRows.push(row);return row;
+}
+function holdLight(row,i,on){row.held[on?"add":"delete"](i);row.lts[i].querySelectorAll("i").forEach(x=>{x.classList.toggle("hold",on);x.classList.toggle("on",false)})}
+setInterval(()=>{lightRows.forEach(r=>{if(!r.el.offsetParent)return;r.lts.forEach((b,i)=>{if(r.held.has(i))return;b.querySelectorAll("i").forEach(x=>{if(Math.random()<.35)x.classList.toggle("on")})})})},380);
+
+/* =========================================================
+   NAV
+   ========================================================= */
+let cur="boot";
+function go(id,arg){
+  $$(".screen").forEach(s=>s.classList.toggle("on",s.id===id));cur=id;
+  if(id==="scanner")openScanner(arg||"id");
+  if(id==="settings")buildSettings();
+  if(id==="alarm")buildAlarms();
+}
+document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g){SFX.tap();go(g.dataset.go)}});
+
+/* =========================================================
+   THEME APPLY
+   ========================================================= */
+const sigSVG=d=>`<path class="ln" d="${d}"/>`;
+function applyTheme(){
+  document.documentElement.dataset.theme=S.theme;
+  const t=T();
+  $$("[data-sig]").forEach(e=>e.innerHTML=sigSVG(t.sig));
+  $("#bootSig").innerHTML=sigSVG(t.sig);
+  $$("[data-t]").forEach(e=>e.textContent=t[e.dataset.t]);
+  $$("[data-op]").forEach(e=>e.textContent=S.op||t.op);
+  const m=$("#mods");m.innerHTML="";
+  MODS.forEach((md,i)=>{
+    const b=document.createElement("button");b.className="mod"+(md.live?"":" off")+(md.red?" red":"");
+    b.innerHTML=`<span class="n">0${i+1}</span><span class="t"><b>${t.mods[md.id]}</b><svg class="glyphs" data-glyph="${10+i*3}"></svg></span><span class="s ${md.live?"ok":"off"}">${md.live?"ONLINE":"OFFLINE"}</span>`;
+    b.onclick=()=>{SFX.tap();
+      if(md.id==="scanner")go("scanner","id");
+      else if(md.id==="droid")go("scanner","droid");
+      else if(md.live)go(md.id);
+      else{$("#offTitle").textContent=t.mods[md.id];go("offline")}};
+    m.appendChild(b);
+  });
+  paintGlyphs();
+}
+
+/* ---------- clock ---------- */
+function tick(){const d=new Date(),p=n=>String(n).padStart(2,"0");
+  $$("[data-clock]").forEach(e=>e.innerHTML=`${p(d.getHours())}:${p(d.getMinutes())}<br><span style="opacity:.6;font-size:9px">${p(d.getSeconds())} SEC</span>`);
+  const doy=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);
+  $$("[data-stardate]").forEach(e=>e.textContent=`CYCLE ${String(doy).padStart(3,"0")}.${d.getHours()}`);
+}
+setInterval(tick,1000);tick();
+
+/* =========================================================
+   PERSPECTIVE GRID (trench-run floor)
+   ========================================================= */
+const cv=$("#grid"),cx=cv.getContext("2d");let gOff=0;
+function grid(){
+  if(cur==="menu"){
+    const r=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;
+    if(cv.width!==w*r||cv.height!==h*r){cv.width=w*r;cv.height=h*r}
+    cx.setTransform(r,0,0,r,0,0);cx.clearRect(0,0,w,h);
+    const col=getComputedStyle(document.documentElement).getPropertyValue("--c").trim();
+    cx.strokeStyle=col;cx.shadowColor=col;cx.shadowBlur=4;
+    const hz=h*.12,vx=w/2;
+    cx.globalAlpha=.8;cx.lineWidth=1;cx.beginPath();cx.moveTo(0,hz);cx.lineTo(w,hz);cx.stroke();
+    cx.globalAlpha=.35;
+    for(let i=-12;i<=12;i++){cx.beginPath();cx.moveTo(vx+i*6,hz);cx.lineTo(vx+i*w*.18,h);cx.stroke()}
+    gOff=(gOff+.012)%1;
+    for(let i=0;i<10;i++){const z=(i+gOff)/10;const y=hz+(h-hz)*Math.pow(z,2.2);cx.globalAlpha=.15+.5*z;cx.beginPath();cx.moveTo(0,y);cx.lineTo(w,y);cx.stroke()}
+    cx.globalAlpha=1;
+  }
+  requestAnimationFrame(grid);
+}
+requestAnimationFrame(grid);
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+let booted=false;
+function boot(){
+  if(booted)return;booted=true;ac();SFX.boot();wake();
+  $("#bootTap").style.display="none";
+  const t=T();const lines=[`> ${t.unit}`,"> SECURE CHANNEL .......... OK","> BIOMETRIC LINK .......... OK","> HOLONET RELAY ........... OK",`> OPERATOR ${S.op||t.op} ... VERIFIED`,"> SYSTEMS NOMINAL"];
+  const log=$("#bootLog");log.innerHTML="";
+  lines.forEach((l,i)=>setTimeout(()=>{log.innerHTML+=l+"<br>";SFX.blip()},180*i));
+  setTimeout(()=>{go("menu");scheduleComms()},180*lines.length+500);
+}
+$("#boot").addEventListener("click",boot);
+$("#reboot").onclick=()=>{booted=false;$("#bootLog").innerHTML="";$("#bootTap").style.display="";go("boot")};
+
+let wl=null;async function wake(){try{if("wakeLock" in navigator&&!wl){wl=await navigator.wakeLock.request("screen");wl.addEventListener("release",()=>wl=null)}}catch(e){}}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&booted)wake()});
+
+/* =========================================================
+   SCANNER — shared by ID scanner and droid scanner
+   ========================================================= */
+const SEG=24;let scanState="idle",scanMode="id",force=null,scanT=null;
+const scanRow=makeLights($("#scanLights"),8,{
+  0:()=>{const v=scanMode==="id"?"ok":"droid";setForce(force===v?null:v)},
+  7:()=>{const v=scanMode==="id"?"rej":"trick";setForce(force===v?null:v)}
+});
+function setForce(v){force=v;holdLight(scanRow,0,v==="ok"||v==="droid");holdLight(scanRow,7,v==="rej"||v==="trick");SFX.tap()}
+(function initScan(){
+  $("#prog").innerHTML="<i></i>".repeat(SEG);
+  let d="";for(let y=20;y<480;y+=20)for(let x=10;x<260;x+=20)d+=`<rect x="${x}" y="${y}" width="1.5" height="1.5" class="fl" opacity=".18"/>`;$("#dots").innerHTML=d;
+  let b="";for(let i=0;i<46;i++){const w=[1,2,3][i%3];b+=`<rect x="${36+i*4.1}" y="236" width="${w}" height="26" class="fl" opacity=".5"/>`}$("#bars").innerHTML=b;
+  let s="";for(let i=0;i<20;i++)s+=`<rect x="${26+i*10.6}" y="370" width="7" height="4" class="fl" opacity=".7"/>`;$("#spec").innerHTML=s;
+})();
+function fillCols(){const n=46;$("#colL").innerHTML=Array.from({length:n},hex).join("<br>");$("#colR").innerHTML=Array.from({length:n},()=>String(Math.floor(Math.random()*999)).padStart(3,"0")).join("<br>")}
+function setProg(k){$$("#prog i").forEach((e,i)=>e.classList.toggle("on",i<k))}
+function setStat(s){$("#stat").textContent=s}
+function droidFrame(amp){
+  let d="M20 175";for(let x=0;x<=220;x+=4){const y=175+Math.sin(x*.09+performance.now()/90)*amp*Math.sin(x*.023)+ (Math.random()-.5)*amp*.5;d+=`L${20+x} ${y.toFixed(1)}`}
+  $("#wave").setAttribute("d",d);
+  $$("#spec rect").forEach(r=>{const h=4+Math.random()*amp*1.6;r.setAttribute("height",h);r.setAttribute("y",376-h)});
+}
+function openScanner(mode){
+  scanMode=mode;$("#scanner").dataset.mode=mode;
+  $("#scanTitle").textContent=T().mods[mode==="id"?"scanner":"droid"];
+  setForce(null);resetScan();
+}
+function resetScan(){clearInterval(scanT);scanState="idle";$("#scanWin").classList.remove("scanning");setProg(0);fillCols();droidFrame(3);
+  setStat(scanMode==="id"?"PRESENT IDENTIFICATION":"AWAITING SIGNAL");$("#bScan").disabled=false;$("#bVerdict").disabled=true;$("#bVerdict").textContent=scanMode==="id"?"VERDICT":"RESULT";$("#sweep").setAttribute("transform","translate(0,0)")}
+$("#bScan").onclick=()=>{
+  if(scanState==="scanning")return;
+  scanState="scanning";$("#bScan").disabled=true;$("#bVerdict").disabled=true;
+  $("#scanWin").classList.add("scanning");SFX.scanStart();
+  const dur=3200,t0=performance.now();let k=0,last=0;
+  const msgs=scanMode==="id"?["SCANNING DOCUMENT","READING BIOMETRICS","CROSS-REFERENCING","CHECKING ARCHIVES","ANALYSING"]:["LISTENING FOR BINARY","MEASURING SERVOS","CHECKING FOR BOLTS","SCANNING CIRCUITS","ANALYSING"];
+  scanT=setInterval(()=>{
+    const now=performance.now(),p=Math.min(1,(now-t0)/dur);
+    const y=40+(Math.sin(p*Math.PI*3-Math.PI/2)*.5+.5)*420;
+    $("#sweep").setAttribute("transform",`translate(0,${y})`);
+    if(scanMode==="droid")droidFrame(8+Math.sin(p*Math.PI)*40);
+    const nk=Math.floor(p*SEG);if(nk!==k){k=nk;setProg(k)}
+    if(now-last>90){last=now;fillCols();SFX.blip();setStat(msgs[Math.min(msgs.length-1,Math.floor(p*msgs.length))]+".".repeat(1+Math.floor(now/300)%3))}
+    if(p>=1){clearInterval(scanT);scanState="ready";$("#scanWin").classList.remove("scanning");setProg(SEG);setStat("ANALYSIS COMPLETE");SFX.done();$("#bVerdict").disabled=false;$("#bScan").disabled=false;droidFrame(3)}
+  },30);
+};
+
+/* ---------- overlay ---------- */
+const ICON_OK="M50 6 A44 44 0 1 1 49.9 6 Z M28 52 L44 68 L74 34";
+const ICON_REJ="M50 8 L94 88 H6 Z M50 36 V62 M50 72 V76";
+const ICON_DROID="M30 40 A20 20 0 0 1 70 40 V78 H30 Z M30 40 H70 M44 30 A3 3 0 1 0 44.1 30 M24 50 V86 M76 50 V86 M30 60 H70";
+const ICON_TRICK="M14 50 Q 32 20 50 50 T 86 50 M14 64 Q 32 34 50 64 T 86 64 M14 36 Q 32 6 50 36 T 86 36";
+let vReady=0,vOnClose=null;
+function showOverlay(o){
+  const v=$("#verdict");v.className="on "+o.cls;
+  $("#vIcon").innerHTML=`<path class="ln" d="${o.icon}"/>`;
+  $("#vH1").innerHTML=nl(o.h1);$("#vH2").innerHTML=nl(o.h2||"");
+  $("#vList").innerHTML=o.list||"";$("#vId").textContent=o.id||"";
+  vReady=performance.now()+(o.hold||900);vOnClose=o.onClose||null;
+}
+$("#verdict").onclick=()=>{if(performance.now()<vReady)return;stopKlax();$("#verdict").className="";if(vOnClose)vOnClose()};
+
+$("#bVerdict").onclick=()=>{
+  if(scanState!=="ready")return;
+  const t=T(),f=force;setForce(null);
+  if(scanMode==="id"){
+    const rej=f?f==="rej":Math.random()<1/S.odds;
+    if(rej){
+      const ch=[...t.rej.list].sort(()=>Math.random()-.5).slice(0,3);
+      showOverlay({cls:"rej strobe",icon:ICON_REJ,h1:t.rej.h1,h2:t.rej.h2,list:"CHARGES:<br>"+ch.map(c=>"▸ "+c).join("<br>"),id:`WARRANT ${t.idp}-${hex()}-${hex()}`,onClose:resetScan});
+      klaxon(0,14);
+    }else{
+      const i=Math.floor(Math.random()*t.ok.h2.length);
+      showOverlay({cls:"ok",icon:ICON_OK,h1:t.ok.h1,h2:t.ok.h2[i],list:t.ok.mc?`MIDI-CHLORIAN COUNT: ${(12000+Math.floor(Math.random()*8000)).toLocaleString("en-GB")}<br>${t.ok.list[i]}`:t.ok.list[i],id:`CLEARANCE ${t.idp}-${hex()}-${hex()}`,onClose:resetScan});
+      SFX.ok();
+    }
+  }else{
+    const r=f==="trick"?"trick":f==="droid"?"droid":(Math.random()<.5?"droid":"human");
+    if(r==="droid"){
+      const L="ABCDEFGHJKLMNPRSTVXZ",d=()=>Math.floor(Math.random()*10);
+      const des=`${rnd([...L])}${d()}-${rnd([...L])}${d()}`;
+      showOverlay({cls:"rej strobe",icon:ICON_DROID,h1:"DROID\nDETECTED",h2:t.droid.h2,list:`CLASS: ${rnd(t.droid.types)}<br>DESIGNATION: ${des}<br>${t.droid.tag}`,id:`ASSET TAG ${t.idp}-${hex()}`,onClose:resetScan});
+      SFX.droid();setTimeout(()=>klaxon(2,4),500);
+    }else if(r==="trick"){
+      showOverlay({cls:"ok trick",icon:ICON_TRICK,h1:"THESE AREN'T\nTHE DROIDS",h2:"YOU'RE\nLOOKING FOR",list:"YOU CAN GO ABOUT YOUR BUSINESS<br>MOVE ALONG",id:"SCAN RESULT: INCONCLUSIVE",hold:1400,onClose:resetScan});
+      SFX.trick();
+    }else{
+      showOverlay({cls:"ok",icon:ICON_OK,h1:"ORGANIC\nLIFEFORM",h2:"NO DROID\nDETECTED",list:`DROID PARTS: 0%<br>${rnd(["100% ORGANIC","PROBABLY HUMAN","CONTAINS SNACKS"])}`,id:`SCAN ${t.idp}-${hex()}`,onClose:resetScan});
+      SFX.ok();
+    }
+  }
+};
+
+/* =========================================================
+   ALERT CONTROL
+   ========================================================= */
+function buildAlarms(){
+  const t=T();$("#alarmTitle").textContent=t.mods.alarm;
+  const L=$("#alarmList");L.innerHTML="";
+  t.alarms.forEach(([b,h2],i)=>{
+    const el=document.createElement("button");el.className="btn red";
+    el.innerHTML=`${b}<small>CONDITION ${["RED","RED","AMBER","RED"][i]} · CODE ${String(i+1).padStart(2,"0")}</small>`;
+    el.onclick=()=>{
+      showOverlay({cls:"rej strobe alarm",icon:ICON_REJ,h1:b.replace(" ","\n"),h2,list:"",id:`ALERT ${t.idp}-${hex()} · ${t.unit}`,hold:1200});
+      klaxon(i%3,Infinity);
+    };
+    L.appendChild(el);
+  });
+}
+
+/* =========================================================
+   HOLO-COMMS — random transmissions
+   ========================================================= */
+let commsT=null,typeT=null,lastOrder=-1;
+function scheduleComms(){
+  clearTimeout(commsT);if(!S.comms)return;
+  const ms=S.comms*60000*(.7+Math.random()*.6);
+  commsT=setTimeout(tryComms,ms);
+}
+function busy(){return cur==="boot"||scanState==="scanning"||$("#verdict").classList.contains("on")||$("#holo").classList.contains("on")||document.activeElement===$("#opIn")}
+function tryComms(){if(busy()){commsT=setTimeout(tryComms,20000);return}transmit();scheduleComms()}
+function transmit(){
+  const t=T();let i;do{i=Math.floor(Math.random()*t.orders.length)}while(i===lastOrder&&t.orders.length>1);lastOrder=i;
+  const msg=t.orders[i].toUpperCase();
+  $("#hFrom").textContent="FROM: "+t.from;$("#hCode").textContent=`TX ${t.idp}-${hex()}`;
+  $("#hSig").innerHTML="<i></i>".repeat(28);
+  const h=$("#holo");h.classList.add("on");SFX.comms();
+  const m=$("#hMsg");m.innerHTML="";let k=0;clearInterval(typeT);
+  setTimeout(()=>{typeT=setInterval(()=>{k++;m.innerHTML=msg.slice(0,k)+'<span class="cur"></span>';if(k%2)SFX.type();
+    $$("#hSig i").forEach(x=>x.style.height=(15+Math.random()*85)+"%");
+    if(k>=msg.length){clearInterval(typeT)}},45)},700);
+  h.dataset.ready=performance.now()+1500;
+}
+$("#holo").onclick=()=>{const h=$("#holo");if(performance.now()<+h.dataset.ready)return;clearInterval(typeT);h.classList.remove("on");SFX.tap()};
+makeLights($("#menuLights"),8,{0:()=>{SFX.tap();transmit()}});
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+function buildSettings(){
+  const th=$("#themes");th.innerHTML="";
+  const cols={imperial:"#5cff8a",republic:"#6fd6ff",rebel:"#ff9a2e",jedi:"#f0e2a2"};
+  Object.entries(THEMES).forEach(([k,t])=>{const b=document.createElement("button");b.className="th"+(k===S.theme?" sel":"");b.style.color=cols[k];b.innerHTML=`<svg viewBox="0 0 100 100">${sigSVG(t.sig)}</svg>${t.name}`;b.onclick=()=>{S.theme=k;save();applyTheme();buildSettings();SFX.boot()};th.appendChild(b)});
+  const oi=$("#opIn");oi.value=S.op;oi.placeholder=T().op;oi.oninput=()=>{S.op=oi.value.toUpperCase().trim();save();$$("[data-op]").forEach(e=>e.textContent=S.op||T().op)};
+  seg("#odds",[[2,"1 IN 2"],[3,"1 IN 3"],[4,"1 IN 4"],[5,"1 IN 5"]],"odds");
+  seg("#comms",[[0,"OFF"],[2,"2 MIN"],[5,"5 MIN"],[10,"10 MIN"]],"comms",scheduleComms);
+  seg("#snd",[[true,"ON"],[false,"OFF"]],"sound");
+}
+function seg(sel,opts,key,cb){const el=$(sel);el.innerHTML="";opts.forEach(([v,l])=>{const b=document.createElement("button");b.textContent=l;b.className=S[key]===v?"sel":"";b.onclick=()=>{S[key]=v;save();seg(sel,opts,key,cb);SFX.tap();cb&&cb()};el.appendChild(b)})}
+
+/* ---------- init ---------- */
+applyTheme();
+document.addEventListener("gesturestart",e=>e.preventDefault());
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
