@@ -97,6 +97,13 @@ body.glitch .flip{opacity:.15}
 .tile{background:#000;display:flex;align-items:center;justify-content:center;border:0}
 .tile svg{width:86px;height:86px}
 .tile.off svg{opacity:.22}
+.tile{position:relative}
+.tcyc{position:relative;width:96px;height:96px}
+.tcyc img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.2s ease}
+.tcyc img.on{opacity:1}
+.tcyc.face{width:84px;height:104px}
+.tcyc.face img{object-fit:cover;object-position:50% 25%}
+.tcyc .br{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px)}
 .tile.live:active{background:rgba(var(--rgb),.12)}
 
 /* ============ SCANNER ============ */
@@ -579,7 +586,7 @@ function ticks(cx,cy,r,n,len){let d="";for(let i=0;i<n;i++){const a=i*2*Math.PI/
    MENU
    ============================================================ */
 const IC={
- scan:`<path class="ln" d="${segs(40,40,24,4,34,-45)}"/><path class="md" d="M8 18V8h10M62 8h10v10M72 62v10H62M18 72H8V62"/><rect class="fl" x="36" y="36" width="8" height="8"/>`,
+ scan:`<rect class="ln" x="6" y="16" width="68" height="50" rx="4"/><rect class="md" x="33" y="9" width="14" height="10" rx="2"/><rect class="md" x="13" y="26" width="22" height="28" rx="1"/><circle class="md" cx="24" cy="35" r="5"/><path class="md" d="M16 52c1-6 4-8 8-8s7 2 8 8"/><rect class="fl" x="42" y="28" width="26" height="5" rx="1"/><rect class="fd" x="42" y="38" width="20" height="5" rx="1"/><rect class="fd" x="42" y="48" width="24" height="5" rx="1"/>`,
  droid:`<path class="ln" d="M6 46h10V30h10v24h10V22h10v32h10V38h10v8h8"/><path class="dm" d="M6 66h68M10 62v8M24 62v8M38 62v8M52 62v8M66 62v8"/><path class="md" d="M6 14h20M54 14h20"/>`,
  alert:`<path class="ln" d="M12 56 40 28 68 56"/><path class="ln" d="M22 70 40 52 58 70"/><path class="md" d="M28 22 40 10 52 22"/>`,
  comms:`<rect class="fl" x="12" y="34" width="12" height="12"/><path class="md" d="${arc(18,40,18,-50,50)}"/><path class="ln" d="${arc(18,40,32,-45,45)}"/><path class="md" d="${arc(18,40,46,-38,38)}"/><path class="dm" d="M10 72h60"/>`,
@@ -589,7 +596,11 @@ const IC={
  holo:`<path class="ln" d="M24 72h32"/><path class="md" d="M34 66h12v6H34Z"/><path class="md" d="M40 64 16 14M40 64 64 14"/><path class="ln" d="M22 26h36M26 36h28M30 46h20"/><path class="dm" d="M16 14h48"/>`
 };
 const TILES=[["scan","ss","id"],["droid","ss","droid"],["alert"],["comms"],["wanted","gal"],["qr","info"],["signup"],["holo"]];
-$("#grid").innerHTML=TILES.map(([k,to,m])=>`<button class="tile ${to?"live":"off"}" ${to?`data-to="${to}" data-mode="${m||""}"`:""}><svg viewBox="0 0 80 80">${IC[k]}</svg></button>`).join("");
+const TBR=`<svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 14V1h13M86 1h13v13M99 86v13H86M14 99H1V86" vector-effect="non-scaling-stroke"/></svg>`;
+const tileArt=k=>k==="droid"?`<div class="tcyc" id="tcDroid">${["emblems/r2.png","emblems/c3po.png","emblems/deathstar.png"].map((s,i)=>`<img src="${s}" class="${i?"":"on"}" alt="">`).join("")}</div>`
+  :k==="wanted"?`<div class="tcyc face" id="tcFace">${TBR}<img class="on" alt=""><img alt=""></div>`
+  :`<svg viewBox="0 0 80 80">${IC[k]}</svg>`;
+$("#grid").innerHTML=TILES.map(([k,to,m])=>`<button class="tile ${to?"live":"off"}" ${to?`data-to="${to}" data-mode="${m||""}"`:""}>${tileArt(k)}</button>`).join("");
 $$(".tile.live").forEach(t=>t.addEventListener("click",()=>{SFX.tap();go(t.dataset.to,t.dataset.mode)}));
 
 setInterval(()=>{
@@ -816,6 +827,19 @@ function showSuspect(){
 function pickSuspect(i){S.suspect=i;save();showSuspect();go("ss","wanted")}
 $("#wPortrait").addEventListener("click",e=>{e.stopPropagation();if(state==="processing")return;SFX.tap();go("gal")});
 showSuspect();
+/* menu tiles: slow image loops (4 s each, 1.2 s crossfade) */
+(function tileLoops(){
+  const d=[...document.querySelectorAll("#tcDroid img")];let di=0;
+  const faces=[...document.querySelectorAll("#tcFace img")];let fi=0;
+  const order=SUSPECTS.map(x=>x.src).sort(()=>Math.random()-.5);let oi=0;
+  faces[0].src=order[0];
+  setInterval(()=>{
+    if(cur!=="menu")return;
+    d[di].classList.remove("on");di=(di+1)%d.length;d[di].classList.add("on");
+    oi=(oi+1)%order.length;const nx=faces[1-fi];nx.src=order[oi];
+    faces[fi].classList.remove("on");nx.classList.add("on");fi=1-fi;
+  },4000);
+})();
 
 /* ============================================================
    INFO / QR DECK — one looping deck. Opens on Facebook.
