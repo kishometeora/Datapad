@@ -1,5 +1,5 @@
 /* Datapad offline cache — bump VERSION whenever files change */
-const VERSION="datapad-imperial-v6";
+const VERSION="datapad-imperial-v7";
 const FILES=["./","index.html","manifest.json","icon-180.png","icon-512.png",
   "fonts/orbitron-900.woff2","fonts/orbitron-700.woff2","fonts/aurebesh-canon.otf",
   "emblems/imperial.png","emblems/rebel.png","emblems/deathstar.png","emblems/r2.png","emblems/c3po.png","emblems/republic.svg","emblems/jedi.svg"];

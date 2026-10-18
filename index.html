@@ -128,6 +128,14 @@ body.glitch .flip{opacity:.15}
 #ss.scanning .sonar .p{animation:ping 1.6s ease-out infinite}
 #ss.scanning .sonar .p2{animation-delay:.8s}
 @keyframes ping{from{transform:scale(.3);opacity:1}to{transform:scale(1.25);opacity:0}}
+/* droid mode: top-right becomes a 3-way target selector */
+#tsel{position:absolute;inset:0;display:none;align-items:center;justify-content:space-around;padding:0 10px}
+#ss[data-mode="droid"] #tsel{display:flex}#ss[data-mode="droid"] #cxAur{display:none}
+#ss[data-mode="droid"] .cx-tr{opacity:1}
+#tsel button{width:46px;height:46px;background:none;border:0;display:flex;align-items:center;justify-content:center;border-radius:4px}
+#tsel img{width:38px;height:38px;object-fit:contain;opacity:.4;transition:opacity .15s,filter .15s}
+#tsel button.sel img{opacity:1;filter:url(#tRed) drop-shadow(0 0 3px #FF3B30) drop-shadow(0 0 6px #FF3B30)}
+#tsel.passing button.sel img{opacity:.45;filter:none}
 #cxAur{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:.06em;color:rgba(var(--rgb),.75);white-space:nowrap;overflow:hidden}
 .tally{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
 .trow{display:flex;align-items:center;gap:3px}
@@ -266,6 +274,7 @@ body.aurOn .headline .flip{font-size:.74em}
       <div class="cx cx-tr">
         <svg class="br" viewBox="0 0 160 48" preserveAspectRatio="none"><path class="md" d="M2 12V2h12M146 2h12v10M158 36v10h-12M14 46H2V36"/></svg>
         <div class="aur" id="cxAur">ISB 7 K4 TR</div>
+        <div id="tsel"><button data-t="0" aria-label="plans"><img src="emblems/deathstar.png" alt=""></button><button data-t="1" aria-label="astromech"><img src="emblems/r2.png" alt=""></button><button data-t="2" aria-label="protocol"><img src="emblems/c3po.png" alt=""></button></div>
       </div>
       <div class="cx cx-bl">
         <svg class="br" viewBox="0 0 160 48" preserveAspectRatio="none"><path class="md" d="M2 12V2h12M146 2h12v10M158 36v10h-12M14 46H2V36"/></svg>
@@ -520,7 +529,11 @@ setMode("id");
 let state="idle",next=Math.random()<FAIL_ODDS?"fail":"pass",timers=[],aurT=null;
 const later=(fn,ms)=>timers.push(setTimeout(fn,ms));
 const clearTimers=()=>{timers.forEach(clearTimeout);timers=[]};
-function showLights(){$("#lPass").classList.toggle("on",next==="pass");$("#lFail").classList.toggle("on",next==="fail")}
+let nextTarget=Math.floor(Math.random()*3);   /* droid scanner: which target a fail will "find" */
+function showLights(){$("#lPass").classList.toggle("on",next==="pass");$("#lFail").classList.toggle("on",next==="fail");
+  $$("#tsel button").forEach((b,i)=>b.classList.toggle("sel",i===nextTarget));$("#tsel").classList.toggle("passing",next==="pass")}
+$$("#tsel button").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();if(state==="processing")return;
+  nextTarget=+b.dataset.t;next="fail";showLights();SFX.tap()}));   /* picking a target also forces FAIL */
 showLights();
 $("#lights").addEventListener("click",()=>{if(state==="processing")return;next=next==="pass"?"fail":"pass";showLights();SFX.tap()});
 
@@ -576,7 +589,7 @@ $("#vtap").addEventListener("click",()=>{
 
 function reveal(result){
   state="result";stopCycle();
-  if(M.targets&&result==="fail"){const t=rnd(TARGETS);M.failImg=t[0];M.failHead=t[1]}
+  if(M.targets&&result==="fail"){const t=TARGETS[nextTarget];M.failImg=t[0];M.failHead=t[1]}
   const f=$("#flash");f.style.background=result==="fail"?"var(--red-flash)":"var(--grn-flash)";
   f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
   setPanel(result);view("vRes");setStatus("COMPLETE");
@@ -590,7 +603,7 @@ function reveal(result){
     later(()=>{fillBar("m2");SFX.pass2()},1100);
     later(()=>{fillBar("m3");SFX.calm()},1450);
   }
-  next=Math.random()<FAIL_ODDS?"fail":"pass";showLights();
+  next=Math.random()<FAIL_ODDS?"fail":"pass";nextTarget=Math.floor(Math.random()*3);showLights();
   $("#ss").classList.remove("busy");
   later(()=>$("#ss").classList.add("result"),700);
 }
