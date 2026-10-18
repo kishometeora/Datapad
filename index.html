@@ -166,6 +166,8 @@ body.glitch .flip{opacity:.15}
 #ss[data-mode="wanted"] #resTop,#ss[data-mode="wanted"] #resFoot{display:block}
 #resTop{font-size:44px;letter-spacing:.14em;text-shadow:0 0 14px rgba(var(--rgb),.7)}
 #resFoot{font-size:16px;letter-spacing:.08em;opacity:.9}
+@keyframes wblink{0%,55%{opacity:1}56%,100%{opacity:.2}}
+#ss[data-mode="wanted"] #panel.fail #resHead,#ss[data-mode="wanted"] #panel.pass #resFoot{animation:wblink .9s steps(1) infinite}
 #ss[data-mode="wanted"] #resPWrap{width:180px;height:225px}
 #ss[data-mode="wanted"] .headline{min-height:0}
 
