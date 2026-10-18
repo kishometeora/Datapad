@@ -133,9 +133,8 @@ body.glitch .flip{opacity:.15}
 #ss[data-mode="droid"] #tsel{display:flex}#ss[data-mode="droid"] #cxAur{display:none}
 #ss[data-mode="droid"] .cx-tr{opacity:1}
 #tsel button{width:46px;height:46px;background:none;border:0;display:flex;align-items:center;justify-content:center;border-radius:4px}
-#tsel img{width:38px;height:38px;object-fit:contain;opacity:.4;transition:opacity .15s,filter .15s}
-#tsel button.sel img{opacity:1;filter:url(#tRed) drop-shadow(0 0 3px #FF3B30) drop-shadow(0 0 6px #FF3B30)}
-#tsel.passing button.sel img{opacity:.45;filter:none}
+#tsel img{width:38px;height:38px;object-fit:contain;opacity:.3;transition:opacity .06s}
+#tsel button.lit img{opacity:1;filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 6px rgba(255,255,255,.7))}
 #cxAur{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:.06em;color:rgba(var(--rgb),.75);white-space:nowrap;overflow:hidden}
 .tally{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
 .trow{display:flex;align-items:center;gap:3px}
@@ -372,7 +371,7 @@ const T={
   aurWords:["IMPERIAL SECURITY","SECTOR SEVEN","CHECKPOINT","IDENT CHECK","AUTHORISED","GARRISON","PATROL","CLEARANCE","DATA LINK","ARCHIVE"],
   codes:["ISB","TK","K4","TR","VX","SEC","GAR","ID","AX","RZ"]
 };
-const FAIL_ODDS=1/3;
+const FAIL_ODDS=1/3;   /* ID scanner; the droid scanner uses 1/2 (see MODES) */
 
 /* ---------- state (saved on the phone) ---------- */
 const S={vol:2,count:0,tp:0,tf:0,dcount:0,dp:0,df:0};      // vol: 0 off,1 low,2 med,3 high
@@ -512,11 +511,11 @@ setInterval(()=>{if(cur!=="menu")return;const el=Math.random()<.5?$("#mAur3"):$(
 /* ---- scanner modes: ID scanner and droid scanner share one screen ---- */
 const DROID_IC=`<svg viewBox="0 0 40 40"><g fill="none" stroke="#34D058" stroke-width="3" style="filter:drop-shadow(0 0 2px #34D058)"><rect x="11" y="4" width="18" height="12" rx="2"/><circle cx="20" cy="10" r="2.5" fill="#34D058"/><rect x="8" y="18" width="24" height="12" rx="1"/><path d="M12 30v7M28 30v7M8 37h8M24 37h8"/></g></svg>`;
 const MODES={
-  id:{k:["tp","tf","count"],passIc:`<img src="emblems/imperial.png" alt="" style="filter:url(#tGrn) drop-shadow(0 0 3px #34D058)">`,failIc:`<img src="emblems/rebel.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/rebel.png",failHead:["REBEL","DETECTED"],passHead:["APPROVED"]},
-  droid:{k:["dp","df","dcount"],passIc:DROID_IC,failIc:`<img src="emblems/deathstar.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/deathstar.png",failHead:["PLANS","DETECTED"],targets:true,passHead:["NOT THE","DROID","WE'RE LOOKING FOR"]}
+  id:{odds:1/3,k:["tp","tf","count"],passIc:`<img src="emblems/imperial.png" alt="" style="filter:url(#tGrn) drop-shadow(0 0 3px #34D058)">`,failIc:`<img src="emblems/rebel.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/rebel.png",failHead:["REBEL","DETECTED"],passHead:["APPROVED"]},
+  droid:{odds:1/2,k:["dp","df","dcount"],passIc:DROID_IC,failIc:`<img src="emblems/deathstar.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/deathstar.png",failHead:["PLANS","DETECTED"],targets:true,passHead:["NOT THE","DROID","WE'RE LOOKING FOR"]}
 };
 let mode="id",M=MODES.id;
-function setMode(m){mode=m;M=MODES[m];$("#ss").dataset.mode=m;$("#tPassIc").innerHTML=M.passIc;$("#tFailIc").innerHTML=M.failIc;paintTally()}
+function setMode(m){mode=m;M=MODES[m];$("#ss").dataset.mode=m;rollNext();if(typeof showLights==="function")showLights();$("#tPassIc").innerHTML=M.passIc;$("#tFailIc").innerHTML=M.failIc;paintTally()}
 function paintTally(){
   const[p,f,c]=M.k;
   $$("#tPass .dot").forEach((d,i)=>d.classList.toggle("on",i<S[p]));
@@ -524,17 +523,32 @@ function paintTally(){
   $("#cnt").textContent=String(S[c]).padStart(3,"0");
   $("#setCnt").textContent=`ID ${String(S.count).padStart(3,"0")} · DROID ${String(S.dcount).padStart(3,"0")}`;
 }
-setMode("id");
 
-let state="idle",next=Math.random()<FAIL_ODDS?"fail":"pass",timers=[],aurT=null;
+let state="idle",next="pass",timers=[],aurT=null;
 const later=(fn,ms)=>timers.push(setTimeout(fn,ms));
 const clearTimers=()=>{timers.forEach(clearTimeout);timers=[]};
 let nextTarget=Math.floor(Math.random()*3);   /* droid scanner: which target a fail will "find" */
 function showLights(){$("#lPass").classList.toggle("on",next==="pass");$("#lFail").classList.toggle("on",next==="fail");
-  $$("#tsel button").forEach((b,i)=>b.classList.toggle("sel",i===nextTarget));$("#tsel").classList.toggle("passing",next==="pass")}
+  }
+function rollNext(){next=Math.random()<M.odds?"fail":"pass";nextTarget=Math.floor(Math.random()*3)}
+/* selector sequence: icons light white in turn; the chosen target flashes twice (only when the next result is a fail) */
+(function seq(){
+  const btns=$$("#tsel button");let i=0;
+  const lit=(on)=>btns[i].classList.toggle("lit",on);
+  function step(){
+    if($("#ss").dataset.mode!=="droid"||!$("#ss").classList.contains("on")){setTimeout(step,500);return}
+    const dbl=next==="fail"&&i===nextTarget;
+    lit(true);
+    setTimeout(()=>{lit(false);
+      if(dbl){setTimeout(()=>{lit(true);setTimeout(()=>{lit(false);i=(i+1)%3;setTimeout(step,260)},180)},130)}
+      else{i=(i+1)%3;setTimeout(step,260)}
+    },180);
+  }
+  step();
+})();
 $$("#tsel button").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();if(state==="processing")return;
   nextTarget=+b.dataset.t;next="fail";showLights();SFX.tap()}));   /* picking a target also forces FAIL */
-showLights();
+setMode("id");
 $("#lights").addEventListener("click",()=>{if(state==="processing")return;next=next==="pass"?"fail":"pass";showLights();SFX.tap()});
 
 function view(id){$$("#ss .view").forEach(v=>v.classList.toggle("on",v.id===id))}
@@ -603,7 +617,7 @@ function reveal(result){
     later(()=>{fillBar("m2");SFX.pass2()},1100);
     later(()=>{fillBar("m3");SFX.calm()},1450);
   }
-  next=Math.random()<FAIL_ODDS?"fail":"pass";nextTarget=Math.floor(Math.random()*3);showLights();
+  rollNext();showLights();
   $("#ss").classList.remove("busy");
   later(()=>$("#ss").classList.add("result"),700);
 }
