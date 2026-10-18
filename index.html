@@ -157,7 +157,7 @@ body.glitch .flip{opacity:.15}
 #resPWrap{display:none;position:relative;width:200px;height:250px}
 #resPortrait{width:100%;height:100%;object-fit:contain}
 #ss[data-mode="wanted"] #resPWrap{display:block}
-#neq{display:none;position:absolute;left:10%;top:15%;width:80%;height:70%}
+#neq{display:none;position:absolute;inset:0;width:100%;height:100%}
 #panel.pass #neq{display:block}#ss[data-mode="wanted"] #resSym{display:none}
 #panel.fail #resPortrait{filter:url(#tRed) drop-shadow(0 0 3px #FF3B30) drop-shadow(0 0 8px rgba(255,59,48,.6))}
 #panel.pass #resPortrait{opacity:.3;filter:grayscale(1)}
@@ -359,7 +359,7 @@ body.aurOn .headline .flip{font-size:.74em}
     <!-- result -->
     <div class="view" id="vRes">
       <svg class="sym" viewBox="0 0 100 100" id="resSym"></svg>
-      <div id="resPWrap"><img id="resPortrait" src="suspects/_placeholder.png" alt=""><svg id="neq" viewBox="0 0 100 100"><path d="M18 38h64M18 62h64M66 14 34 86" fill="none" stroke="#34D058" stroke-width="9" stroke-linecap="square" style="filter:drop-shadow(0 0 4px #34D058) drop-shadow(0 0 10px rgba(52,208,88,.6))"/></svg></div>
+      <div id="resPWrap"><img id="resPortrait" src="suspects/_placeholder.png" alt=""><svg id="neq" viewBox="0 0 200 250"><path d="M6 12H194M6 23H194M6 34H194M6 45H194M6 56H194M6 67H194M6 78H194M6 89H194M6 100H194M6 111H194M6 122H194M6 133H194M6 144H194M6 155H194M6 166H194M6 177H194M6 188H194M6 199H194M6 210H194M6 221H194M6 232H194M6 243H194" stroke="rgba(52,208,88,.28)" stroke-width="1" fill="none"/><g fill="none" stroke="#34D058" stroke-width="5" style="filter:drop-shadow(0 0 3px #34D058) drop-shadow(0 0 8px rgba(52,208,88,.6))"><circle cx="164" cy="214" r="24"/><path d="M147 231 181 197"/></g></svg></div>
       <div class="en headline" id="resHead"></div>
     </div>
   </div>
