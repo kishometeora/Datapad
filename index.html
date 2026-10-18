@@ -55,8 +55,9 @@ svg{display:block;overflow:visible}
 
 /* flip text: alternates English (Orbitron) <-> Aurebesh */
 .flip{display:inline-block;transition:opacity .08s}
-.flip.isAur{font-family:Aur;font-weight:400;font-size:.86em;letter-spacing:.03em}
-.flip.glitch{opacity:.15}
+/* one global switch: body.aurOn = everything Aurebesh, otherwise everything English */
+body.aurOn .flip{font-family:Aur;font-weight:400;font-size:.86em;letter-spacing:.03em}
+body.glitch .flip{opacity:.15}
 
 /* ---------- screens ---------- */
 .screen{position:absolute;inset:0;display:none;flex-direction:column;gap:14px;
@@ -130,7 +131,7 @@ svg{display:block;overflow:visible}
 #cxAur{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:.06em;color:rgba(var(--rgb),.75);white-space:nowrap;overflow:hidden}
 .tally{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
 .trow{display:flex;align-items:center;gap:3px}
-.trow img{width:14px;height:14px;margin-right:5px}
+.trow img,.trow .ticon svg{width:14px;height:14px;display:block}.ticon{margin-right:5px}
 .dot{width:6px;height:8px;border-radius:1px;background:rgba(var(--rgb),.25)}
 .trow.g .dot.on{background:var(--grn);box-shadow:0 0 4px var(--grn)}
 .trow.r .dot.on{background:var(--red);box-shadow:0 0 4px var(--red)}
@@ -144,6 +145,9 @@ svg{display:block;overflow:visible}
 .card .info .aur{font-size:22px}
 .csweep{position:absolute;left:0;right:0;height:30px;background:linear-gradient(rgba(var(--rgb),0),rgba(var(--rgb),.22));border-bottom:3px solid var(--c);animation:csw 1s ease-in-out infinite alternate}
 @keyframes csw{from{top:-30px}to{top:300px}}
+#ss[data-mode="id"] .droidcard,#ss[data-mode="droid"] .idcard{display:none}
+.droidcard{display:flex;align-items:center;justify-content:center}
+.headline .sub{opacity:.85}
 .proc-t{font-size:30px;height:40px;text-align:center}
 .segs{display:flex;gap:6px;width:100%}
 .segs i{flex:1;height:18px;border-radius:2px;border:2px solid rgba(var(--rgb),.35)}
@@ -152,7 +156,8 @@ svg{display:block;overflow:visible}
 #vRes{gap:36px;text-align:center}
 #vRes .sym{width:190px;height:190px}
 .headline{font-size:46px;line-height:1.15;min-height:110px;display:flex;flex-direction:column;justify-content:center}
-.headline .flip.isAur{font-size:38px}
+.headline > div{white-space:nowrap}
+body.aurOn .headline .flip{font-size:.74em}
 .meter rect{transition:fill .15s}
 .meter rect.e{fill:transparent;stroke:rgba(var(--rgb),.35);stroke-width:1.2}
 #panel{color:var(--c)}
@@ -225,7 +230,7 @@ svg{display:block;overflow:visible}
 </section>
 
 <!-- ======================= ID SCANNER ======================= -->
-<section id="ss" class="screen">
+<section id="ss" class="screen" data-mode="id">
   <div class="top">
     <button class="home" data-home><img class="emb" src="emblems/imperial.png" alt=""></button>
     <div class="box amb en" id="status" style="display:flex;align-items:center;justify-content:center"><span class="flip" id="statusTxt" data-t="READY">READY</span></div>
@@ -265,8 +270,8 @@ svg{display:block;overflow:visible}
       <div class="cx cx-bl">
         <svg class="br" viewBox="0 0 160 48" preserveAspectRatio="none"><path class="md" d="M2 12V2h12M146 2h12v10M158 36v10h-12M14 46H2V36"/></svg>
         <div class="tally">
-          <div class="trow g" id="tPass"><img src="emblems/imperial.png" alt="" style="filter:url(#tGrn) drop-shadow(0 0 3px #34D058)"></div>
-          <div class="trow r" id="tFail"><img src="emblems/rebel.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)"></div>
+          <div class="trow g" id="tPass"><span class="ticon" id="tPassIc"></span></div>
+          <div class="trow r" id="tFail"><span class="ticon" id="tFailIc"></span></div>
         </div>
       </div>
       <div class="cx cx-br">
@@ -277,7 +282,7 @@ svg{display:block;overflow:visible}
 
     <!-- verdict processing: ID card -->
     <div class="view" id="vProc">
-      <div class="card">
+      <div class="card idcard">
         <div class="row">
           <svg width="120" height="150" viewBox="0 0 120 150" id="portrait"></svg>
           <div class="info">
@@ -291,6 +296,7 @@ svg{display:block;overflow:visible}
         <svg width="320" height="70" id="blocks" style="margin-top:22px"></svg>
         <div class="csweep"></div>
       </div>
+      <div class="card droidcard"><svg width="300" height="290" viewBox="0 0 300 290" id="droidSchem"></svg><div class="csweep"></div></div>
       <div class="en proc-t"><span class="flip" data-t="PROCESSING">PROCESSING</span></div>
       <div class="segs" id="segs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
@@ -360,7 +366,7 @@ const T={
 const FAIL_ODDS=1/3;
 
 /* ---------- state (saved on the phone) ---------- */
-const S={vol:2,count:0,tp:0,tf:0};      // vol: 0 off,1 low,2 med,3 high
+const S={vol:2,count:0,tp:0,tf:0,dcount:0,dp:0,df:0};      // vol: 0 off,1 low,2 med,3 high
 try{Object.assign(S,JSON.parse(localStorage.getItem("datapad")||"{}"))}catch(e){}
 const save=()=>{try{localStorage.setItem("datapad",JSON.stringify(S))}catch(e){}};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -416,24 +422,23 @@ function humStop(){
 }
 
 /* ============================================================
-   FLIP TEXT — English <-> Aurebesh every ~2.2s
+   FLIP TEXT — whole app switches English <-> Aurebesh together every ~2.2s
    ============================================================ */
+const FLIP_MS=2200;   /* time each language stays on screen */
 setInterval(()=>{
-  $$(".flip").forEach(el=>{
-    if(!el.offsetParent)return;
-    el.classList.add("glitch");
-    setTimeout(()=>{el.classList.toggle("isAur");el.classList.remove("glitch")},90);
-  });
-},2200);
-function setHeadline(lines){$("#resHead").innerHTML=lines.map(l=>`<div><span class="flip" data-t="${l}">${l}</span></div>`).join("")}
+  const b=document.body;b.classList.add("glitch");
+  setTimeout(()=>{b.classList.toggle("aurOn");b.classList.remove("glitch")},90);
+},FLIP_MS);
+function setHeadline(lines){$("#resHead").innerHTML=lines.map(l=>{const fs=Math.min(46,Math.floor(330/(l.length*.86)));return `<div style="font-size:${fs}px" class="${fs<40?"sub":""}"><span class="flip" data-t="${l}">${l}</span></div>`}).join("")}
 function setStatus(t){const el=$("#statusTxt");el.dataset.t=t;el.textContent=t}
 
 /* ============================================================
    NAVIGATION + TRANSITIONS
    ============================================================ */
 let cur="menu";
-function go(id){
+function go(id,mode){
   if(id===cur)return;
+  if(id==="ss")setMode(mode||"id");
   if(cur==="ss")resetScanner();
   if(cur==="set")commitSettings();
   $("#"+cur).classList.remove("on","enter");
@@ -463,9 +468,9 @@ const IC={
  signup:`<path class="ln" d="M8 14 18 24 8 34"/><rect class="fl" x="26" y="20" width="46" height="8"/><rect class="fd" x="26" y="38" width="34" height="8"/><rect class="fd" x="26" y="56" width="40" height="8"/><path class="md" d="M10 50h8M10 60h8"/>`,
  holo:`<path class="ln" d="M24 72h32"/><path class="md" d="M34 66h12v6H34Z"/><path class="md" d="M40 64 16 14M40 64 64 14"/><path class="ln" d="M22 26h36M26 36h28M30 46h20"/><path class="dm" d="M16 14h48"/>`
 };
-const TILES=[["scan","ss"],["droid"],["alert"],["comms"],["wanted"],["qr"],["signup"],["holo"]];
-$("#grid").innerHTML=TILES.map(([k,to])=>`<button class="tile ${to?"live":"off"}" ${to?`data-to="${to}"`:""}><svg viewBox="0 0 80 80">${IC[k]}</svg></button>`).join("");
-$$(".tile.live").forEach(t=>t.addEventListener("click",()=>{SFX.tap();go(t.dataset.to)}));
+const TILES=[["scan","ss","id"],["droid","ss","droid"],["alert"],["comms"],["wanted"],["qr"],["signup"],["holo"]];
+$("#grid").innerHTML=TILES.map(([k,to,m])=>`<button class="tile ${to?"live":"off"}" ${to?`data-to="${to}" data-mode="${m||""}"`:""}><svg viewBox="0 0 80 80">${IC[k]}</svg></button>`).join("");
+$$(".tile.live").forEach(t=>t.addEventListener("click",()=>{SFX.tap();go(t.dataset.to,t.dataset.mode)}));
 
 setInterval(()=>{
   if(cur!=="menu")return;
@@ -495,12 +500,22 @@ setInterval(()=>{if(cur!=="menu")return;const el=Math.random()<.5?$("#mAur3"):$(
   $("#tPass").insertAdjacentHTML("beforeend",'<i class="dot"></i>'.repeat(10));
   $("#tFail").insertAdjacentHTML("beforeend",'<i class="dot"></i>'.repeat(10));
 })();
+/* ---- scanner modes: ID scanner and droid scanner share one screen ---- */
+const DROID_IC=`<svg viewBox="0 0 40 40"><g fill="none" stroke="#34D058" stroke-width="3" style="filter:drop-shadow(0 0 2px #34D058)"><rect x="11" y="4" width="18" height="12" rx="2"/><circle cx="20" cy="10" r="2.5" fill="#34D058"/><rect x="8" y="18" width="24" height="12" rx="1"/><path d="M12 30v7M28 30v7M8 37h8M24 37h8"/></g></svg>`;
+const MODES={
+  id:{k:["tp","tf","count"],passIc:`<img src="emblems/imperial.png" alt="" style="filter:url(#tGrn) drop-shadow(0 0 3px #34D058)">`,failIc:`<img src="emblems/rebel.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/rebel.png",failHead:["REBEL","DETECTED"],passHead:["APPROVED"]},
+  droid:{k:["dp","df","dcount"],passIc:DROID_IC,failIc:`<img src="emblems/deathstar.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/deathstar.png",failHead:["PLANS","DETECTED"],targets:true,passHead:["NOT THE","DROID","WE'RE LOOKING FOR"]}
+};
+let mode="id",M=MODES.id;
+function setMode(m){mode=m;M=MODES[m];$("#ss").dataset.mode=m;$("#tPassIc").innerHTML=M.passIc;$("#tFailIc").innerHTML=M.failIc;paintTally()}
 function paintTally(){
-  $$("#tPass .dot").forEach((d,i)=>d.classList.toggle("on",i<S.tp));
-  $$("#tFail .dot").forEach((d,i)=>d.classList.toggle("on",i<S.tf));
-  const c=String(S.count).padStart(3,"0");$("#cnt").textContent=c;$("#setCnt").textContent=c;
+  const[p,f,c]=M.k;
+  $$("#tPass .dot").forEach((d,i)=>d.classList.toggle("on",i<S[p]));
+  $$("#tFail .dot").forEach((d,i)=>d.classList.toggle("on",i<S[f]));
+  $("#cnt").textContent=String(S[c]).padStart(3,"0");
+  $("#setCnt").textContent=`ID ${String(S.count).padStart(3,"0")} · DROID ${String(S.dcount).padStart(3,"0")}`;
 }
-paintTally();
+setMode("id");
 
 let state="idle",next=Math.random()<FAIL_ODDS?"fail":"pass",timers=[],aurT=null;
 const later=(fn,ms)=>timers.push(setTimeout(fn,ms));
@@ -512,14 +527,14 @@ $("#lights").addEventListener("click",()=>{if(state==="processing")return;next=n
 function view(id){$$("#ss .view").forEach(v=>v.classList.toggle("on",v.id===id))}
 function setPanel(cls){const p=$("#panel");p.classList.remove("fail","pass");if(cls)p.classList.add(cls)}
 function resetScanner(){
-  clearTimers();humStop();clearInterval(aurT);state="idle";
+  clearTimers();humStop();clearInterval(aurT);stopCycle();state="idle";
   $("#ss").classList.remove("result","busy","scanning");setPanel(null);view("vRet");
   $("#icStart").style.display="";$("#icStop").style.display="none";
   setStatus("READY");
 }
 function startScan(){
   /* tallies: when either row filled up last time, both rows start again */
-  if(S.tp>=10||S.tf>=10){S.tp=0;S.tf=0;save();paintTally()}
+  {const[p,f]=M.k;if(S[p]>=10||S[f]>=10){S[p]=0;S[f]=0;save();paintTally()}}
   state="scanning";$("#ss").classList.add("scanning");
   $("#icStart").style.display="none";$("#icStop").style.display="";
   setStatus("SCANNING");humStart();
@@ -529,10 +544,19 @@ $("#bStart").addEventListener("click",()=>{SFX.tap();if(state==="scanning")reset
 
 /* ID card details */
 $("#portrait").innerHTML=`<path class="md" d="M2 22V2h22M96 2h22v22M118 128v20H96M24 148H2V128"/><path class="ln" d="${segs(60,62,34,6,22,-90)}"/><path class="md" d="M60 40l20 22-20 22-20-22Z"/><rect class="fl" x="56" y="58" width="8" height="8"/><path class="dm" d="M8 40v44M4 44h8M4 54h8M4 64h8M4 74h8"/>`;
+$("#droidSchem").innerHTML=`
+ <path class="md" d="M6 30V6h24M270 6h24v24M294 260v24h-24M30 284H6V260"/>
+ <circle class="dm" cx="150" cy="135" r="112" stroke-dasharray="6 8"/>
+ <image id="cyc" href="emblems/deathstar.png" x="55" y="40" width="190" height="190"/>
+ <path class="dm" d="M30 258h240M40 252v12M80 252v12M120 252v12M160 252v12M200 252v12M240 252v12"/>`;
+const TARGETS=[["emblems/deathstar.png",["PLANS","DETECTED"]],["emblems/r2.png",["ASTROMECH","DETECTED"]],["emblems/c3po.png",["PROTOCOL DROID","DETECTED"]]];
+let cycT=null;
+function startCycle(){let i=0;const im=$("#cyc");clearInterval(cycT);cycT=setInterval(()=>{i=(i+1)%TARGETS.length;im.setAttribute("href",TARGETS[i][0])},170)}
+function stopCycle(){clearInterval(cycT);cycT=null}
 function paintBlocks(){let b="";for(let r=0;r<3;r++)for(let i=0;i<16;i++){const on=Math.random()<.55;b+=`<rect class="${on?"fl":"fd"}" x="${i*20}" y="${r*24}" width="${[14,8,14,10][(i+r)%4]}" height="14" rx="1"/>`}$("#blocks").innerHTML=b}
 
 /* result graphics */
-const FAILSYM=`<path class="ln" d="${segs(50,50,40,8,14,-90)}"/><path class="md" d="M2 14V2h12M86 2h12v12M98 86v12H86M14 98H2V86"/><image href="emblems/rebel.png" x="27" y="27" width="46" height="46" filter="url(#tRed)" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)"/>`;
+const FAILSYM=()=>`<path class="ln" d="${segs(50,50,40,8,14,-90)}"/><path class="md" d="M2 14V2h12M86 2h12v12M98 86v12H86M14 98H2V86"/><image href="${M.failImg}" x="${M.targets?20:27}" y="${M.targets?20:27}" width="${M.targets?60:46}" height="${M.targets?60:46}" filter="url(#tRed)" style="filter:url(#tRed) drop-shadow(0 0 2px #FF3B30) drop-shadow(0 0 4px #FF3B30)"/>`;
 const METER=`<g class="meter"><path class="md" d="M2 14V2h12M86 2h12v12M98 86v12H86M14 98H2V86"/><rect class="e" id="m3" x="16" y="18" width="68" height="15" rx="2"/><rect class="e" id="m2" x="16" y="42" width="68" height="15" rx="2"/><rect class="e" id="m1" x="16" y="66" width="68" height="15" rx="2"/><path class="dm" d="M9 18v63M6 25h3M6 49h3M6 73h3"/></g>`;
 function fillBar(id){const r=$("#"+id);r.classList.remove("e");r.classList.add("fl")}
 
@@ -543,7 +567,7 @@ $("#vtap").addEventListener("click",()=>{
   state="processing";$("#ss").classList.remove("scanning");$("#ss").classList.add("busy");
   setStatus("ANALYSING");
   const result=next;
-  paintBlocks();view("vProc");
+  paintBlocks();view("vProc");if(M.targets)startCycle();
   const sg=$$("#segs i");sg.forEach(s=>s.classList.remove("on"));
   sg.forEach((s,i)=>later(()=>s.classList.add("on"),(i+1)*230));
   let t=0,gap=.24;while(t<1.75){SFX.chirp(t);t+=gap;gap=Math.max(.05,gap*.8)}
@@ -551,16 +575,17 @@ $("#vtap").addEventListener("click",()=>{
 });
 
 function reveal(result){
-  state="result";
+  state="result";stopCycle();
+  if(M.targets&&result==="fail"){const t=rnd(TARGETS);M.failImg=t[0];M.failHead=t[1]}
   const f=$("#flash");f.style.background=result==="fail"?"var(--red-flash)":"var(--grn-flash)";
   f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
   setPanel(result);view("vRes");setStatus("COMPLETE");
   /* counter + tally */
-  S.count++;if(result==="pass")S.tp=Math.min(10,S.tp+1);else S.tf=Math.min(10,S.tf+1);save();paintTally();
+  {const[p,f,c]=M.k;S[c]++;if(result==="pass")S[p]=Math.min(10,S[p]+1);else S[f]=Math.min(10,S[f]+1);save();paintTally();}
   if(result==="fail"){
-    $("#resSym").innerHTML=FAILSYM;setHeadline(T.failHead);SFX.klaxon();
+    $("#resSym").innerHTML=FAILSYM();setHeadline(M.failHead);SFX.klaxon();
   }else{
-    $("#resSym").innerHTML=METER;setHeadline(T.passHead);
+    $("#resSym").innerHTML=METER;setHeadline(M.passHead);
     later(()=>{fillBar("m1");SFX.pass1()},750);
     later(()=>{fillBar("m2");SFX.pass2()},1100);
     later(()=>{fillBar("m3");SFX.calm()},1450);
@@ -584,7 +609,7 @@ function paintVol(){
 }
 function commitSettings(){Object.assign(S,pending);save();if(master)master.gain.value=VOL[S.vol]}
 $("#bSave").addEventListener("click",()=>{commitSettings();$("#bSave").classList.add("saved");SFX.armed()});
-$("#bReset").addEventListener("click",()=>{S.count=0;save();paintTally();$("#bReset").textContent="DONE";SFX.armed()});
+$("#bReset").addEventListener("click",()=>{S.count=0;S.dcount=0;save();paintTally();$("#bReset").textContent="DONE";SFX.armed()});
 
 /* ============================================================
    MISC
