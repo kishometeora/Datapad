@@ -949,7 +949,7 @@ let wl=null;async function wake(){try{if("wakeLock" in navigator&&!wl){wl=await 
 document.addEventListener("pointerdown",wake,{once:true});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")wake();else humStop()});
 document.addEventListener("gesturestart",e=>e.preventDefault());
-if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>document.addEventListener("visibilitychange",()=>{if(!document.hidden)r.update().catch(()=>{})})).catch(()=>{});
 </script>
 </body>
 </html>
