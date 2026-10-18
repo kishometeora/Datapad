@@ -183,6 +183,8 @@ body.glitch .flip{opacity:.15}
 #resFoot{font-size:16px;letter-spacing:.08em;opacity:.9}
 @keyframes wblink{0%,55%{opacity:1}56%,100%{opacity:.2}}
 #ss[data-mode="wanted"] #panel.fail #resHead,#ss[data-mode="wanted"] #panel.pass #resFoot{animation:wblink .9s steps(1) infinite}
+/* ID + droid scanners: flashing MOVE ALONG under the headline on a pass */
+#ss:not([data-mode="wanted"]) #panel.pass #resFoot{display:block;animation:wblink .9s steps(1) infinite;margin-top:6px}
 #ss[data-mode="wanted"] #resPWrap{width:180px;height:225px}
 #ss[data-mode="wanted"] .headline{min-height:0}
 
@@ -770,6 +772,7 @@ function reveal(result){
     const fit=(t,max,w)=>Math.min(max,Math.floor(w/(t.length*.86)));
     const fl=t=>`<span class="flip" data-t="${t}">${t}</span>`;
     $("#resTop").innerHTML=fl(M.top);$("#resFoot").innerHTML=fl(M.foot);$("#resFoot").style.fontSize=fit(M.foot,18,340)+"px";}
+  if(!M.wanted){$("#resFoot").innerHTML=`<span class="flip" data-t="MOVE ALONG">MOVE ALONG</span>`;$("#resFoot").style.fontSize="24px"}
   if(M.targets&&result==="fail"){const t=TARGETS[nextTarget];M.failImg=t[0];M.failHead=t[1]}
   const f=$("#flash");f.style.background=result==="fail"?"var(--red-flash)":"var(--grn-flash)";
   f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
@@ -908,7 +911,7 @@ let ipos=START;
 (function buildDeck(){
   const fl=t=>`<span class="flip2" data-t="${t}">${t}</span>`;
   const card=c=>c.q
-    ?`<div class="card2"><div class="en ctitle">${fl(c.t)}</div><div class="qrbox">${qrSvg(c.q)}</div><div class="url">${c.u.replace(/^https:\/\//,"")}</div></div>`
+    ?`<div class="card2"><div class="en ctitle">${fl(c.t)}</div><div class="qrbox">${qrSvg(c.q)}</div><div class="url">${c.u.replace(/^https:\/\/(www\.)?/,"").replace(/\/$/,"")}</div></div>`
     :`<div class="card2"><svg class="csym" viewBox="0 0 170 132">${SYM[c.s]}</svg><div class="en ctitle">${fl(c.t)}</div><div class="cline">${c.l}</div></div>`;
   /* clones at both ends make the loop seamless */
   const all=[DECK[DECK.length-1],...DECK,DECK[0]];
@@ -966,7 +969,7 @@ let epos=0;
   const fl=t=>`<span class="flip2" data-t="${t}">${t}</span>`;
   const tot=ESTEPS.filter(c=>c.n).length;
   $("#etrack").innerHTML=ESTEPS.map(c=>c.q
-    ?`<div class="card2"><div class="en ctitle">${fl(c.t)}</div><div class="qrbox">${qrSvg(c.q)}</div><div class="url">${c.u.replace(/^https:\/\//,"")}</div></div>`
+    ?`<div class="card2"><div class="en ctitle">${fl(c.t)}</div><div class="qrbox">${qrSvg(c.q)}</div><div class="url">${c.u.replace(/^https:\/\/(www\.)?/,"").replace(/\/$/,"")}</div></div>`
     :`<div class="card2"><div class="en cstep">${fl("STEP "+c.n+" OF "+tot)}</div><svg class="csym" viewBox="0 0 170 132">${ESYM[c.s]}</svg><div class="en ctitle">${fl(c.t)}</div><div class="cline">${c.l}</div></div>`).join("");
   $("#edots").innerHTML="<i></i>".repeat(ESTEPS.length);
   $("#eBack").addEventListener("click",()=>{if(epos>0){SFX.tap();eshow(epos-1,true)}});
