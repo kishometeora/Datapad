@@ -154,10 +154,13 @@ body.glitch .flip{opacity:.15}
 .wbars i b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--c);box-shadow:0 0 4px rgba(var(--rgb),.6);transition:width 1.6s ease-out}
 .wbars.go i b{width:var(--w)}
 /* result: portrait instead of symbol */
-#resPortrait{display:none;width:200px;height:250px;object-fit:contain}
-#ss[data-mode="wanted"] #resPortrait{display:block}#ss[data-mode="wanted"] #resSym{display:none}
+#resPWrap{display:none;position:relative;width:200px;height:250px}
+#resPortrait{width:100%;height:100%;object-fit:contain}
+#ss[data-mode="wanted"] #resPWrap{display:block}
+#neq{display:none;position:absolute;left:10%;top:15%;width:80%;height:70%}
+#panel.pass #neq{display:block}#ss[data-mode="wanted"] #resSym{display:none}
 #panel.fail #resPortrait{filter:url(#tRed) drop-shadow(0 0 3px #FF3B30) drop-shadow(0 0 8px rgba(255,59,48,.6))}
-#panel.pass #resPortrait{filter:drop-shadow(0 0 4px rgba(230,234,238,.55))}
+#panel.pass #resPortrait{opacity:.3;filter:grayscale(1)}
 #ss[data-mode="wanted"] #vRes{gap:22px}
 
 /* ===== WANTED: suspect gallery ===== */
@@ -356,7 +359,7 @@ body.aurOn .headline .flip{font-size:.74em}
     <!-- result -->
     <div class="view" id="vRes">
       <svg class="sym" viewBox="0 0 100 100" id="resSym"></svg>
-      <img id="resPortrait" src="suspects/_placeholder.png" alt="">
+      <div id="resPWrap"><img id="resPortrait" src="suspects/_placeholder.png" alt=""><svg id="neq" viewBox="0 0 100 100"><path d="M18 38h64M18 62h64M66 14 34 86" fill="none" stroke="#34D058" stroke-width="9" stroke-linecap="square" style="filter:drop-shadow(0 0 4px #34D058) drop-shadow(0 0 10px rgba(52,208,88,.6))"/></svg></div>
       <div class="en headline" id="resHead"></div>
     </div>
   </div>
@@ -660,7 +663,7 @@ $("#vtap").addEventListener("click",()=>{
 function reveal(result){
   state="result";stopCycle();$("#wbars").classList.remove("go");
   if(M.wanted){const sp=SUSPECTS[S.suspect],r=(lo,hi)=>lo+Math.floor(Math.random()*(hi-lo+1));
-    M.failHead=[sp.name,r(70,97)+"% MATCH","WANTED"];M.passHead=["SUSPECT","NOT MATCHED",r(50,69)+"% MATCH"];}
+    M.failHead=[sp.name,r(70,97)+"% MATCH","WANTED"];M.passHead=["NOT A MATCH",r(50,69)+"% SIMILAR"];}
   if(M.targets&&result==="fail"){const t=TARGETS[nextTarget];M.failImg=t[0];M.failHead=t[1]}
   const f=$("#flash");f.style.background=result==="fail"?"var(--red-flash)":"var(--grn-flash)";
   f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
