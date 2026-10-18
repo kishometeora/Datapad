@@ -135,6 +135,43 @@ body.glitch .flip{opacity:.15}
 #tsel button{width:46px;height:46px;background:none;border:0;display:flex;align-items:center;justify-content:center;border-radius:4px}
 #tsel img{width:38px;height:38px;object-fit:contain;opacity:.3;transition:opacity .06s}
 #tsel button.lit img{opacity:1;filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 6px rgba(255,255,255,.7))}
+/* ===== WANTED: scanner mode ===== */
+#ss[data-mode="wanted"] .cx,#ss[data-mode="wanted"] #bgGrid,#ss[data-mode="wanted"] .bioframe{display:none}
+#ss[data-mode="wanted"] #scanSvg{top:50%;height:50%}
+#ss[data-mode="wanted"] #vtap{top:75%;width:92px;height:92px}
+#wPortrait{display:none;position:absolute;left:0;right:0;top:0;height:50%;background:none;border:0;padding:16px 16px 6px}
+#ss[data-mode="wanted"] #wPortrait{display:block}
+#wPortrait img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 4px rgba(var(--rgb),.55))}
+#wPortrait .br,.wcmp .br{position:absolute;inset:8px;width:calc(100% - 16px);height:calc(100% - 16px)}
+#ss[data-mode="wanted"] .sweepg{display:none!important}
+/* processing: subject vs suspect */
+#ss[data-mode="wanted"] .idcard,#ss[data-mode="wanted"] .droidcard,#ss:not([data-mode="wanted"]) .wantedcard{display:none}
+.wantedcard{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 12px 36px}
+.wcmp{position:relative;width:120px;height:160px;flex:none}
+.wcmp img{position:absolute;inset:14px;width:calc(100% - 28px);height:calc(100% - 28px);object-fit:contain}
+.wbars{flex:1;display:flex;flex-direction:column;gap:9px}
+.wbars i{display:block;height:10px;border-radius:2px;background:rgba(var(--rgb),.25);position:relative;overflow:hidden}
+.wbars i b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--c);box-shadow:0 0 4px rgba(var(--rgb),.6);transition:width 1.6s ease-out}
+.wbars.go i b{width:var(--w)}
+/* result: portrait instead of symbol */
+#resPortrait{display:none;width:200px;height:250px;object-fit:contain}
+#ss[data-mode="wanted"] #resPortrait{display:block}#ss[data-mode="wanted"] #resSym{display:none}
+#panel.fail #resPortrait{filter:url(#tRed) drop-shadow(0 0 3px #FF3B30) drop-shadow(0 0 8px rgba(255,59,48,.6))}
+#panel.pass #resPortrait{filter:drop-shadow(0 0 4px rgba(230,234,238,.55))}
+#ss[data-mode="wanted"] #vRes{gap:22px}
+
+/* ===== WANTED: suspect gallery ===== */
+#gal .gwrap{flex:1;min-height:0;display:flex;flex-direction:column;padding:10px 0}
+#gpages{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#gpages::-webkit-scrollbar{display:none}
+.gpage{flex:0 0 100%;scroll-snap-align:start;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(5,1fr);gap:8px;padding:0 10px}
+.gtile{position:relative;background:none;border:0;padding:0;min-height:0}
+.gtile img{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px);object-fit:cover;object-position:50% 22%;filter:drop-shadow(0 0 3px rgba(var(--rgb),.45))}
+.gtile .br{position:absolute;inset:0;width:100%;height:100%}
+.gtile:active{background:rgba(var(--rgb),.12)}
+.gtile.sel .br path{stroke:var(--amb);filter:drop-shadow(0 0 3px var(--amb))}
+#gdots{display:flex;justify-content:center;gap:10px;height:22px;align-items:center;flex:none}
+#gdots i{width:8px;height:8px;border-radius:2px;background:rgba(var(--rgb),.3)}#gdots i.on{background:var(--c)}
 #cxAur{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:.06em;color:rgba(var(--rgb),.75);white-space:nowrap;overflow:hidden}
 .tally{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
 .trow{display:flex;align-items:center;gap:3px}
@@ -248,7 +285,7 @@ body.aurOn .headline .flip{font-size:.74em}
     <div class="view on" id="vRet">
       <svg id="scanSvg" viewBox="0 0 386 570" preserveAspectRatio="xMidYMid meet">
         <path class="gr" id="bgGrid"/>
-        <rect x="40" y="76" width="306" height="418" rx="24" style="fill:none;stroke-width:2.5;stroke:rgba(var(--rgb),.4)"/>
+        <rect class="bioframe" x="40" y="76" width="306" height="418" rx="24" style="fill:none;stroke-width:2.5;stroke:rgba(var(--rgb),.4)"/>
         <g class="sweepg"><g class="sweep">
           <rect x="40" y="46" width="306" height="44" fill="url(#sg)"/><path class="ln" d="M40 90h306" style="stroke-width:3"/>
         </g></g>
@@ -262,6 +299,7 @@ body.aurOn .headline .flip{font-size:.74em}
         <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--c)" stop-opacity="0"/><stop offset="1" stop-color="var(--c)" stop-opacity=".25"/></linearGradient></defs>
       </svg>
       <button id="vtap" aria-label="verdict"></button>
+      <button id="wPortrait" aria-label="change suspect"><svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 12V1h11M88 1h11v11M99 88v11H88M12 99H1V88" vector-effect="non-scaling-stroke"/></svg><img id="wImg" src="suspects/_placeholder.png" alt=""></button>
 
       <!-- complications -->
       <div class="cx cx-tl">
@@ -304,6 +342,12 @@ body.aurOn .headline .flip{font-size:.74em}
         <svg width="320" height="70" id="blocks" style="margin-top:22px"></svg>
         <div class="csweep"></div>
       </div>
+      <div class="card wantedcard">
+        <div class="wcmp"><svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 12V1h11M88 1h11v11M99 88v11H88M12 99H1V88" vector-effect="non-scaling-stroke"/></svg><img src="suspects/_placeholder.png" alt=""><div class="aur dimtxt" style="position:absolute;left:0;right:0;bottom:-24px;text-align:center;font-size:13px">SUBJECT</div></div>
+        <div class="wbars" id="wbars"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
+        <div class="wcmp"><svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 12V1h11M88 1h11v11M99 88v11H88M12 99H1V88" vector-effect="non-scaling-stroke"/></svg><img id="wCmpImg" src="suspects/_placeholder.png" alt=""><div class="aur dimtxt" style="position:absolute;left:0;right:0;bottom:-24px;text-align:center;font-size:13px">SUSPECT</div></div>
+        <div class="csweep"></div>
+      </div>
       <div class="card droidcard"><svg width="300" height="290" viewBox="0 0 300 290" id="droidSchem"></svg><div class="csweep"></div></div>
       <div class="en proc-t"><span class="flip" data-t="PROCESSING">PROCESSING</span></div>
       <div class="segs" id="segs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -312,6 +356,7 @@ body.aurOn .headline .flip{font-size:.74em}
     <!-- result -->
     <div class="view" id="vRes">
       <svg class="sym" viewBox="0 0 100 100" id="resSym"></svg>
+      <img id="resPortrait" src="suspects/_placeholder.png" alt="">
       <div class="en headline" id="resHead"></div>
     </div>
   </div>
@@ -328,6 +373,15 @@ body.aurOn .headline .flip{font-size:.74em}
     </button>
   </div>
   <div id="catch"></div>
+</section>
+
+<!-- ======================= SUSPECT GALLERY ======================= -->
+<section id="gal" class="screen">
+  <div class="top">
+    <button class="home" data-home><img class="emb" src="emblems/imperial.png" alt=""></button>
+    <div class="box amb en" style="flex:1;height:86px;display:flex;align-items:center;justify-content:center;font-size:20px"><span class="flip" data-t="SELECT SUSPECT">SELECT SUSPECT</span></div>
+  </div>
+  <div class="box gwrap"><div id="gpages"></div><div id="gdots"></div></div>
 </section>
 
 <!-- ======================= SETTINGS ======================= -->
@@ -374,7 +428,7 @@ const T={
 const FAIL_ODDS=1/3;   /* ID scanner; the droid scanner uses 1/2 (see MODES) */
 
 /* ---------- state (saved on the phone) ---------- */
-const S={vol:2,count:0,tp:0,tf:0,dcount:0,dp:0,df:0};      // vol: 0 off,1 low,2 med,3 high
+const S={vol:2,count:0,tp:0,tf:0,dcount:0,dp:0,df:0,wcount:0,wp:0,wf:0,suspect:0};      // vol: 0 off,1 low,2 med,3 high
 try{Object.assign(S,JSON.parse(localStorage.getItem("datapad")||"{}"))}catch(e){}
 const save=()=>{try{localStorage.setItem("datapad",JSON.stringify(S))}catch(e){}};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -476,7 +530,7 @@ const IC={
  signup:`<path class="ln" d="M8 14 18 24 8 34"/><rect class="fl" x="26" y="20" width="46" height="8"/><rect class="fd" x="26" y="38" width="34" height="8"/><rect class="fd" x="26" y="56" width="40" height="8"/><path class="md" d="M10 50h8M10 60h8"/>`,
  holo:`<path class="ln" d="M24 72h32"/><path class="md" d="M34 66h12v6H34Z"/><path class="md" d="M40 64 16 14M40 64 64 14"/><path class="ln" d="M22 26h36M26 36h28M30 46h20"/><path class="dm" d="M16 14h48"/>`
 };
-const TILES=[["scan","ss","id"],["droid","ss","droid"],["alert"],["comms"],["wanted"],["qr"],["signup"],["holo"]];
+const TILES=[["scan","ss","id"],["droid","ss","droid"],["alert"],["comms"],["wanted","gal"],["qr"],["signup"],["holo"]];
 $("#grid").innerHTML=TILES.map(([k,to,m])=>`<button class="tile ${to?"live":"off"}" ${to?`data-to="${to}" data-mode="${m||""}"`:""}><svg viewBox="0 0 80 80">${IC[k]}</svg></button>`).join("");
 $$(".tile.live").forEach(t=>t.addEventListener("click",()=>{SFX.tap();go(t.dataset.to,t.dataset.mode)}));
 
@@ -512,6 +566,7 @@ setInterval(()=>{if(cur!=="menu")return;const el=Math.random()<.5?$("#mAur3"):$(
 const DROID_IC=`<svg viewBox="0 0 40 40"><g fill="none" stroke="#34D058" stroke-width="3" style="filter:drop-shadow(0 0 2px #34D058)"><rect x="11" y="4" width="18" height="12" rx="2"/><circle cx="20" cy="10" r="2.5" fill="#34D058"/><rect x="8" y="18" width="24" height="12" rx="1"/><path d="M12 30v7M28 30v7M8 37h8M24 37h8"/></g></svg>`;
 const MODES={
   id:{odds:1/3,k:["tp","tf","count"],passIc:`<img src="emblems/imperial.png" alt="" style="filter:url(#tGrn) drop-shadow(0 0 3px #34D058)">`,failIc:`<img src="emblems/rebel.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/rebel.png",failHead:["REBEL","DETECTED"],passHead:["APPROVED"]},
+  wanted:{odds:1/2,k:["wp","wf","wcount"],passIc:"",failIc:"",wanted:true},
   droid:{odds:1/2,k:["dp","df","dcount"],passIc:DROID_IC,failIc:`<img src="emblems/deathstar.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/deathstar.png",failHead:["PLANS","DETECTED"],targets:true,passHead:["NOT THE","DROID","WE'RE LOOKING FOR"]}
 };
 let mode="id",M=MODES.id;
@@ -585,7 +640,7 @@ function paintBlocks(){let b="";for(let r=0;r<3;r++)for(let i=0;i<16;i++){const 
 /* result graphics */
 const FAILSYM=()=>`<path class="ln" d="${segs(50,50,40,8,14,-90)}"/><path class="md" d="M2 14V2h12M86 2h12v12M98 86v12H86M14 98H2V86"/><image href="${M.failImg}" x="${M.targets?20:27}" y="${M.targets?20:27}" width="${M.targets?60:46}" height="${M.targets?60:46}" filter="url(#tRed)" style="filter:url(#tRed) drop-shadow(0 0 2px #FF3B30) drop-shadow(0 0 4px #FF3B30)"/>`;
 const METER=`<g class="meter"><path class="md" d="M2 14V2h12M86 2h12v12M98 86v12H86M14 98H2V86"/><rect class="e" id="m3" x="16" y="18" width="68" height="15" rx="2"/><rect class="e" id="m2" x="16" y="42" width="68" height="15" rx="2"/><rect class="e" id="m1" x="16" y="66" width="68" height="15" rx="2"/><path class="dm" d="M9 18v63M6 25h3M6 49h3M6 73h3"/></g>`;
-function fillBar(id){const r=$("#"+id);r.classList.remove("e");r.classList.add("fl")}
+function fillBar(id){const r=$("#"+id);if(!r)return;r.classList.remove("e");r.classList.add("fl")}
 
 /* VERDICT — the glowing centre button */
 $("#vtap").addEventListener("click",()=>{
@@ -595,6 +650,7 @@ $("#vtap").addEventListener("click",()=>{
   setStatus("ANALYSING");
   const result=next;
   paintBlocks();view("vProc");if(M.targets)startCycle();
+  if(M.wanted){const wb=$("#wbars");wb.classList.remove("go");$$("#wbars b").forEach(b=>b.style.setProperty("--w",(55+Math.random()*45|0)+"%"));void wb.offsetWidth;wb.classList.add("go")}
   const sg=$$("#segs i");sg.forEach(s=>s.classList.remove("on"));
   sg.forEach((s,i)=>later(()=>s.classList.add("on"),(i+1)*230));
   let t=0,gap=.24;while(t<1.75){SFX.chirp(t);t+=gap;gap=Math.max(.05,gap*.8)}
@@ -602,7 +658,9 @@ $("#vtap").addEventListener("click",()=>{
 });
 
 function reveal(result){
-  state="result";stopCycle();
+  state="result";stopCycle();$("#wbars").classList.remove("go");
+  if(M.wanted){const sp=SUSPECTS[S.suspect],r=(lo,hi)=>lo+Math.floor(Math.random()*(hi-lo+1));
+    M.failHead=[sp.name,r(70,97)+"% MATCH","WANTED"];M.passHead=["SUSPECT","NOT MATCHED",r(50,69)+"% MATCH"];}
   if(M.targets&&result==="fail"){const t=TARGETS[nextTarget];M.failImg=t[0];M.failHead=t[1]}
   const f=$("#flash");f.style.background=result==="fail"?"var(--red-flash)":"var(--grn-flash)";
   f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
@@ -623,6 +681,38 @@ function reveal(result){
 }
 /* tap anywhere: clear the result and go straight into the next scan */
 $("#catch").addEventListener("click",()=>{SFX.tap();resetScanner();startScan()});
+
+/* ============================================================
+   WANTED — suspect list (Imperial). Photo files live in suspects/<id>.png;
+   a missing photo shows the placeholder silhouette.
+   ============================================================ */
+const SUSPECTS=[
+  ["cassian","CASSIAN ANDOR"],["kenobi","OBI-WAN KENOBI"],["luke","LUKE SKYWALKER"],
+  ["han","HAN SOLO"],["leia","LEIA ORGANA"],["qira","QI'RA"],
+  ["lando","LANDO CALRISSIAN"],["monmothma","MON MOTHMA"],["chirrut","CHIRRUT IMWE"],
+  ["wedge","WEDGE ANTILLES"],["biggs","BIGGS DARKLIGHTER"],["owen","OWEN LARS"],
+  ["beru","BERU LARS"],["rieekan","GENERAL RIEEKAN"],["bodhi","BODHI ROOK"]
+].map(([id,name])=>({id,name,src:`suspects/${id}.png`}));
+const PH="suspects/_placeholder.png";
+const imgTag=(src)=>`<img src="${src}" alt="" onerror="this.onerror=null;this.src='${PH}'">`;
+(function buildGallery(){
+  const per=15,pages=Math.ceil(SUSPECTS.length/per);let h="";
+  const br=`<svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 14V1h13M86 1h13v13M99 86v13H86M14 99H1V86" vector-effect="non-scaling-stroke"/></svg>`;
+  for(let p=0;p<pages;p++){h+=`<div class="gpage">`;for(let i=p*per;i<Math.min(SUSPECTS.length,(p+1)*per);i++)h+=`<button class="gtile" data-i="${i}">${br}${imgTag(SUSPECTS[i].src)}</button>`;h+=`</div>`}
+  $("#gpages").innerHTML=h;
+  $("#gdots").innerHTML=pages>1?"<i></i>".repeat(pages):"";
+  const dots=()=>{const n=Math.round($("#gpages").scrollLeft/Math.max(1,$("#gpages").clientWidth));$$("#gdots i").forEach((d,i)=>d.classList.toggle("on",i===n))};
+  $("#gpages").addEventListener("scroll",dots,{passive:true});dots();
+  $$(".gtile").forEach(t=>t.addEventListener("click",()=>{SFX.tap();pickSuspect(+t.dataset.i)}));
+})();
+function showSuspect(){
+  const sp=SUSPECTS[S.suspect]||SUSPECTS[0];
+  ["#wImg","#wCmpImg","#resPortrait"].forEach(q=>{const im=$(q);im.onerror=()=>{im.onerror=null;im.src=PH};im.src=sp.src});
+  $$(".gtile").forEach(t=>t.classList.toggle("sel",+t.dataset.i===S.suspect));
+}
+function pickSuspect(i){S.suspect=i;save();showSuspect();go("ss","wanted")}
+$("#wPortrait").addEventListener("click",e=>{e.stopPropagation();if(state==="processing")return;SFX.tap();go("gal")});
+showSuspect();
 
 /* ============================================================
    SETTINGS
