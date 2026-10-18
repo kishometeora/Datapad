@@ -161,7 +161,13 @@ body.glitch .flip{opacity:.15}
 #panel.pass #neq{display:block}#ss[data-mode="wanted"] #resSym{display:none}
 #panel.fail #resPortrait{filter:url(#tRed) drop-shadow(0 0 3px #FF3B30) drop-shadow(0 0 8px rgba(255,59,48,.6))}
 #panel.pass #resPortrait{opacity:.3;filter:grayscale(1)}
-#ss[data-mode="wanted"] #vRes{gap:22px}
+#ss[data-mode="wanted"] #vRes{gap:14px;justify-content:space-between;padding:22px 14px 26px}
+#resTop,#resFoot{display:none;text-align:center;white-space:nowrap}
+#ss[data-mode="wanted"] #resTop,#ss[data-mode="wanted"] #resFoot{display:block}
+#resTop{font-size:44px;letter-spacing:.14em;text-shadow:0 0 14px rgba(var(--rgb),.7)}
+#resFoot{font-size:16px;letter-spacing:.08em;opacity:.9}
+#ss[data-mode="wanted"] #resPWrap{width:180px;height:225px}
+#ss[data-mode="wanted"] .headline{min-height:0}
 
 /* ===== WANTED: suspect gallery ===== */
 #gal .gwrap{flex:1;min-height:0;display:flex;flex-direction:column;padding:10px 0}
@@ -365,9 +371,11 @@ body.aurOn .headline .flip{font-size:.74em}
 
     <!-- result -->
     <div class="view" id="vRes">
+      <div class="en" id="resTop"></div>
       <svg class="sym" viewBox="0 0 100 100" id="resSym"></svg>
       <div id="resPWrap"><img id="resPortrait" src="suspects/_placeholder.png" alt=""><svg id="neq" viewBox="0 0 200 250"><path d="M6 12H194M6 23H194M6 34H194M6 45H194M6 56H194M6 67H194M6 78H194M6 89H194M6 100H194M6 111H194M6 122H194M6 133H194M6 144H194M6 155H194M6 166H194M6 177H194M6 188H194M6 199H194M6 210H194M6 221H194M6 232H194M6 243H194" stroke="rgba(52,208,88,.28)" stroke-width="1" fill="none"/><g fill="none" stroke="#34D058" stroke-width="5" style="filter:drop-shadow(0 0 3px #34D058) drop-shadow(0 0 8px rgba(52,208,88,.6))"><circle cx="164" cy="214" r="24"/><path d="M147 231 181 197"/></g></svg></div>
       <div class="en headline" id="resHead"></div>
+      <div class="en" id="resFoot"></div>
     </div>
   </div>
 
@@ -678,7 +686,12 @@ $("#vtap").addEventListener("click",()=>{
 function reveal(result){
   state="result";stopCycle();$("#wbars").classList.remove("go");
   if(M.wanted){const sp=SUSPECTS[S.suspect],r=(lo,hi)=>lo+Math.floor(Math.random()*(hi-lo+1));
-    M.failHead=[sp.name,r(70,97)+"% MATCH","WANTED"];M.passHead=["NOT A MATCH",r(50,69)+"% SIMILAR"];}
+    M.failHead=[sp.name,r(70,97)+"% MATCH"];M.passHead=["NOT "+sp.name,r(50,69)+"% SIMILAR"];
+    M.top=result==="fail"?"WANTED":"CLEARED";
+    M.foot=result==="fail"?"CHARGE: "+rnd(sp.crimes):"MOVE ALONG";
+    const fit=(t,max,w)=>Math.min(max,Math.floor(w/(t.length*.86)));
+    const fl=t=>`<span class="flip" data-t="${t}">${t}</span>`;
+    $("#resTop").innerHTML=fl(M.top);$("#resFoot").innerHTML=fl(M.foot);$("#resFoot").style.fontSize=fit(M.foot,18,340)+"px";}
   if(M.targets&&result==="fail"){const t=TARGETS[nextTarget];M.failImg=t[0];M.failHead=t[1]}
   const f=$("#flash");f.style.background=result==="fail"?"var(--red-flash)":"var(--grn-flash)";
   f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
@@ -705,12 +718,22 @@ $("#catch").addEventListener("click",()=>{SFX.tap();resetScanner();startScan()})
    a missing photo shows the placeholder silhouette.
    ============================================================ */
 const SUSPECTS=[
-  ["cassian","CASSIAN ANDOR"],["kenobi","OBI-WAN KENOBI"],["luke","LUKE SKYWALKER"],
-  ["han","HAN SOLO"],["leia","LEIA ORGANA"],["qira","QI'RA"],
-  ["lando","LANDO CALRISSIAN"],["monmothma","MON MOTHMA"],["chirrut","CHIRRUT IMWE"],
-  ["wedge","WEDGE ANTILLES"],["biggs","BIGGS DARKLIGHTER"],["owen","OWEN LARS"],
-  ["beru","BERU LARS"],["rieekan","GENERAL RIEEKAN"],["bodhi","BODHI ROOK"]
-].map(([id,name])=>({id,name,src:`suspects/${id}.png`}));
+  ["cassian","CASSIAN ANDOR",["REBEL ESPIONAGE","THEFT OF IMPERIAL DATA","SABOTAGE ON SCARIF"]],
+  ["kenobi","OBI-WAN KENOBI",["JEDI ACTIVITY","UNLICENSED MIND TRICKS","HARBOURING A FUGITIVE"]],
+  ["luke","LUKE SKYWALKER",["DESTROYING THE DEATH STAR","UNREGISTERED T-65 PILOT","JEDI TRAINING"]],
+  ["han","HAN SOLO",["SMUGGLING","UNPAID DEBTS TO JABBA","RECKLESS HYPERSPACE FLIGHT"]],
+  ["leia","LEIA ORGANA",["THEFT OF IMPERIAL PLANS","HIGH TREASON","RESISTING ARREST"]],
+  ["qira","QI'RA",["CRIME SYNDICATE ACTIVITY","THEFT OF COAXIUM","CONSPIRACY"]],
+  ["lando","LANDO CALRISSIAN",["GAMBLING FRAUD","SABACC CHEATING","UNLICENSED STARSHIP TRADING"]],
+  ["monmothma","MON MOTHMA",["TREASON AGAINST THE EMPIRE","FUNDING REBELLION","SENATE CONSPIRACY"]],
+  ["chirrut","CHIRRUT IMWE",["DISTURBING THE PEACE ON JEDHA","ASSAULTING STORMTROOPERS","EXCESSIVE FAITH IN THE FORCE"]],
+  ["wedge","WEDGE ANTILLES",["REBEL PILOT","DESTROYING IMPERIAL PROPERTY","DESERTION FROM THE ACADEMY"]],
+  ["biggs","BIGGS DARKLIGHTER",["DESERTION","REBEL PILOT","JOYRIDING ON TATOOINE"]],
+  ["owen","OWEN LARS",["HARBOURING DROIDS","PURCHASING STOLEN DROIDS","CONCEALING A FUGITIVE"]],
+  ["beru","BERU LARS",["HARBOURING DROIDS","AIDING FUGITIVES","WITHHOLDING INFORMATION"]],
+  ["rieekan","GENERAL RIEEKAN",["COMMANDING REBEL FORCES","OPERATING AN ILLEGAL BASE"]],
+  ["bodhi","BODHI ROOK",["DEFECTION","THEFT OF AN IMPERIAL SHUTTLE","SMUGGLING A MESSAGE"]]
+].map(([id,name,crimes])=>({id,name,crimes,src:`suspects/${id}.png`}));
 const PH="suspects/_placeholder.png";
 const imgTag=(src)=>`<img src="${src}" alt="" onerror="this.onerror=null;this.src='${PH}'">`;
 (function buildGallery(){
