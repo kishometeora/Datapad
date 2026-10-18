@@ -537,6 +537,7 @@ function go(id,mode){
   const n=$("#"+id);n.classList.add("on","enter");setTimeout(()=>n.classList.remove("enter"),600);
   cur=id;
   if(id==="set")openSettings();
+  if(id==="ss"){resetScanner();startScan()}   /* every scanner starts scanning as soon as it opens */
 }
 $$("[data-home]").forEach(b=>b.addEventListener("click",()=>{SFX.tap();go("menu")}));
 
