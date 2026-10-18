@@ -159,7 +159,7 @@ body.glitch .flip{opacity:.15}
 #ss[data-mode="wanted"] #resPWrap{display:block}
 #neq{display:none;position:absolute;inset:0;width:100%;height:100%}
 #panel.pass #neq{display:block}#ss[data-mode="wanted"] #resSym{display:none}
-#panel.fail #resPortrait{filter:url(#tRed) drop-shadow(0 0 3px #FF3B30) drop-shadow(0 0 8px rgba(255,59,48,.6))}
+#panel.fail #resPortrait{filter:url(#tRedP) drop-shadow(0 0 1.5px rgba(255,59,48,.8))}
 #panel.pass #resPortrait{opacity:.3;filter:grayscale(1)}
 #ss[data-mode="wanted"] #vRes{gap:14px;justify-content:space-between;padding:22px 14px 26px}
 #resTop,#resFoot{display:none;text-align:center;white-space:nowrap}
@@ -268,6 +268,8 @@ body.aurOn .headline .flip{font-size:.74em}
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <filter id="tGrn"><feFlood flood-color="#34D058"/><feComposite in2="SourceAlpha" operator="in"/></filter>
   <filter id="tRed"><feFlood flood-color="#FF3B30"/><feComposite in2="SourceAlpha" operator="in"/></filter>
+  <!-- sharper red for portraits: keeps facial detail, lifts mid-tones -->
+  <filter id="tRedP" color-interpolation-filters="sRGB"><feComponentTransfer in="SourceAlpha" result="a"><feFuncA type="gamma" amplitude="1.15" exponent=".8"/></feComponentTransfer><feFlood flood-color="#FF5A4F"/><feComposite in2="a" operator="in"/></filter>
 </svg>
 
 <!-- ======================= MENU ======================= -->
