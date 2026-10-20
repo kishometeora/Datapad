@@ -251,7 +251,7 @@ body.aurOn .headline .flip{font-size:.74em}
 #cit .cbtn image{filter:brightness(0) invert(.92)}
 #cit .cbtn{display:flex;align-items:center;justify-content:center;gap:16px;padding:0;background:none;border:2px solid rgba(var(--rgb),.4);border-radius:4px;color:var(--c);font-family:Orb;font-weight:700;font-size:19px;letter-spacing:.1em;text-align:left}
 #cit .cbtn:active{background:rgba(var(--rgb),.15)}
-#citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:0 26px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
+#citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:space-evenly;gap:14px;padding:10px 22px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
 #citOv.on{display:flex}
 #citOv .cic{position:relative;width:180px;height:180px}
 #citOv .cic>*{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .06s}
@@ -264,6 +264,7 @@ body.aurOn .headline .flip{font-size:.74em}
 .fx3>.a{font-family:Aur;font-weight:400;font-size:.86em;letter-spacing:.03em;visibility:hidden}
 #citOv.aurOn .fx3>.e{visibility:hidden}#citOv.aurOn .fx3>.a{visibility:visible}#citOv.glitch .fx3{opacity:.15}
 #citOv .ct{font-size:22px;letter-spacing:.16em}
+#citOv .cw{font-weight:900;line-height:1;letter-spacing:.04em;text-shadow:0 0 10px rgba(var(--red-rgb),.7);margin-bottom:6px}
 #citOv .co{font-size:32px;line-height:1.2;text-shadow:0 0 8px rgba(var(--red-rgb),.6)}
 #citOv .cr{font-size:18px;line-height:1.6;letter-spacing:.04em;max-width:340px;color:#fff;opacity:.9}
 /* stacked English/Aurebesh (follows the global flip) so text never jumps */
@@ -513,7 +514,7 @@ body.aurOn .fx2>.e{visibility:hidden}body.aurOn .fx2>.a{visibility:visible}body.
   </div>
   <div style="flex:1;min-height:0;position:relative;display:flex">
     <div class="clist" id="clist"></div>
-    <div id="citOv"><div class="cic"><img class="on" src="emblems/imperial.png" alt=""><svg id="citIc" viewBox="0 0 100 100"></svg></div><div class="en ct" id="citT"></div><div class="en co" id="citO"></div><div class="cr" id="citR"></div></div>
+    <div id="citOv"><div class="en cw" id="citW"></div><div class="cic"><img class="on" src="emblems/imperial.png" alt=""><svg id="citIc" viewBox="0 0 100 100"></svg></div><div class="en ct" id="citT"></div><div class="en co" id="citO"></div><div class="cr" id="citR"></div></div>
   </div>
 </section>
 
@@ -1073,6 +1074,7 @@ const CIT_EN=FLIP_EN,CIT_AUR=FLIP_AUR,CIT_SWAP=1400;   /* 75/25 like everything 
   $$("#clist .cbtn").forEach(b=>b.addEventListener("click",()=>{
     const c=CITES[+b.dataset.i];
     close();
+    $("#citW").innerHTML=fx(c[0]);$("#citW").style.fontSize=Math.min(80,Math.floor(336/(c[0].length*.88)))+"px";
     $("#citT").innerHTML=fx("IMPERIAL CITATION");$("#citO").innerHTML=fx(c[1]);$("#citR").textContent=c[2];
     $("#citIc").innerHTML=`<g transform="translate(50 50) scale(.6) translate(-50 -50)">${CIC[c[3]]}</g><circle cx="50" cy="50" r="44" fill="none" stroke="var(--red)" stroke-width="8"/><path d="M24 24 76 76" stroke="#000" stroke-width="16"/><path d="M19 19 81 81" stroke="var(--red)" stroke-width="8"/>`;ov.querySelector(".cic img").classList.add("on");$("#citIc").classList.remove("on");
     ov.classList.add("on");tF=setTimeout(flip,CIT_EN);tS=setTimeout(swap,CIT_SWAP);
