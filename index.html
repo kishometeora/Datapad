@@ -245,10 +245,12 @@ body.aurOn .headline .flip{font-size:.74em}
 
 /* full-screen flash */
 /* ===== CITATIONS ===== */
-#cit .clist{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
-#cit .cbtn{flex:1;display:flex;align-items:center;gap:16px;padding:0 18px;background:none;border:2px solid rgba(var(--rgb),.4);border-radius:4px;color:var(--c);font-family:Orb;font-weight:700;font-size:19px;letter-spacing:.1em;text-align:left}
+#cit .clist{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);gap:10px}
+#cit .cbtn:last-child:nth-child(odd){grid-column:1/-1}
+#cit .cbtn svg{width:96px;height:96px;fill:var(--c);filter:drop-shadow(0 0 3px rgba(var(--rgb),.5))}
+#cit .cbtn image{filter:brightness(0) invert(.92)}
+#cit .cbtn{display:flex;align-items:center;justify-content:center;gap:16px;padding:0;background:none;border:2px solid rgba(var(--rgb),.4);border-radius:4px;color:var(--c);font-family:Orb;font-weight:700;font-size:19px;letter-spacing:.1em;text-align:left}
 #cit .cbtn:active{background:rgba(var(--rgb),.15)}
-#cit .cbtn i{font-style:normal;font-size:13px;opacity:.5;width:18px}
 #citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:0 26px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
 #citOv.on{display:flex}
 #citOv .cic{position:relative;width:180px;height:180px}
@@ -1056,7 +1058,7 @@ const CITES=[
 const CIT_EN=3500,CIT_AUR=1000,CIT_SWAP=1400;   /* English 3.5 s, Aurebesh 1 s; cog/icon swap every 1.4 s */
 (function buildCites(){
   const fx=t=>`<span class="fx3"><span class="e">${t}</span><span class="a" aria-hidden="true">${t}</span></span>`;
-  $("#clist").innerHTML=CITES.map((c,i)=>`<button class="cbtn" data-i="${i}"><i>${String(i+1).padStart(2,"0")}</i>${c[0]}</button>`).join("");
+  $("#clist").innerHTML=CITES.map((c,i)=>`<button class="cbtn" data-i="${i}" aria-label="${c[0]}"><svg viewBox="0 0 100 100">${CIC[c[3]]}</svg></button>`).join("");
   let snd=null,tF=null,tS=null;const ov=$("#citOv");
   const flip=()=>{const aur=ov.classList.contains("aurOn");ov.classList.add("glitch");
     setTimeout(()=>{ov.classList.toggle("aurOn",!aur);ov.classList.remove("glitch")},90);tF=setTimeout(flip,aur?CIT_EN:CIT_AUR)};
@@ -1066,7 +1068,7 @@ const CIT_EN=3500,CIT_AUR=1000,CIT_SWAP=1400;   /* English 3.5 s, Aurebesh 1 s; 
     const c=CITES[+b.dataset.i];
     close();
     $("#citT").innerHTML=fx("IMPERIAL CITATION");$("#citO").innerHTML=fx(c[1]);$("#citR").textContent=c[2];
-    $("#citIc").innerHTML=CIC[c[3]];ov.querySelector(".cic img").classList.add("on");$("#citIc").classList.remove("on");
+    $("#citIc").innerHTML=`<g transform="translate(50 50) scale(.6) translate(-50 -50)">${CIC[c[3]]}</g><circle cx="50" cy="50" r="44" fill="none" stroke="var(--red)" stroke-width="8"/><path d="M24 24 76 76" stroke="#000" stroke-width="16"/><path d="M19 19 81 81" stroke="var(--red)" stroke-width="8"/>`;ov.querySelector(".cic img").classList.add("on");$("#citIc").classList.remove("on");
     ov.classList.add("on");tF=setTimeout(flip,CIT_EN);tS=setTimeout(swap,CIT_SWAP);
     const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
     snd=play("alert_loop");if(!snd)SFX.klaxon();
