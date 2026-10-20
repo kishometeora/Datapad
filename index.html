@@ -728,11 +728,15 @@ setInterval(()=>{
   $$("#mBars .bar").forEach(b=>{if(b.id==="setBar")return;if(Math.random()<.5)b.style.width=(30+Math.random()*90|0)+"px"});
   $$("#mPips i").forEach(p=>{if(Math.random()<.4)p.classList.toggle("on")});
 },1800);
-/* rotating Aurebesh lines; the small line under the bars sometimes shows the time (24 h, Aurebesh only — a hidden clock) */
+/* rotating Aurebesh lines (as before). Hidden clock: tap the Imperial cog and the small line under the bars
+   shows the time in Aurebesh (24 h) for 2 s, then goes back to what it said. */
 const aurClock=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return p(d.getHours())+" "+p(d.getMinutes())};
-$("#mAur2").textContent=aurClock();
-setInterval(()=>{if(cur!=="menu")return;const two=Math.random()<.5,el=two?$("#mAur2"):$("#mAur3");el.style.opacity=.2;
-  setTimeout(()=>{el.textContent=two&&Math.random()<.5?aurClock():rnd(T.aurWords);el.style.opacity=""},120)},5200);
+let clockUntil=0;
+setInterval(()=>{if(cur!=="menu")return;const el=Math.random()<.5?$("#mAur3"):$("#mAur2");if(el.id==="mAur2"&&Date.now()<clockUntil)return;
+  el.style.opacity=.2;setTimeout(()=>{el.textContent=rnd(T.aurWords);el.style.opacity=""},120)},5200);
+$("#menu .embwrap").addEventListener("click",()=>{const el=$("#mAur2");if(Date.now()<clockUntil)return;const prev=el.textContent;clockUntil=Date.now()+2000;
+  el.style.opacity=.2;setTimeout(()=>{el.textContent=aurClock();el.style.opacity=""},90);
+  setTimeout(()=>{el.style.opacity=.2;setTimeout(()=>{el.textContent=prev;el.style.opacity=""},90)},2000);});
 
 /* hidden control: long-press top-left data bar -> settings */
 (function(){
