@@ -545,12 +545,12 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 
 /* ============================================================
-   AUDIO — Imperial sound set (synthesised, original)
+   AUDIO — recorded sound set, with the original synthesised beeps as fallback
    ============================================================ */
 let AC=null,master=null;
 const VOL=[0,.25,.55,1];
 function ac(){
-  if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.connect(AC.destination)}catch(e){return null}}
+  if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.connect(AC.destination);loadSounds()}catch(e){return null}}
   if(AC.state==="suspended")AC.resume();
   master.gain.value=VOL[S.vol];
   return AC;
@@ -563,9 +563,28 @@ function tone(f,d,{type="square",v=.06,at=0,f2=null,attack=.004}={}){
   g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+attack);g.gain.exponentialRampToValueAtTime(.0001,t+d);
   o.connect(g).connect(master);o.start(t);o.stop(t+d+.05);
 }
+/* recorded sound set (sounds/*.mp3). Each SFX plays its file once it has loaded,
+   and falls back to the old synthesised beep if it hasn't. GAIN sets each file's level. */
+const SND={},GAIN={tap:.5,armed:.7,screen_open:.6,processing:.7,pass:.7,fail:.7,scan_loop:.5,alert_loop:.7,holo_start:.7,holo_end:.7};
+function loadSounds(){
+  Object.keys(GAIN).forEach(n=>fetch("sounds/"+n+".mp3").then(r=>r.arrayBuffer())
+    .then(b=>new Promise((ok,no)=>AC.decodeAudioData(b,ok,no))).then(buf=>{SND[n]=buf}).catch(()=>{}));
+}
+function play(n,{at=0,loop=false}={}){
+  const a=ac();if(!a||!S.vol||!SND[n])return null;
+  const src=a.createBufferSource(),g=a.createGain();src.buffer=SND[n];g.gain.value=GAIN[n];
+  if(loop){/* skip mp3 padding so the loop is seamless */
+    const d=SND[n].getChannelData(0);let i=0,j=d.length-1;while(i<j&&Math.abs(d[i])<.002)i++;while(j>i&&Math.abs(d[j])<.002)j--;
+    src.loop=true;src.loopStart=i/SND[n].sampleRate;src.loopEnd=j/SND[n].sampleRate;}
+  src.connect(g).connect(master);src.start(a.currentTime+at,loop?src.loopStart:0);return {src,g};
+}
 const SFX={
-  tap:()=>tone(2200,.035,{v:.03}),
-  armed:()=>tone(620,.09,{v:.05,f2:900}),
+  tap:()=>play("tap")||tone(2200,.035,{v:.03}),
+  armed:()=>play("armed")||tone(620,.09,{v:.05,f2:900}),
+  open:()=>play("screen_open")||tone(2200,.035,{v:.03}),
+  processing:()=>{if(play("processing"))return;let t=0,gap=.24;while(t<1.75){SFX.chirp(t);t+=gap;gap=Math.max(.05,gap*.8)}},
+  passSound:()=>!!play("pass"),
+  fail:()=>play("fail")||SFX.klaxon(),
   chirp:(at=0)=>tone(1400+Math.random()*1200,.045,{v:.045,at,f2:1800+Math.random()*1200}),
   pass1:()=>tone(1500,.09,{type:"sine",v:.09,f2:1900}),
   pass2:()=>tone(1800,.09,{type:"sine",v:.09,f2:2300}),
@@ -579,6 +598,8 @@ const SFX={
 let hum=null;
 function humStart(){
   const a=ac();if(!a||!S.vol||hum)return;const t=a.currentTime;
+  const rec=play("scan_loop",{loop:true});
+  if(rec){rec.g.gain.setValueAtTime(.0001,t);rec.g.gain.exponentialRampToValueAtTime(GAIN.scan_loop,t+.25);hum={out:rec.g,os:[rec.src]};return}
   const out=a.createGain();out.gain.setValueAtTime(.0001,t);out.gain.exponentialRampToValueAtTime(.12,t+.25);out.connect(master);
   const lp=a.createBiquadFilter();lp.type="lowpass";lp.frequency.value=800;lp.Q.value=6;lp.connect(out);
   const o1=a.createOscillator();o1.type="sawtooth";o1.frequency.value=98;o1.connect(lp);
@@ -651,7 +672,7 @@ const tileArt=k=>k==="droid"?`<div class="tcyc" id="tcDroid">${["emblems/r2.png"
   :k==="qr"?`<div class="tcyc" id="tcQr"><svg class="lay on" viewBox="-3 -3 86 86">${IC.qr}</svg><img src="emblems/cogbird.png" alt=""></div>`
   :`<svg viewBox="0 0 80 80">${IC[k]}</svg>`;
 $("#grid").innerHTML=TILES.map(([k,to,m])=>`<button class="tile ${to?"live":"off"}" ${to?`data-to="${to}" data-mode="${m||""}"`:""}><span class="ta">${tileArt(k)}</span></button>`).join("");
-$$(".tile.live").forEach(t=>t.addEventListener("click",()=>{SFX.tap();go(t.dataset.to,t.dataset.mode)}));
+$$(".tile.live").forEach(t=>t.addEventListener("click",()=>{SFX.open();go(t.dataset.to,t.dataset.mode)}));
 
 setInterval(()=>{
   if(cur!=="menu")return;
@@ -772,7 +793,7 @@ $("#vtap").addEventListener("click",()=>{
   if(M.wanted){const wb=$("#wbars");wb.classList.remove("go");$$("#wbars b").forEach(b=>b.style.setProperty("--w",(55+Math.random()*45|0)+"%"));void wb.offsetWidth;wb.classList.add("go")}
   const sg=$$("#segs i");sg.forEach(s=>s.classList.remove("on"));
   sg.forEach((s,i)=>later(()=>s.classList.add("on"),(i+1)*230));
-  let t=0,gap=.24;while(t<1.75){SFX.chirp(t);t+=gap;gap=Math.max(.05,gap*.8)}
+  SFX.processing();
   later(()=>reveal(result),2000);
 });
 
@@ -793,12 +814,13 @@ function reveal(result){
   /* counter + tally */
   {const[p,f,c]=M.k;S[c]++;if(result==="pass")S[p]=Math.min(10,S[p]+1);else S[f]=Math.min(10,S[f]+1);save();paintTally();}
   if(result==="fail"){
-    if(!M.wanted)$("#resSym").innerHTML=FAILSYM();setHeadline(M.failHead);SFX.klaxon();
+    if(!M.wanted)$("#resSym").innerHTML=FAILSYM();setHeadline(M.failHead);SFX.fail();
   }else{
     $("#resSym").innerHTML=METER;setHeadline(M.passHead);
-    later(()=>{fillBar("m1");SFX.pass1()},750);
-    later(()=>{fillBar("m2");SFX.pass2()},1100);
-    later(()=>{fillBar("m3");SFX.calm()},1450);
+    const rec=SFX.passSound();
+    later(()=>{fillBar("m1");if(!rec)SFX.pass1()},750);
+    later(()=>{fillBar("m2");if(!rec)SFX.pass2()},1100);
+    later(()=>{fillBar("m3");if(!rec)SFX.calm()},1450);
   }
   rollNext();showLights();
   $("#ss").classList.remove("busy");
