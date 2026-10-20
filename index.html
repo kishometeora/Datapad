@@ -716,7 +716,7 @@ const IC={
  signup:`<path class="ln" d="M8 14 18 24 8 34"/><rect class="fl" x="26" y="20" width="46" height="8"/><rect class="fd" x="26" y="38" width="34" height="8"/><rect class="fd" x="26" y="56" width="40" height="8"/><path class="md" d="M10 50h8M10 60h8"/>`,
  holo:`<path class="ln" d="M24 72h32"/><path class="md" d="M34 66h12v6H34Z"/><path class="md" d="M40 64 16 14M40 64 64 14"/><path class="ln" d="M22 26h36M26 36h28M30 46h20"/><path class="dm" d="M16 14h48"/>`
 };
-const TILES=[["scan","ss","id"],["droid","ss","droid"],["cite","cit"],["comms"],["wanted","gal"],["qr","info"],["signup","enl"],["holo"]];
+const TILES=[["scan","ss","id"],["droid","ss","droid"],["wanted","gal"],["cite","cit"],["comms"],["holo"],["signup","enl"],["qr","info"]];
 const TBR=`<svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 14V1h13M86 1h13v13M99 86v13H86M14 99H1V86" vector-effect="non-scaling-stroke"/></svg>`;
 const tileArt=k=>k==="droid"?`<div class="tcyc" id="tcDroid">${["emblems/r2.png","emblems/c3po.png","emblems/deathstar.png"].map((s,i)=>`<img src="${s}" class="${i?"":"on"}" alt="">`).join("")}</div>`
   :k==="wanted"?`<div class="tcyc face" id="tcFace">${TBR}<img class="on" alt=""><img alt=""></div>`
