@@ -251,11 +251,19 @@ body.aurOn .headline .flip{font-size:.74em}
 #cit .cbtn i{font-style:normal;font-size:13px;opacity:.5;width:18px}
 #citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:0 26px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
 #citOv.on{display:flex}
-#citOv img{width:96px;height:96px;filter:url(#tRed) drop-shadow(0 0 4px var(--red))}
+#citOv .cic{position:relative;width:180px;height:180px}
+#citOv .cic>*{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .06s}
+#citOv .cic>.on{opacity:1}
+#citOv .cic img{filter:url(#tRed) drop-shadow(0 0 5px var(--red))}
+#citOv .cic svg{fill:var(--red);filter:drop-shadow(0 0 5px var(--red))}
+#citOv .cic image{filter:url(#tRed)}
+/* citation text: own flip timer, mostly English so the crowd can read it */
+.fx3{display:inline-grid;justify-items:center;align-items:center;transition:opacity .08s}.fx3>span{grid-area:1/1}
+.fx3>.a{font-family:Aur;font-weight:400;font-size:.86em;letter-spacing:.03em;visibility:hidden}
+#citOv.aurOn .fx3>.e{visibility:hidden}#citOv.aurOn .fx3>.a{visibility:visible}#citOv.glitch .fx3{opacity:.15}
 #citOv .ct{font-size:22px;letter-spacing:.16em}
 #citOv .co{font-size:32px;line-height:1.2;text-shadow:0 0 8px rgba(var(--red-rgb),.6)}
 #citOv .cr{font-size:18px;line-height:1.6;letter-spacing:.04em;max-width:340px;color:#fff;opacity:.9}
-#citOv .ctap{position:absolute;bottom:18px;font-size:11px;letter-spacing:.2em;opacity:.45}
 /* stacked English/Aurebesh (follows the global flip) so text never jumps */
 .fx2{display:inline-grid;justify-items:center;align-items:center;transition:opacity .08s}.fx2>span{grid-area:1/1}
 .fx2>.a{font-family:Aur;font-weight:400;font-size:.86em;letter-spacing:.03em;visibility:hidden}
@@ -503,7 +511,7 @@ body.aurOn .fx2>.e{visibility:hidden}body.aurOn .fx2>.a{visibility:visible}body.
   </div>
   <div style="flex:1;min-height:0;position:relative;display:flex">
     <div class="clist" id="clist"></div>
-    <div id="citOv"><img src="emblems/imperial.png" alt=""><div class="en ct" id="citT"></div><div class="en co" id="citO"></div><div class="cr" id="citR"></div><div class="en ctap">TAP TO CLOSE</div></div>
+    <div id="citOv"><div class="cic"><img class="on" src="emblems/imperial.png" alt=""><svg id="citIc" viewBox="0 0 100 100"></svg></div><div class="en ct" id="citT"></div><div class="en co" id="citO"></div><div class="cr" id="citR"></div></div>
   </div>
 </section>
 
@@ -1026,24 +1034,40 @@ function ishow(i,anim){
 /* ============================================================
    CITATIONS — tap an offence to issue it full screen (red flash + alarm once). Tap to close.
    ============================================================ */
+/* topic icons (simple solid silhouettes, 100×100) shown alternately with the Imperial cog */
+const CIC={
+ car:`<path d="M14 58l8-20c2-5 6-8 12-8h32c6 0 10 3 12 8l8 20c5 1 8 5 8 10v10c0 3-2 5-5 5h-5a11 11 0 0 1-22 0H38a11 11 0 0 1-22 0h-5c-3 0-5-2-5-5V68c0-5 3-9 8-10zm14-1h44l-6-15c-1-2-3-3-5-3H39c-2 0-4 1-5 3z"/><circle cx="27" cy="83" r="6" fill="#000"/><circle cx="73" cy="83" r="6" fill="#000"/>`,
+ loiter:`<circle cx="50" cy="16" r="10"/><path d="M38 30h24c4 0 7 3 7 7v26h-8v31h-9V66h-4v28h-9V63h-8V37c0-4 3-7 7-7z"/><path d="M76 20a12 12 0 1 1 0 24a12 12 0 1 1 0-24zm-1 5v8l5 4 2-2-4-4v-6z" opacity=".9"/>`,
+ rebel:`<image href="emblems/rebel.png" x="6" y="6" width="88" height="88"/>`,
+ jedi:`<image href="emblems/jedi.svg" x="6" y="6" width="88" height="88"/>`,
+ saber:`<path d="M80 6l7 7-46 46-7-7z" opacity=".95"/><path d="M33 51l16 16-7 7-4-4-16 16c-2 2-5 2-7 0l-2-2c-2-2-2-5 0-7l16-16-3-3z"/>`,
+ dog:`<path d="M20 48c0-4 3-6 7-6h38l6 6v16h-4v24h-8V66H33v22h-8V64c-4-2-5-8-5-16z"/><circle cx="74" cy="38" r="12"/><path d="M66 30l3-16 9 12z"/><rect x="78" y="36" width="16" height="10" rx="4"/><path d="M22 47 9 30l5-4 12 15z"/>`,
+ pram:`<path d="M12 22h8l5 14h59c3 0 5 3 4 6-3 16-17 28-34 28H48c-14 0-25-9-28-22l-8-26z"/><path d="M54 8a34 34 0 0 1 32 26H54z" opacity=".85"/><circle cx="34" cy="84" r="9"/><circle cx="72" cy="84" r="9"/>`
+};
 const CITES=[
- ["PARKING","PARKED IN A RESTRICTED ZONE","Move this vehicle by Imperial order"],
- ["LOITERING","LOITERING IN A SECURE SECTOR","Move along. This area is under Imperial lockdown"],
- ["INSIGNIA","WEARING REBEL INSIGNIA","Your identity has been logged by the ISB"],
- ["JEDI","SUSPECTED JEDI","Report to the Inquisitorius immediately"],
- ["LIGHTSABER","LIGHTSABER DETECTED","Jedi weapons are forbidden by Imperial decree"],
- ["CREATURE","UNLICENSED CREATURE","All creatures must be registered with the Imperial Bureau of Standards"],
- ["TRANSPORT","UNREGISTERED TRANSPORTATION","This vehicle has been logged for impound"]
+ ["PARKING","PARKED IN A RESTRICTED ZONE","Move this vehicle by Imperial order","car"],
+ ["LOITERING","LOITERING IN A SECURE SECTOR","Move along. This area is under Imperial lockdown","loiter"],
+ ["INSIGNIA","WEARING REBEL INSIGNIA","Your identity has been logged by the ISB","rebel"],
+ ["JEDI","SUSPECTED JEDI","Report to the Inquisitorius immediately","jedi"],
+ ["LIGHTSABER","LIGHTSABER DETECTED","Jedi weapons are forbidden by Imperial decree","saber"],
+ ["CREATURE","UNLICENSED CREATURE","All creatures must be registered with the Imperial Bureau of Standards","dog"],
+ ["TRANSPORT","UNREGISTERED TRANSPORTATION","This vehicle has been logged for impound","pram"]
 ];
+const CIT_EN=3500,CIT_AUR=1000,CIT_SWAP=1400;   /* English 3.5 s, Aurebesh 1 s; cog/icon swap every 1.4 s */
 (function buildCites(){
-  const fx=t=>`<span class="fx2"><span class="e">${t}</span><span class="a" aria-hidden="true">${t}</span></span>`;
+  const fx=t=>`<span class="fx3"><span class="e">${t}</span><span class="a" aria-hidden="true">${t}</span></span>`;
   $("#clist").innerHTML=CITES.map((c,i)=>`<button class="cbtn" data-i="${i}"><i>${String(i+1).padStart(2,"0")}</i>${c[0]}</button>`).join("");
-  let snd=null;
-  const close=()=>{$("#citOv").classList.remove("on");if(snd&&AC){try{snd.src.stop()}catch(e){}snd=null}};
+  let snd=null,tF=null,tS=null;const ov=$("#citOv");
+  const flip=()=>{const aur=ov.classList.contains("aurOn");ov.classList.add("glitch");
+    setTimeout(()=>{ov.classList.toggle("aurOn",!aur);ov.classList.remove("glitch")},90);tF=setTimeout(flip,aur?CIT_EN:CIT_AUR)};
+  const swap=()=>{[...ov.querySelectorAll(".cic>*")].forEach(e=>e.classList.toggle("on"));tS=setTimeout(swap,CIT_SWAP)};
+  const close=()=>{ov.classList.remove("on","aurOn");clearTimeout(tF);clearTimeout(tS);if(snd&&AC){try{snd.src.stop()}catch(e){}snd=null}};
   $$("#clist .cbtn").forEach(b=>b.addEventListener("click",()=>{
     const c=CITES[+b.dataset.i];
+    close();
     $("#citT").innerHTML=fx("IMPERIAL CITATION");$("#citO").innerHTML=fx(c[1]);$("#citR").textContent=c[2];
-    $("#citOv").classList.add("on");
+    $("#citIc").innerHTML=CIC[c[3]];ov.querySelector(".cic img").classList.add("on");$("#citIc").classList.remove("on");
+    ov.classList.add("on");tF=setTimeout(flip,CIT_EN);tS=setTimeout(swap,CIT_SWAP);
     const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
     snd=play("alert_loop");if(!snd)SFX.klaxon();
   }));
