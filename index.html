@@ -662,13 +662,15 @@ function humStop(){
 }
 
 /* ============================================================
-   FLIP TEXT — whole app switches English <-> Aurebesh together every ~2.2s
+   FLIP TEXT — every English/Aurebesh flip in the app: 75% English, 25% Aurebesh
    ============================================================ */
-const FLIP_MS=2200;   /* time each language stays on screen */
-setInterval(()=>{
-  const b=document.body;b.classList.add("glitch");
-  setTimeout(()=>{b.classList.toggle("aurOn");b.classList.remove("glitch")},90);
-},FLIP_MS);
+const FLIP_EN=3000,FLIP_AUR=1000;   /* English 3 s, Aurebesh 1 s */
+function flip(){
+  const b=document.body,aur=b.classList.contains("aurOn");b.classList.add("glitch");
+  setTimeout(()=>{b.classList.toggle("aurOn",!aur);b.classList.remove("glitch")},90);
+  setTimeout(flip,aur?FLIP_EN:FLIP_AUR);
+}
+setTimeout(flip,FLIP_EN);
 function setHeadline(lines){$("#resHead").innerHTML=lines.map(l=>{const fs=Math.min(46,Math.floor(330/(l.length*.86)));return `<div style="font-size:${fs}px" class="${fs<40?"sub":""}"><span class="flip" data-t="${l}">${l}</span></div>`}).join("")}
 function setStatus(t){const el=$("#statusTxt");el.dataset.t=t;el.textContent=t}
 
@@ -1017,8 +1019,8 @@ let ipos=START;
   const el=$("#info"),els=[$("#info"),$("#enl")];
   const step=()=>{const aur=el.classList.contains("aurOn");
     els.forEach(x=>x.classList.add("glitch"));setTimeout(()=>{els.forEach(x=>{x.classList.toggle("aurOn",!aur);x.classList.remove("glitch")})},90);
-    setTimeout(step,aur?2500:1500)};   /* after switching to English wait 2.5 s; after Aurebesh 1.5 s */
-  setTimeout(step,2500);
+    setTimeout(step,aur?FLIP_EN:FLIP_AUR)};   /* same 75/25 rhythm as the rest of the app */
+  setTimeout(step,FLIP_EN);
 })();
 function ishow(i,anim){
   const tr=$("#itrack");tr.style.transition=anim?"":"none";
@@ -1059,7 +1061,7 @@ const CITES=[
  ["CREATURE","UNLICENSED CREATURE","All creatures must be registered with the Imperial Bureau of Standards","dog"],
  ["TRANSPORT","UNREGISTERED TRANSPORTATION","This vehicle has been logged for impound","pram"]
 ];
-const CIT_EN=3500,CIT_AUR=1000,CIT_SWAP=1400;   /* English 3.5 s, Aurebesh 1 s; cog/icon swap every 1.4 s */
+const CIT_EN=FLIP_EN,CIT_AUR=FLIP_AUR,CIT_SWAP=1400;   /* 75/25 like everything else; cog/icon swap every 1.4 s */
 (function buildCites(){
   const fx=t=>`<span class="fx3"><span class="e">${t}</span><span class="a" aria-hidden="true">${t}</span></span>`;
   $("#clist").innerHTML=CITES.map((c,i)=>`<button class="cbtn" data-i="${i}" aria-label="${c[0]}"><svg viewBox="0 0 100 100">${CIC[c[3]]}</svg></button>`).join("");
