@@ -252,7 +252,11 @@ body.aurOn .headline .flip{font-size:.74em}
 #set .ttl{flex:1;height:70px;display:flex;flex-direction:column;justify-content:center;padding:0 16px;gap:4px}
 #set .ttl .en{font-size:20px}#set .ttl .aur{font-size:15px}
 #set .top{height:70px}#set .home{width:56px;height:56px}
-#set .body{flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:12px;overflow:auto}
+#set .body{flex:1;padding:12px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:8px;overflow:auto}
+/* settings: tighter so it all fits on the 12 Pro Max without scrolling, and Save sits lower */
+#set{padding-bottom:calc(max(env(safe-area-inset-bottom),12px) + var(--cal-bottom))}
+#set .fac{height:40px}#set .seg button{height:38px}
+#set .sec{margin-bottom:6px}
 .sec{font-size:12px;letter-spacing:.18em;opacity:.7;margin:0 0 8px 2px;display:flex;justify-content:space-between}
 .facs{display:flex;flex-direction:column;gap:8px}
 .fac{display:flex;align-items:center;gap:14px;height:44px;padding:0 14px;border:2px solid rgba(var(--rgb),.35);border-radius:4px;font-size:17px;letter-spacing:.12em;background:none;color:inherit;font-family:Orb;font-weight:700}
@@ -317,7 +321,7 @@ body.aurOn .headline .flip{font-size:.74em}
   -webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto;pointer-events:auto}
 #wallOv .wtip{font-size:11px;letter-spacing:.08em;line-height:1.7;text-align:center;opacity:.75}
 #wallClose{height:60px;width:100%;flex:none;font-size:18px}
-#bSave{height:76px;flex:none;font-size:22px}
+#bSave{height:68px;flex:none;font-size:22px}
 #bSave.saved{background:rgba(var(--rgb),.2)}
 </style>
 </head>
