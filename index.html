@@ -277,6 +277,13 @@ body.aurOn .headline .flip{font-size:.74em}
 #info .csym,#enl .csym{width:170px;height:170px}
 #enl .cstep{font-size:14px;letter-spacing:.14em;opacity:.7;margin-bottom:-10px}
 #ejump button:disabled{opacity:.25}
+#enl .card2{gap:16px}
+#enl .ctitle{min-height:0}
+#enl .equote{font-size:15px;letter-spacing:.04em;color:var(--amb,#FFB020);line-height:1.5;max-width:330px;margin-top:-6px}
+#enl .erow{display:flex;align-items:center;gap:16px;width:100%;max-width:350px;text-align:left}
+#enl .erow img{width:64px;height:64px;object-fit:contain;flex:none}
+#enl .ert{font-size:17px;letter-spacing:.06em}
+#enl .erl{font-size:15px;line-height:1.5;opacity:.85;margin-top:4px}
 /* About card: cog + starbird merge into the Causeway Legions emblem (8 s loop) */
 .cbm image{transform-box:fill-box;transform-origin:center}
 .cbm .cI{animation:cbI 8s infinite ease-in-out}
@@ -290,7 +297,7 @@ body.aurOn .headline .flip{font-size:.74em}
 @media (prefers-reduced-motion:reduce){.cbm .cI,.cbm .cR{animation:none;opacity:0}.cbm .cC{animation:none;opacity:1}.cbm .cF{display:none}}
 #info .qrbox,#enl .qrbox{width:300px;height:300px;padding:14px;background:#000;border:3px solid var(--c);border-radius:6px;box-shadow:0 0 8px rgba(var(--rgb),.4)}
 #info .qrbox svg,#enl .qrbox svg{width:100%;height:100%;display:block}
-#info .url,#enl .url{font-family:Orb;font-weight:700;font-size:13px;letter-spacing:.02em;word-break:break-all;max-width:340px;line-height:1.5}
+#info .url,#enl .url{font-family:Orb;font-weight:700;font-size:13px;letter-spacing:.02em;overflow-wrap:anywhere;max-width:340px;line-height:1.5}
 #idots,#edots{display:flex;justify-content:center;gap:8px;height:16px;align-items:center;flex:none}
 #idots i,#edots i{width:7px;height:7px;border-radius:2px;background:rgba(var(--rgb),.3)}#idots i.on,#edots i.on{background:var(--c)}
 #ijump,#ejump{display:flex;gap:8px;flex:none;height:56px}
@@ -635,6 +642,7 @@ const TILES=[["scan","ss","id"],["droid","ss","droid"],["alert"],["comms"],["wan
 const TBR=`<svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 14V1h13M86 1h13v13M99 86v13H86M14 99H1V86" vector-effect="non-scaling-stroke"/></svg>`;
 const tileArt=k=>k==="droid"?`<div class="tcyc" id="tcDroid">${["emblems/r2.png","emblems/c3po.png","emblems/deathstar.png"].map((s,i)=>`<img src="${s}" class="${i?"":"on"}" alt="">`).join("")}</div>`
   :k==="wanted"?`<div class="tcyc face" id="tcFace">${TBR}<img class="on" alt=""><img alt=""></div>`
+  :k==="signup"?`<div class="tcyc" id="tcEnl">${["signup","research","build","submit","cleared"].map((n,i)=>`<img src="emblems/enlist/${n}.png" class="${i?"":"on"}" alt="">`).join("")}</div>`
   :k==="qr"?`<div class="tcyc" id="tcQr"><svg class="lay on" viewBox="-3 -3 86 86">${IC.qr}</svg><img src="emblems/cogbird.png" alt=""></div>`
   :`<svg viewBox="0 0 80 80">${IC[k]}</svg>`;
 $("#grid").innerHTML=TILES.map(([k,to,m])=>`<button class="tile ${to?"live":"off"}" ${to?`data-to="${to}" data-mode="${m||""}"`:""}><span class="ta">${tileArt(k)}</span></button>`).join("");
@@ -869,11 +877,12 @@ showSuspect();
 (function tileLoops(){
   const d=[...document.querySelectorAll("#tcDroid>img")];let di=0;
   const q=[...document.querySelectorAll("#tcQr>*")];let qi=0;
+  const en=[...document.querySelectorAll("#tcEnl>img")];let ei=0;
   const faces=[...document.querySelectorAll("#tcFace>img")];let fi=0;
   const order=SUSPECTS.map(x=>x.src).sort(()=>Math.random()-.5);let oi=0;
   faces[0].src=order[0];faces[1].src=order[1];
   const step=(a,i)=>{a[i].classList.remove("on");i=(i+1)%a.length;a[i].classList.add("on");return i};
-  const swap={tcDroid:()=>{di=step(d,di)},tcQr:()=>{qi=step(q,qi)},
+  const swap={tcDroid:()=>{di=step(d,di)},tcQr:()=>{qi=step(q,qi)},tcEnl:()=>{ei=step(en,ei)},
     tcFace:()=>{oi=(oi+1)%order.length;const nx=faces[1-fi];nx.src=order[oi];faces[fi].classList.remove("on");nx.classList.add("on");fi=1-fi}};
   const tas=[...document.querySelectorAll("#grid .ta")];
   setInterval(()=>{
@@ -911,7 +920,7 @@ let ipos=START;
 (function buildDeck(){
   const fl=t=>`<span class="flip2" data-t="${t}">${t}</span>`;
   const card=c=>c.q
-    ?`<div class="card2"><div class="en ctitle">${fl(c.t)}</div><div class="qrbox">${qrSvg(c.q)}</div><div class="url">${c.u.replace(/^https:\/\/(www\.)?/,"").replace(/\/$/,"")}</div></div>`
+    ?`<div class="card2"><div class="en ctitle">${fl(c.t)}</div><div class="qrbox">${qrSvg(c.q)}</div><div class="url">${c.u.replace(/^https:\/\/(www\.)?/,"").replace(/\/$/,"").replace(/\//g,"/<wbr>")}</div></div>`
     :`<div class="card2"><svg class="csym" viewBox="0 0 170 132">${SYM[c.s]}</svg><div class="en ctitle">${fl(c.t)}</div><div class="cline">${c.l}</div></div>`;
   /* clones at both ends make the loop seamless */
   const all=[DECK[DECK.length-1],...DECK,DECK[0]];
@@ -948,18 +957,20 @@ function ishow(i,anim){
    ENLIST — sign-up guide. Imperial theme = 501st steps (Rebellion theme will get Rebel Legion steps).
    Steps 1-4 then the JOIN US QR. Not a loop: BACK / NEXT and swipe.
    ============================================================ */
-const ESYM={
- select:SYM.cost,
- build:`<rect class="ln" x="30" y="78" width="110" height="26" rx="2"/><path class="md" d="M42 78v10M54 78v14M66 78v10M78 78v14M90 78v10M102 78v14M114 78v10M126 78v14"/><path class="ln" d="M60 64 104 24"/><circle class="md" cx="110" cy="20" r="10"/><rect class="fl" x="106" y="14" width="8" height="8"/><path class="md" d="M2 16V2h14M154 2h14v14M168 116v14h-14M16 130H2V116"/>`,
- inspect:`<path class="ln" d="M44 30h-12v18M126 30h12v18M44 112h-12V94M126 112h12V94"/><circle class="md" cx="85" cy="52" r="12"/><path class="md" d="M64 102c2-20 10-30 21-30s19 10 21 30"/><path class="fl" d="M36 70h98v4H36z" style="opacity:.8"/><path class="md" d="M2 16V2h14M154 2h14v14M168 116v14h-14M16 130H2V116"/>`,
- id:`<rect class="ln" x="28" y="34" width="114" height="80" rx="6"/><rect class="md" x="72" y="24" width="26" height="14" rx="2"/><rect class="md" x="40" y="50" width="36" height="48" rx="1"/><circle class="md" cx="58" cy="66" r="8"/><path class="md" d="M45 94c1-9 6-13 13-13s12 4 13 13"/><rect class="fl" x="88" y="54" width="42" height="8" rx="1"/><rect class="fd" x="88" y="70" width="32" height="8" rx="1"/><rect class="fd" x="88" y="86" width="38" height="8" rx="1"/><path class="md" d="M2 16V2h14M154 2h14v14M168 116v14h-14M16 130H2V116"/>`
-};
+/* icons: Causeway Legions' own "Path to Becoming a Member" artwork, recoloured pale (emblems/enlist/) */
+const EIMG=k=>`<image href="emblems/enlist/${k}.png" x="30" y="10" width="110" height="112"/><path class="md" d="M2 16V2h14M154 2h14v14M168 116v14h-14M16 130H2V116"/>`;
+const ESYM={signup:EIMG("signup"),research:EIMG("research"),build:EIMG("build"),submit:EIMG("submit"),cleared:EIMG("cleared")};
 const ENLIST={
  imperial:[
-  {n:1,t:"SELECT COSTUME",l:"Choose a costume from the 501st Costume Reference Library: troopers, Sith, bounty hunters and more.<br>Members must be 18+",s:"select"},
-  {n:2,t:"BUILD TO STANDARD",l:"Build or buy it to match the library's standards.<br>Garrison members will help and advise",s:"build"},
-  {n:3,t:"SUBMIT FOR INSPECTION",l:"Send photos of yourself in full costume to the Garrison Membership Liaison",s:"inspect"},
-  {n:4,t:"RECEIVE YOUR ID",l:"Once approved, you're a member of the 501st Legion with your own legion ID number",s:"id"},
+  {n:1,t:"SIGN UP",qt:"“Hello there”",l:"Create a forum account, then post in Introductions. Tell us about yourself and the costumes you love",s:"signup"},
+  {n:2,t:"RESEARCH",qt:"“You must choose”",l:"Helmet or open face? Armour or flight suit? Check the Costume Standards and ask members",s:"research"},
+  {n:3,t:"BUILD THREAD",qt:"“Stay on target”",l:"Start a build thread on the forum and post updates as you go. We'll keep you on track",s:"build"},
+  {n:4,t:"SUBMITTING",qt:"“Never tell me the odds”",l:"Costume complete? Take your photos and submit it for clearance",s:"submit"},
+  {n:5,t:"CLEARED MEMBER",qt:"“You've taken your first steps into a larger world”",l:"Welcome to the Legion! Here's to many years of happy trooping",s:"cleared"},
+  {t:"ALONG THE WAY",rows:[
+   {i:"crew",t:"CREW",l:"Come out with us before you're cleared"},
+   {i:"troops",t:"TROOPS",l:"Events most weekends. This is where the fun begins"},
+   {i:"party",t:"ARMOUR PARTIES",l:"Build together every 3–4 months"}]},
   {t:"JOIN US",q:"join",u:"https://www.causewaylegions.com/forums/index.php?/register/"}
  ]
 };
@@ -969,8 +980,9 @@ let epos=0;
   const fl=t=>`<span class="flip2" data-t="${t}">${t}</span>`;
   const tot=ESTEPS.filter(c=>c.n).length;
   $("#etrack").innerHTML=ESTEPS.map(c=>c.q
-    ?`<div class="card2"><div class="en ctitle">${fl(c.t)}</div><div class="qrbox">${qrSvg(c.q)}</div><div class="url">${c.u.replace(/^https:\/\/(www\.)?/,"").replace(/\/$/,"")}</div></div>`
-    :`<div class="card2"><div class="en cstep">${fl("STEP "+c.n+" OF "+tot)}</div><svg class="csym" viewBox="0 0 170 132">${ESYM[c.s]}</svg><div class="en ctitle">${fl(c.t)}</div><div class="cline">${c.l}</div></div>`).join("");
+    ?`<div class="card2"><div class="en ctitle">${fl(c.t)}</div><div class="qrbox">${qrSvg(c.q)}</div><div class="url">${c.u.replace(/^https:\/\/(www\.)?/,"").replace(/\/$/,"").replace(/\//g,"/<wbr>")}</div></div>`
+    :c.rows?`<div class="card2"><div class="en ctitle">${fl(c.t)}</div>${c.rows.map(r=>`<div class="erow"><img src="emblems/enlist/${r.i}.png" alt=""><div><div class="en ert">${fl(r.t)}</div><div class="erl">${r.l}</div></div></div>`).join("")}</div>`
+    :`<div class="card2"><div class="en cstep">${fl("STEP "+c.n+" OF "+tot)}</div><svg class="csym" viewBox="0 0 170 132">${ESYM[c.s]}</svg><div class="en ctitle">${fl(c.t)}</div><div class="equote">${c.qt}</div><div class="cline">${c.l}</div></div>`).join("");
   $("#edots").innerHTML="<i></i>".repeat(ESTEPS.length);
   $("#eBack").addEventListener("click",()=>{if(epos>0){SFX.tap();eshow(epos-1,true)}});
   $("#eNext").addEventListener("click",()=>{SFX.tap();eshow(epos<ESTEPS.length-1?epos+1:0,true)});
