@@ -565,6 +565,7 @@ function tone(f,d,{type="square",v=.06,at=0,f2=null,attack=.004}={}){
 }
 /* recorded sound set (sounds/*.mp3). Each SFX plays its file once it has loaded,
    and falls back to the old synthesised beep if it hasn't. GAIN sets each file's level. */
+let failSnd=null;
 const SND={},GAIN={tap:.5,armed:.7,screen_open:.6,processing:.7,pass:.7,fail:.7,scan_loop:.5,alert_loop:.7,holo_start:.7,holo_end:.7};
 function loadSounds(){
   Object.keys(GAIN).forEach(n=>fetch("sounds/"+n+".mp3").then(r=>r.arrayBuffer())
@@ -584,7 +585,11 @@ const SFX={
   open:()=>play("screen_open")||tone(2200,.035,{v:.03}),
   processing:()=>{if(play("processing"))return;let t=0,gap=.24;while(t<1.75){SFX.chirp(t);t+=gap;gap=Math.max(.05,gap*.8)}},
   passSound:()=>!!play("pass"),
-  fail:()=>play("fail")||SFX.klaxon(),
+  /* klaxon plays 3 times (~8 s); cut short when the next scan starts or the scanner closes */
+  fail:()=>{const r=play("fail",{loop:true});if(!r)return SFX.klaxon();
+    const len=r.src.loopEnd-r.src.loopStart;r.src.stop(AC.currentTime+len*3);failSnd=r;},
+  failStop:()=>{if(!failSnd||!AC)return;const r=failSnd,t=AC.currentTime;failSnd=null;
+    try{r.g.gain.setValueAtTime(r.g.gain.value,t);r.g.gain.exponentialRampToValueAtTime(.0001,t+.12);r.src.stop(t+.15)}catch(e){}},
   chirp:(at=0)=>tone(1400+Math.random()*1200,.045,{v:.045,at,f2:1800+Math.random()*1200}),
   pass1:()=>tone(1500,.09,{type:"sine",v:.09,f2:1900}),
   pass2:()=>tone(1800,.09,{type:"sine",v:.09,f2:2300}),
@@ -749,7 +754,7 @@ $("#lights").addEventListener("click",()=>{if(state==="processing")return;next=n
 function view(id){$$("#ss .view").forEach(v=>v.classList.toggle("on",v.id===id))}
 function setPanel(cls){const p=$("#panel");p.classList.remove("fail","pass");if(cls)p.classList.add(cls)}
 function resetScanner(){
-  clearTimers();humStop();clearInterval(aurT);stopCycle();state="idle";
+  clearTimers();humStop();SFX.failStop();clearInterval(aurT);stopCycle();state="idle";
   $("#ss").classList.remove("result","busy","scanning");setPanel(null);view("vRet");
   $("#icStart").style.display="";$("#icStop").style.display="none";
   setStatus("READY");
@@ -759,7 +764,7 @@ function startScan(){
   {const[p,f]=M.k;if(S[p]>=10||S[f]>=10){S[p]=0;S[f]=0;save();paintTally()}}
   state="scanning";$("#ss").classList.add("scanning");
   $("#icStart").style.display="none";$("#icStop").style.display="";
-  setStatus("SCANNING");humStart();
+  setStatus("SCANNING");SFX.failStop();humStart();
   aurT=setInterval(()=>{$("#cxAur").textContent=Array.from({length:2},()=>rnd(T.codes)+" "+(Math.random()*90+10|0)).join(" ")},650);
 }
 $("#bStart").addEventListener("click",()=>{SFX.tap();if(state==="scanning")resetScanner();else if(state==="idle")startScan()});
@@ -1049,7 +1054,7 @@ $("#bReset").addEventListener("click",()=>{S.count=0;S.dcount=0;save();paintTall
    ============================================================ */
 let wl=null;async function wake(){try{if("wakeLock" in navigator&&!wl){wl=await navigator.wakeLock.request("screen");wl.addEventListener("release",()=>wl=null)}}catch(e){}}
 document.addEventListener("pointerdown",wake,{once:true});
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")wake();else humStop()});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")wake();else{humStop();SFX.failStop()}});
 document.addEventListener("gesturestart",e=>e.preventDefault());
 if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>document.addEventListener("visibilitychange",()=>{if(!document.hidden)r.update().catch(()=>{})})).catch(()=>{});
 </script>
