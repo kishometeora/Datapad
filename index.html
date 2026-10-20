@@ -244,6 +244,22 @@ body.aurOn .headline .flip{font-size:.74em}
 #ss.busy .bot .btn,#ss.busy .home{pointer-events:none}
 
 /* full-screen flash */
+/* ===== CITATIONS ===== */
+#cit .clist{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+#cit .cbtn{flex:1;display:flex;align-items:center;gap:16px;padding:0 18px;background:none;border:2px solid rgba(var(--rgb),.4);border-radius:4px;color:var(--c);font-family:Orb;font-weight:700;font-size:19px;letter-spacing:.1em;text-align:left}
+#cit .cbtn:active{background:rgba(var(--rgb),.15)}
+#cit .cbtn i{font-style:normal;font-size:13px;opacity:.5;width:18px}
+#citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:0 26px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
+#citOv.on{display:flex}
+#citOv img{width:96px;height:96px;filter:url(#tRed) drop-shadow(0 0 4px var(--red))}
+#citOv .ct{font-size:22px;letter-spacing:.16em}
+#citOv .co{font-size:32px;line-height:1.2;text-shadow:0 0 8px rgba(var(--red-rgb),.6)}
+#citOv .cr{font-size:18px;line-height:1.6;letter-spacing:.04em;max-width:340px;color:#fff;opacity:.9}
+#citOv .ctap{position:absolute;bottom:18px;font-size:11px;letter-spacing:.2em;opacity:.45}
+/* stacked English/Aurebesh (follows the global flip) so text never jumps */
+.fx2{display:inline-grid;justify-items:center;align-items:center;transition:opacity .08s}.fx2>span{grid-area:1/1}
+.fx2>.a{font-family:Aur;font-weight:400;font-size:.86em;letter-spacing:.03em;visibility:hidden}
+body.aurOn .fx2>.e{visibility:hidden}body.aurOn .fx2>.a{visibility:visible}body.glitch .fx2{opacity:.15}
 #flash{position:fixed;inset:0;z-index:50;pointer-events:none;opacity:0}
 #flash.go{animation:blinks .72s steps(1)}
 @keyframes blinks{0%{opacity:1}17%{opacity:0}33%{opacity:1}50%{opacity:0}67%{opacity:1}84%,100%{opacity:0}}
@@ -479,6 +495,18 @@ body.aurOn .headline .flip{font-size:.74em}
   <div id="ijump"></div>
 </section>
 
+<!-- ======================= CITATIONS ======================= -->
+<section id="cit" class="screen">
+  <div class="top">
+    <button class="home" data-home><img class="emb" src="emblems/imperial.png" alt=""></button>
+    <div class="box amb en" style="flex:1;height:86px;display:flex;align-items:center;justify-content:center;font-size:20px"><span class="fx2"><span class="e">CITATIONS</span><span class="a" aria-hidden="true">CITATIONS</span></span></div>
+  </div>
+  <div style="flex:1;min-height:0;position:relative;display:flex">
+    <div class="clist" id="clist"></div>
+    <div id="citOv"><img src="emblems/imperial.png" alt=""><div class="en ct" id="citT"></div><div class="en co" id="citO"></div><div class="cr" id="citR"></div><div class="en ctap">TAP TO CLOSE</div></div>
+  </div>
+</section>
+
 <!-- ======================= ENLIST (sign-up guide) ======================= -->
 <section id="enl" class="screen">
   <div class="top">
@@ -649,6 +677,7 @@ function go(id,mode){
   if(id==="set")openSettings();
   if(id==="info")ishow(START,false);
   if(id==="enl")eshow(0,false);
+  if(cur!=="cit"&&window.citClose)citClose();
   if(id==="ss"){resetScanner();startScan()}   /* every scanner starts scanning as soon as it opens */
 }
 $$("[data-home]").forEach(b=>b.addEventListener("click",()=>{SFX.tap();go("menu")}));
@@ -666,6 +695,7 @@ function ticks(cx,cy,r,n,len){let d="";for(let i=0;i<n;i++){const a=i*2*Math.PI/
 const IC={
  scan:`<rect class="ln" x="6" y="16" width="68" height="50" rx="4"/><rect class="md" x="33" y="9" width="14" height="10" rx="2"/><rect class="md" x="13" y="26" width="22" height="28" rx="1"/><circle class="md" cx="24" cy="35" r="5"/><path class="md" d="M16 52c1-6 4-8 8-8s7 2 8 8"/><rect class="fl" x="42" y="28" width="26" height="5" rx="1"/><rect class="fd" x="42" y="38" width="20" height="5" rx="1"/><rect class="fd" x="42" y="48" width="24" height="5" rx="1"/>`,
  droid:`<path class="ln" d="M6 46h10V30h10v24h10V22h10v32h10V38h10v8h8"/><path class="dm" d="M6 66h68M10 62v8M24 62v8M38 62v8M52 62v8M66 62v8"/><path class="md" d="M6 14h20M54 14h20"/>`,
+ cite:`<rect class="ln" x="16" y="6" width="48" height="68" rx="3"/><rect class="fl" x="24" y="16" width="32" height="6" rx="1"/><rect class="fd" x="24" y="28" width="26" height="5" rx="1"/><rect class="fd" x="24" y="38" width="30" height="5" rx="1"/><circle class="md" cx="48" cy="58" r="9"/><path class="md" d="M44 58l3 3 6-7"/>`,
  alert:`<path class="ln" d="M12 56 40 28 68 56"/><path class="ln" d="M22 70 40 52 58 70"/><path class="md" d="M28 22 40 10 52 22"/>`,
  comms:`<rect class="fl" x="12" y="34" width="12" height="12"/><path class="md" d="${arc(18,40,18,-50,50)}"/><path class="ln" d="${arc(18,40,32,-45,45)}"/><path class="md" d="${arc(18,40,46,-38,38)}"/><path class="dm" d="M10 72h60"/>`,
  wanted:`<path class="ln" d="M40 18 58 40 40 62 22 40Z"/><rect class="fl" x="36" y="36" width="8" height="8"/><path class="md" d="M6 22V6h16M58 6h16v16M74 58v16H58M22 74H6V58"/><path class="dm" d="M40 2v8M40 70v8"/>`,
@@ -673,7 +703,7 @@ const IC={
  signup:`<path class="ln" d="M8 14 18 24 8 34"/><rect class="fl" x="26" y="20" width="46" height="8"/><rect class="fd" x="26" y="38" width="34" height="8"/><rect class="fd" x="26" y="56" width="40" height="8"/><path class="md" d="M10 50h8M10 60h8"/>`,
  holo:`<path class="ln" d="M24 72h32"/><path class="md" d="M34 66h12v6H34Z"/><path class="md" d="M40 64 16 14M40 64 64 14"/><path class="ln" d="M22 26h36M26 36h28M30 46h20"/><path class="dm" d="M16 14h48"/>`
 };
-const TILES=[["scan","ss","id"],["droid","ss","droid"],["alert"],["comms"],["wanted","gal"],["qr","info"],["signup","enl"],["holo"]];
+const TILES=[["scan","ss","id"],["droid","ss","droid"],["cite","cit"],["comms"],["wanted","gal"],["qr","info"],["signup","enl"],["holo"]];
 const TBR=`<svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 14V1h13M86 1h13v13M99 86v13H86M14 99H1V86" vector-effect="non-scaling-stroke"/></svg>`;
 const tileArt=k=>k==="droid"?`<div class="tcyc" id="tcDroid">${["emblems/r2.png","emblems/c3po.png","emblems/deathstar.png"].map((s,i)=>`<img src="${s}" class="${i?"":"on"}" alt="">`).join("")}</div>`
   :k==="wanted"?`<div class="tcyc face" id="tcFace">${TBR}<img class="on" alt=""><img alt=""></div>`
@@ -991,6 +1021,34 @@ function ishow(i,anim){
   const end=()=>{if(x0===null)return;x0=null;
     if(dx<-50){SFX.tap();ishow(ipos+1,true)}else if(dx>50){SFX.tap();ishow(ipos-1,true)}else ishow(ipos,true)};
   el.addEventListener("pointerup",end);el.addEventListener("pointercancel",end);el.addEventListener("pointerleave",end);
+})();
+
+/* ============================================================
+   CITATIONS — tap an offence to issue it full screen (red flash + alarm once). Tap to close.
+   ============================================================ */
+const CITES=[
+ ["PARKING","PARKED IN A RESTRICTED ZONE","Move this vehicle by Imperial order"],
+ ["LOITERING","LOITERING IN A SECURE SECTOR","Move along. This area is under Imperial lockdown"],
+ ["INSIGNIA","WEARING REBEL INSIGNIA","Your identity has been logged by the ISB"],
+ ["JEDI","SUSPECTED JEDI","Report to the Inquisitorius immediately"],
+ ["LIGHTSABER","LIGHTSABER DETECTED","Jedi weapons are forbidden by Imperial decree"],
+ ["CREATURE","UNLICENSED CREATURE","All creatures must be registered with the Imperial Bureau of Standards"],
+ ["TRANSPORT","UNREGISTERED TRANSPORTATION","This vehicle has been logged for impound"]
+];
+(function buildCites(){
+  const fx=t=>`<span class="fx2"><span class="e">${t}</span><span class="a" aria-hidden="true">${t}</span></span>`;
+  $("#clist").innerHTML=CITES.map((c,i)=>`<button class="cbtn" data-i="${i}"><i>${String(i+1).padStart(2,"0")}</i>${c[0]}</button>`).join("");
+  let snd=null;
+  const close=()=>{$("#citOv").classList.remove("on");if(snd&&AC){try{snd.src.stop()}catch(e){}snd=null}};
+  $$("#clist .cbtn").forEach(b=>b.addEventListener("click",()=>{
+    const c=CITES[+b.dataset.i];
+    $("#citT").innerHTML=fx("IMPERIAL CITATION");$("#citO").innerHTML=fx(c[1]);$("#citR").textContent=c[2];
+    $("#citOv").classList.add("on");
+    const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
+    snd=play("alert_loop");if(!snd)SFX.klaxon();
+  }));
+  $("#citOv").addEventListener("click",()=>{SFX.tap();close()});
+  window.citClose=close;
 })();
 
 /* ============================================================
