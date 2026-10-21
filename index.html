@@ -877,10 +877,10 @@ function reveal(result){
     if(!M.wanted)$("#resSym").innerHTML=FAILSYM();setHeadline(M.failHead);SFX.fail();
   }else{
     $("#resSym").innerHTML=METER;setHeadline(M.passHead);
-    const rec=SFX.passSound();
-    later(()=>{fillBar("m1");if(!rec)SFX.pass1()},750);
-    later(()=>{fillBar("m2");if(!rec)SFX.pass2()},1100);
-    later(()=>{fillBar("m3");if(!rec)SFX.calm()},1450);
+    /* bars 1 + 2: the "armed" chirp; bar 3: the full pass sound (Chris's clips; synth only if they haven't loaded) */
+    later(()=>{fillBar("m1");play("armed")||SFX.pass1()},750);
+    later(()=>{fillBar("m2");play("armed")||SFX.pass2()},1100);
+    later(()=>{fillBar("m3");SFX.passSound()||SFX.calm()},1450);
   }
   rollNext();showLights();
   $("#ss").classList.remove("busy");
