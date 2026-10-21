@@ -421,7 +421,7 @@ body.aurOn .fx2>.e{visibility:hidden}body.aurOn .fx2>.a{visibility:visible}body.
       <div class="cx cx-tr">
         <svg class="br" viewBox="0 0 160 48" preserveAspectRatio="none"><path class="md" d="M2 12V2h12M146 2h12v10M158 36v10h-12M14 46H2V36"/></svg>
         <div class="aur" id="cxAur">ISB 7 K4 TR</div>
-        <div id="tsel"><button data-t="0" aria-label="plans"><img src="emblems/deathstar.png" alt=""></button><button data-t="1" aria-label="astromech"><img src="emblems/r2.png" alt=""></button><button data-t="2" aria-label="protocol"><img src="emblems/c3po.png" alt=""></button></div>
+        <div id="tsel"><button data-t="0" aria-label="plans"><img src="emblems/deathstar.png" alt=""></button><button data-t="1" aria-label="astromech"><img src="emblems/r2.png" alt=""></button><button data-t="2" aria-label="protocol"><img src="emblems/c3po_solid.png" alt=""></button></div>
       </div>
       <div class="cx cx-bl">
         <svg class="br" viewBox="0 0 160 48" preserveAspectRatio="none"><path class="md" d="M2 12V2h12M146 2h12v10M158 36v10h-12M14 46H2V36"/></svg>
@@ -844,7 +844,7 @@ $("#droidSchem").innerHTML=`
  <circle class="dm" cx="150" cy="135" r="112" stroke-dasharray="6 8"/>
  <image id="cyc" href="emblems/deathstar.png" x="55" y="40" width="190" height="190"/>
  <path class="dm" d="M30 258h240M40 252v12M80 252v12M120 252v12M160 252v12M200 252v12M240 252v12"/>`;
-const TARGETS=[["emblems/deathstar.png",["PLANS","DETECTED"]],["emblems/r2.png",["ASTROMECH","DETECTED"]],["emblems/c3po.png",["PROTOCOL DROID","DETECTED"]]];
+const TARGETS=[["emblems/deathstar.png",["PLANS","DETECTED"]],["emblems/r2.png",["ASTROMECH","DETECTED"]],["emblems/c3po_solid.png",["PROTOCOL DROID","DETECTED"]]];
 let cycT=null;
 function startCycle(){let i=0;const im=$("#cyc");clearInterval(cycT);cycT=setInterval(()=>{i=(i+1)%TARGETS.length;im.setAttribute("href",TARGETS[i][0])},170)}
 function stopCycle(){clearInterval(cycT);cycT=null}
