@@ -226,6 +226,7 @@ body.glitch .flip{opacity:.15}
 .segs i.on{background:var(--c);border-color:var(--c);box-shadow:0 0 4px rgba(var(--rgb),.6)}
 /* result */
 #vRes{gap:36px;text-align:center}
+#vRes.hold #resHead,#vRes.hold #resTop,#vRes.hold #resFoot{visibility:hidden}
 #vRes .sym{width:190px;height:190px}
 .headline{font-size:46px;line-height:1.15;min-height:110px;display:flex;flex-direction:column;justify-content:center}
 .headline > div{white-space:nowrap}
@@ -809,7 +810,7 @@ $("#lights").addEventListener("click",()=>{if(state==="processing")return;next=n
 function view(id){$$("#ss .view").forEach(v=>v.classList.toggle("on",v.id===id))}
 function setPanel(cls){const p=$("#panel");p.classList.remove("fail","pass");if(cls)p.classList.add(cls)}
 function resetScanner(){
-  clearTimers();humStop();SFX.failStop();clearInterval(aurT);stopCycle();state="idle";
+  clearTimers();humStop();SFX.failStop();$("#vRes").classList.remove("hold");clearInterval(aurT);stopCycle();state="idle";
   $("#ss").classList.remove("result","busy","scanning");setPanel(null);view("vRet");
   $("#icStart").style.display="";$("#icStop").style.display="none";
   setStatus("READY");
@@ -852,9 +853,9 @@ $("#vtap").addEventListener("click",()=>{
   paintBlocks();view("vProc");if(M.targets)startCycle();
   if(M.wanted){const wb=$("#wbars");wb.classList.remove("go");$$("#wbars b").forEach(b=>b.style.setProperty("--w",(55+Math.random()*45|0)+"%"));void wb.offsetWidth;wb.classList.add("go")}
   const sg=$$("#segs i");sg.forEach(s=>s.classList.remove("on"));
-  sg.forEach((s,i)=>later(()=>s.classList.add("on"),(i+1)*230));
+  sg.forEach((s,i)=>later(()=>s.classList.add("on"),(i+1)*200));   /* 8 blocks done by 1.6 s */
   SFX.processing();
-  later(()=>reveal(result),2000);
+  later(()=>reveal(result),1700);   /* result lands as the processing sound ends */
 });
 
 function reveal(result){
@@ -877,15 +878,16 @@ function reveal(result){
   if(result==="fail"){
     if(!M.wanted)$("#resSym").innerHTML=FAILSYM();setHeadline(M.failHead);SFX.fail();
   }else{
-    $("#resSym").innerHTML=METER;setHeadline(M.passHead);
-    /* bars 1 + 2: the "armed" chirp; bar 3: the full pass sound (Chris's clips; synth only if they haven't loaded) */
-    later(()=>{fillBar("m1");play("armed")||SFX.pass1()},750);
-    later(()=>{fillBar("m2");play("armed")||SFX.pass2()},1100);
-    later(()=>{fillBar("m3");SFX.passSound()||SFX.calm();flash("var(--grn-flash)")},1450);
+    /* pass build-up: bars fill straight away with the "armed" chirp; the headline is held back until bar 3,
+       when the full pass sound, the green flash and APPROVED / MOVE ALONG all land together */
+    $("#resSym").innerHTML=METER;setHeadline(M.passHead);$("#vRes").classList.add("hold");
+    later(()=>{fillBar("m1");play("armed")||SFX.pass1()},150);
+    later(()=>{fillBar("m2");play("armed")||SFX.pass2()},500);
+    later(()=>{fillBar("m3");SFX.passSound()||SFX.calm();flash("var(--grn-flash)");$("#vRes").classList.remove("hold")},850);
   }
   rollNext();showLights();
   $("#ss").classList.remove("busy");
-  later(()=>$("#ss").classList.add("result"),700);
+  later(()=>$("#ss").classList.add("result"),result==="pass"?950:700);   /* tap-for-next only after the finale */
 }
 /* tap anywhere: clear the result and go straight into the next scan */
 $("#catch").addEventListener("click",()=>{SFX.tap();resetScanner();startScan()});
