@@ -83,7 +83,7 @@ body.glitch .flip{opacity:.15}
 .btn[disabled]{opacity:.28;pointer-events:none;box-shadow:none}
 
 /* ============ MENU ============ */
-#menu .head{height:360px;flex:none;padding:16px;display:flex;flex-direction:column}
+#menu .head{height:304px;flex:none;padding:16px;display:flex;flex-direction:column}
 #menu .h-aur{font-size:30px;white-space:nowrap;overflow:hidden;height:40px}
 #menu .mid{display:flex;gap:16px;margin-top:18px}
 #menu .bars{flex:1;display:flex;flex-direction:column;gap:12px;padding-top:6px;min-width:0}
@@ -96,20 +96,20 @@ body.glitch .flip{opacity:.15}
 #menu .low{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px}
 #menu .low .aur{font-size:20px;white-space:nowrap;overflow:hidden}
 .pips{display:flex;gap:8px}.pips i{width:14px;height:14px;border-radius:2px;background:rgba(var(--rgb),.3)}.pips i.on{background:var(--c);box-shadow:0 0 4px rgba(var(--rgb),.6)}
-#grid{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);gap:1px;background:rgba(var(--rgb),.22)}
+#grid{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:1px;background:rgba(var(--rgb),.22)}
 .tile{background:#000;display:flex;align-items:center;justify-content:center;border:0}
-.tile svg{width:86px;height:86px}
+.tile svg{width:100px;height:100px}
+#tcCit image{filter:brightness(0) invert(.92)}
 .tile.off svg{opacity:.22}
 .tile{position:relative}
-.tcyc{position:relative;width:96px;height:96px}
+.tcyc{position:relative;width:112px;height:112px}
 /* ID badge hologram "fizzle" */
 .ta{display:flex;align-items:center;justify-content:center}
 .ta.fz{animation:fizzle .6s steps(1)}
 @keyframes fizzle{0%{opacity:1;transform:none}10%{opacity:.25;transform:translateX(3px)}20%{opacity:.9;transform:translateX(-2px) skewX(-6deg)}30%{opacity:.4;transform:none;filter:brightness(1.8)}45%{opacity:1;transform:translateX(1px)}60%{opacity:.6}75%{opacity:1;transform:none;filter:none}100%{opacity:1}}
 .tcyc>img,.tcyc>svg.lay{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0}
 .tcyc>img.on,.tcyc>svg.lay.on{opacity:1}
-#tcDroid img[src$="c3po.png"]{transform:scale(.75)}
-.tcyc.face{width:84px;height:104px}
+.tcyc.face{width:96px;height:120px}
 .tcyc.face img{object-fit:cover;object-position:50% 25%}
 .tcyc .br{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px)}
 .tile.live:active{background:rgba(var(--rgb),.12)}
@@ -707,20 +707,32 @@ function ticks(cx,cy,r,n,len){let d="";for(let i=0;i<n;i++){const a=i*2*Math.PI/
    MENU
    ============================================================ */
 const IC={
- scan:`<rect class="ln" x="6" y="16" width="68" height="50" rx="4"/><rect class="md" x="33" y="9" width="14" height="10" rx="2"/><rect class="md" x="13" y="26" width="22" height="28" rx="1"/><circle class="md" cx="24" cy="35" r="5"/><path class="md" d="M16 52c1-6 4-8 8-8s7 2 8 8"/><rect class="fl" x="42" y="28" width="26" height="5" rx="1"/><rect class="fd" x="42" y="38" width="20" height="5" rx="1"/><rect class="fd" x="42" y="48" width="24" height="5" rx="1"/>`,
+ scan:`<g style="fill:var(--c)"><rect x="30" y="7" width="20" height="13" rx="3"/><rect x="4" y="16" width="72" height="54" rx="7"/></g><rect x="35" y="11" width="10" height="4" rx="1" fill="#000"/><rect x="11" y="26" width="24" height="35" rx="2" fill="#000"/><g style="fill:var(--c)"><circle cx="23" cy="38" r="6"/><path d="M14 59c1-7 5-10 9-10s8 3 9 10z"/></g><g fill="#000"><rect x="41" y="29" width="28" height="6" rx="1"/><rect x="41" y="41" width="21" height="6" rx="1"/><rect x="41" y="53" width="26" height="6" rx="1"/></g>`,
  droid:`<path class="ln" d="M6 46h10V30h10v24h10V22h10v32h10V38h10v8h8"/><path class="dm" d="M6 66h68M10 62v8M24 62v8M38 62v8M52 62v8M66 62v8"/><path class="md" d="M6 14h20M54 14h20"/>`,
  cite:`<rect class="ln" x="16" y="6" width="48" height="68" rx="3"/><rect class="fl" x="24" y="16" width="32" height="6" rx="1"/><rect class="fd" x="24" y="28" width="26" height="5" rx="1"/><rect class="fd" x="24" y="38" width="30" height="5" rx="1"/><circle class="md" cx="48" cy="58" r="9"/><path class="md" d="M44.5 54.5l7 7M51.5 54.5l-7 7"/>`,
  alert:`<path class="ln" d="M12 56 40 28 68 56"/><path class="ln" d="M22 70 40 52 58 70"/><path class="md" d="M28 22 40 10 52 22"/>`,
  comms:`<rect class="fl" x="12" y="34" width="12" height="12"/><path class="md" d="${arc(18,40,18,-50,50)}"/><path class="ln" d="${arc(18,40,32,-45,45)}"/><path class="md" d="${arc(18,40,46,-38,38)}"/><path class="dm" d="M10 72h60"/>`,
  wanted:`<path class="ln" d="M40 18 58 40 40 62 22 40Z"/><rect class="fl" x="36" y="36" width="8" height="8"/><path class="md" d="M6 22V6h16M58 6h16v16M74 58v16H58M22 74H6V58"/><path class="dm" d="M40 2v8M40 70v8"/>`,
- qr:`<path class="md" d="M8 8h24v24H8ZM48 8h24v24H48ZM8 48h24v24H8Z"/><rect class="fl" x="15" y="15" width="10" height="10"/><rect class="fl" x="55" y="15" width="10" height="10"/><rect class="fl" x="15" y="55" width="10" height="10"/><rect class="fl" x="48" y="48" width="8" height="8"/><rect class="fl" x="64" y="48" width="8" height="8"/><rect class="fl" x="56" y="56" width="8" height="8"/><rect class="fl" x="48" y="64" width="8" height="8"/><rect class="fl" x="64" y="64" width="8" height="8"/>`,
+ qr:`<rect x="2" y="2" width="30" height="30" rx="3" style="fill:var(--c)"/><rect x="8" y="8" width="18" height="18" fill="#000"/><rect x="12" y="12" width="10" height="10" style="fill:var(--c)"/><rect x="48" y="2" width="30" height="30" rx="3" style="fill:var(--c)"/><rect x="54" y="8" width="18" height="18" fill="#000"/><rect x="58" y="12" width="10" height="10" style="fill:var(--c)"/><rect x="2" y="48" width="30" height="30" rx="3" style="fill:var(--c)"/><rect x="8" y="54" width="18" height="18" fill="#000"/><rect x="12" y="58" width="10" height="10" style="fill:var(--c)"/><g style="fill:var(--c)"><rect x="46" y="46" width="10" height="10" rx="1"/><rect x="66" y="46" width="10" height="10" rx="1"/><rect x="56" y="56" width="10" height="10" rx="1"/><rect x="46" y="66" width="10" height="10" rx="1"/><rect x="66" y="66" width="10" height="10" rx="1"/><rect x="56" y="36" width="10" height="10" rx="1"/><rect x="36" y="56" width="10" height="10" rx="1"/></g>`,
  signup:`<path class="ln" d="M8 14 18 24 8 34"/><rect class="fl" x="26" y="20" width="46" height="8"/><rect class="fd" x="26" y="38" width="34" height="8"/><rect class="fd" x="26" y="56" width="40" height="8"/><path class="md" d="M10 50h8M10 60h8"/>`,
  holo:`<path class="ln" d="M24 72h32"/><path class="md" d="M34 66h12v6H34Z"/><path class="md" d="M40 64 16 14M40 64 64 14"/><path class="ln" d="M22 26h36M26 36h28M30 46h20"/><path class="dm" d="M16 14h48"/>`
 };
-const TILES=[["scan","ss","id"],["droid","ss","droid"],["wanted","gal"],["cite","cit"],["comms"],["holo"],["signup","enl"],["qr","info"]];
+const TILES=[["scan","ss","id"],["droid","ss","droid"],["wanted","gal"],["cite","cit"],["signup","enl"],["qr","info"]];   /* holo-message + starfield tiles return when built */
 const TBR=`<svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 14V1h13M86 1h13v13M99 86v13H86M14 99H1V86" vector-effect="non-scaling-stroke"/></svg>`;
-const tileArt=k=>k==="droid"?`<div class="tcyc" id="tcDroid">${["emblems/r2.png","emblems/c3po.png","emblems/deathstar.png"].map((s,i)=>`<img src="${s}" class="${i?"":"on"}" alt="">`).join("")}</div>`
+/* topic icons (simple solid silhouettes, 100×100) shown alternately with the Imperial cog */
+const CIC={
+ car:`<path d="M14 58l8-20c2-5 6-8 12-8h32c6 0 10 3 12 8l8 20c5 1 8 5 8 10v10c0 3-2 5-5 5h-5a11 11 0 0 1-22 0H38a11 11 0 0 1-22 0h-5c-3 0-5-2-5-5V68c0-5 3-9 8-10zm14-1h44l-6-15c-1-2-3-3-5-3H39c-2 0-4 1-5 3z"/><circle cx="27" cy="83" r="6" fill="#000"/><circle cx="73" cy="83" r="6" fill="#000"/>`,
+ loiter:`<circle cx="50" cy="16" r="10"/><path d="M38 30h24c4 0 7 3 7 7v26h-8v31h-9V66h-4v28h-9V63h-8V37c0-4 3-7 7-7z"/><path d="M76 20a12 12 0 1 1 0 24a12 12 0 1 1 0-24zm-1 5v8l5 4 2-2-4-4v-6z" opacity=".9"/>`,
+ rebel:`<image href="emblems/rebel.png" x="6" y="6" width="88" height="88"/>`,
+ jedi:`<image href="emblems/jedi_yoda.png" x="-8" y="-6" width="116" height="112"/>`,
+ saber:`<path d="M80 6l7 7-46 46-7-7z" opacity=".95"/><path d="M33 51l16 16-7 7-4-4-16 16c-2 2-5 2-7 0l-2-2c-2-2-2-5 0-7l16-16-3-3z"/>`,
+ dog:`<path d="M20 48c0-4 3-6 7-6h38l6 6v16h-4v24h-8V66H33v22h-8V64c-4-2-5-8-5-16z"/><circle cx="74" cy="38" r="12"/><path d="M66 30l3-16 9 12z"/><rect x="78" y="36" width="16" height="10" rx="4"/><path d="M22 47 9 30l5-4 12 15z"/>`,
+ jester:`<image href="emblems/jarjar_icon.png" x="4" y="4" width="92" height="92"/>`,
+ pram:`<path d="M12 22h8l5 14h59c3 0 5 3 4 6-3 16-17 28-34 28H48c-14 0-25-9-28-22l-8-26z"/><path d="M54 8a34 34 0 0 1 32 26H54z" opacity=".85"/><circle cx="34" cy="84" r="9"/><circle cx="72" cy="84" r="9"/>`
+};
+const tileArt=k=>k==="droid"?`<div class="tcyc" id="tcDroid">${["emblems/r2.png","emblems/c3po_solid.png","emblems/deathstar.png"].map((s,i)=>`<img src="${s}" class="${i?"":"on"}" alt="">`).join("")}</div>`
   :k==="wanted"?`<div class="tcyc face" id="tcFace">${TBR}<img class="on" alt=""><img alt=""></div>`
+  :k==="cite"?`<div class="tcyc" id="tcCit">${["car","dog","jedi","jester","saber","pram","rebel","loiter"].map((n,i)=>`<svg class="lay${i?"":" on"}" viewBox="0 0 100 100"><g transform="translate(50 50) scale(.62) translate(-50 -50)" style="fill:var(--c)">${CIC[n]}</g><circle cx="50" cy="50" r="44" fill="none" style="stroke:var(--c)" stroke-width="7"/><path d="M24 24 76 76" stroke="#000" stroke-width="15"/><path d="M19 19 81 81" style="stroke:var(--c)" stroke-width="7"/></svg>`).join("")}</div>`
   :k==="signup"?`<div class="tcyc" id="tcEnl">${["signup","research","build","submit","cleared"].map((n,i)=>`<img src="emblems/enlist/${n}.png" class="${i?"":"on"}" alt="">`).join("")}</div>`
   :k==="qr"?`<div class="tcyc" id="tcQr"><svg class="lay on" viewBox="-3 -3 86 86">${IC.qr}</svg><img src="emblems/cogbird.png" alt=""></div>`
   :`<svg viewBox="0 0 80 80">${IC[k]}</svg>`;
@@ -968,11 +980,12 @@ showSuspect();
   const d=[...document.querySelectorAll("#tcDroid>img")];let di=0;
   const q=[...document.querySelectorAll("#tcQr>*")];let qi=0;
   const en=[...document.querySelectorAll("#tcEnl>img")];let ei=0;
+  const ct=[...document.querySelectorAll("#tcCit>svg")];let ci=0;
   const faces=[...document.querySelectorAll("#tcFace>img")];let fi=0;
   const order=SUSPECTS.map(x=>x.src).sort(()=>Math.random()-.5);let oi=0;
   faces[0].src=order[0];faces[1].src=order[1];
   const step=(a,i)=>{a[i].classList.remove("on");i=(i+1)%a.length;a[i].classList.add("on");return i};
-  const swap={tcDroid:()=>{di=step(d,di)},tcQr:()=>{qi=step(q,qi)},tcEnl:()=>{ei=step(en,ei)},
+  const swap={tcDroid:()=>{di=step(d,di)},tcQr:()=>{qi=step(q,qi)},tcEnl:()=>{ei=step(en,ei)},tcCit:()=>{ci=step(ct,ci)},
     tcFace:()=>{oi=(oi+1)%order.length;const nx=faces[1-fi];nx.src=order[oi];faces[fi].classList.remove("on");nx.classList.add("on");fi=1-fi}};
   const tas=[...document.querySelectorAll("#grid .ta")];
   setInterval(()=>{
@@ -1046,17 +1059,6 @@ function ishow(i,anim){
 /* ============================================================
    CITATIONS — tap an offence to issue it full screen (red flash + alarm once). Tap to close.
    ============================================================ */
-/* topic icons (simple solid silhouettes, 100×100) shown alternately with the Imperial cog */
-const CIC={
- car:`<path d="M14 58l8-20c2-5 6-8 12-8h32c6 0 10 3 12 8l8 20c5 1 8 5 8 10v10c0 3-2 5-5 5h-5a11 11 0 0 1-22 0H38a11 11 0 0 1-22 0h-5c-3 0-5-2-5-5V68c0-5 3-9 8-10zm14-1h44l-6-15c-1-2-3-3-5-3H39c-2 0-4 1-5 3z"/><circle cx="27" cy="83" r="6" fill="#000"/><circle cx="73" cy="83" r="6" fill="#000"/>`,
- loiter:`<circle cx="50" cy="16" r="10"/><path d="M38 30h24c4 0 7 3 7 7v26h-8v31h-9V66h-4v28h-9V63h-8V37c0-4 3-7 7-7z"/><path d="M76 20a12 12 0 1 1 0 24a12 12 0 1 1 0-24zm-1 5v8l5 4 2-2-4-4v-6z" opacity=".9"/>`,
- rebel:`<image href="emblems/rebel.png" x="6" y="6" width="88" height="88"/>`,
- jedi:`<image href="emblems/jedi_yoda.png" x="-8" y="-6" width="116" height="112"/>`,
- saber:`<path d="M80 6l7 7-46 46-7-7z" opacity=".95"/><path d="M33 51l16 16-7 7-4-4-16 16c-2 2-5 2-7 0l-2-2c-2-2-2-5 0-7l16-16-3-3z"/>`,
- dog:`<path d="M20 48c0-4 3-6 7-6h38l6 6v16h-4v24h-8V66H33v22h-8V64c-4-2-5-8-5-16z"/><circle cx="74" cy="38" r="12"/><path d="M66 30l3-16 9 12z"/><rect x="78" y="36" width="16" height="10" rx="4"/><path d="M22 47 9 30l5-4 12 15z"/>`,
- jester:`<image href="emblems/jarjar_icon.png" x="4" y="4" width="92" height="92"/>`,
- pram:`<path d="M12 22h8l5 14h59c3 0 5 3 4 6-3 16-17 28-34 28H48c-14 0-25-9-28-22l-8-26z"/><path d="M54 8a34 34 0 0 1 32 26H54z" opacity=".85"/><circle cx="34" cy="84" r="9"/><circle cx="72" cy="84" r="9"/>`
-};
 const CITES=[
  ["NO PARKING","PARKED IN A RESTRICTED ZONE","Move this vehicle by Imperial order","car"],
  ["NO LOITERING","LOITERING IN A SECURE SECTOR","Move along. This area is under Imperial lockdown","loiter"],
