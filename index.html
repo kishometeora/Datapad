@@ -1057,11 +1057,11 @@ const CIC={
 const CITES=[
  ["PARKING","PARKED IN A RESTRICTED ZONE","Move this vehicle by Imperial order","car"],
  ["LOITERING","LOITERING IN A SECURE SECTOR","Move along. This area is under Imperial lockdown","loiter"],
- ["INSIGNIA","WEARING REBEL INSIGNIA","Your identity has been logged by the ISB","rebel"],
- ["JEDI","SUSPECTED JEDI","Report to the Inquisitorius immediately","jedi"],
+ ["REBEL","WEARING REBEL INSIGNIA","Your identity has been logged by the ISB","rebel"],
+ ["JEDI DETECTED","SUSPECTED JEDI","Report to the Inquisitorius immediately","jedi"],
  ["LIGHTSABER","LIGHTSABER DETECTED","Jedi weapons are forbidden by Imperial decree","saber"],
  ["CREATURE","UNLICENSED CREATURE","All creatures must be registered with the Imperial Bureau of Standards","dog"],
- ["TRANSPORT","UNREGISTERED TRANSPORTATION","This vehicle has been logged for impound","pram"],
+ ["UNREGISTERED","UNREGISTERED TRANSPORTATION","This vehicle has been logged for impound","pram"],
  ["BAD JOKE","MADE AN OBVIOUS JOKE","We've heard it before","jester"]
 ];
 const CIT_EN=FLIP_EN,CIT_AUR=FLIP_AUR,CIT_SWAP=1400;   /* 75/25 like everything else; cog/icon swap every 1.4 s */
@@ -1076,7 +1076,8 @@ const CIT_EN=FLIP_EN,CIT_AUR=FLIP_AUR,CIT_SWAP=1400;   /* 75/25 like everything 
   $$("#clist .cbtn").forEach(b=>b.addEventListener("click",()=>{
     const c=CITES[+b.dataset.i];
     close();
-    $("#citW").innerHTML=fx(c[0]);$("#citW").style.fontSize=Math.min(80,Math.floor(336/(c[0].length*.88)))+"px";
+    {const ws=c[0].split(" "),lw=Math.max(...ws.map(w=>w.length));   /* two-word titles go on two lines, sized by the longer word */
+    $("#citW").innerHTML=ws.map(fx).join("<br>");$("#citW").style.fontSize=Math.min(ws.length>1?64:80,Math.floor(336/(lw*.88)))+"px";}
     $("#citT").innerHTML=fx("IMPERIAL CITATION");$("#citO").innerHTML=fx(c[1]);$("#citR").textContent=c[2];
     $("#citIc").innerHTML=`<g transform="translate(50 50) scale(.6) translate(-50 -50)">${CIC[c[3]]}</g><circle cx="50" cy="50" r="44" fill="none" stroke="var(--red)" stroke-width="8"/><path d="M24 24 76 76" stroke="#000" stroke-width="16"/><path d="M19 19 81 81" stroke="var(--red)" stroke-width="8"/>`;ov.querySelector(".cic img").classList.add("on");$("#citIc").classList.remove("on");
     ov.classList.add("on");tF=setTimeout(flip,CIT_EN);tS=setTimeout(swap,CIT_SWAP);
