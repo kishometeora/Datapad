@@ -868,8 +868,9 @@ function reveal(result){
     $("#resTop").innerHTML=fl(M.top);$("#resFoot").innerHTML=fl(M.foot);$("#resFoot").style.fontSize=fit(M.foot,18,340)+"px";}
   if(!M.wanted){$("#resFoot").innerHTML=`<span class="flip" data-t="MOVE ALONG">MOVE ALONG</span>`;$("#resFoot").style.fontSize="24px"}
   if(M.targets&&result==="fail"){const t=TARGETS[nextTarget];M.failImg=t[0];M.failHead=t[1]}
-  const f=$("#flash");f.style.background=result==="fail"?"var(--red-flash)":"var(--grn-flash)";
-  f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
+  /* full-screen flash: red straight away on a fail; green lands with the third bar on a pass */
+  const flash=c=>{const f=$("#flash");f.style.background=c;f.classList.remove("go");void f.offsetWidth;f.classList.add("go")};
+  if(result==="fail")flash("var(--red-flash)");
   setPanel(result);view("vRes");setStatus("COMPLETE");
   /* counter + tally */
   {const[p,f,c]=M.k;S[c]++;if(result==="pass")S[p]=Math.min(10,S[p]+1);else S[f]=Math.min(10,S[f]+1);save();paintTally();}
@@ -880,7 +881,7 @@ function reveal(result){
     /* bars 1 + 2: the "armed" chirp; bar 3: the full pass sound (Chris's clips; synth only if they haven't loaded) */
     later(()=>{fillBar("m1");play("armed")||SFX.pass1()},750);
     later(()=>{fillBar("m2");play("armed")||SFX.pass2()},1100);
-    later(()=>{fillBar("m3");SFX.passSound()||SFX.calm()},1450);
+    later(()=>{fillBar("m3");SFX.passSound()||SFX.calm();flash("var(--grn-flash)")},1450);
   }
   rollNext();showLights();
   $("#ss").classList.remove("busy");
