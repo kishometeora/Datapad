@@ -319,6 +319,8 @@ body.blkOff :is(#citOv .cx,#citOv .cp,#askId,#vMatch .mscore.pr,#panel.pass #res
 /* the rings are decoration now: no centre disc, no tap target */
 #vbtn,#vtap{display:none!important}
 #catch{position:absolute;inset:0;z-index:20;display:none}
+#ss .home{position:relative;z-index:21}   /* the cog stays reachable above the "tap for next scan" layer */
+.home{touch-action:none}
 #ss.result #catch{display:block}
 #ss.busy .bot .btn,#ss.busy .home{pointer-events:none}
 
@@ -823,7 +825,21 @@ function go(id,mode){
   if(cur!=="cit"&&window.citClose)citClose();
   if(id==="ss"){resetScanner();startScan()}   /* every scanner starts scanning as soon as it opens */
 }
-$$("[data-home]").forEach(b=>b.addEventListener("click",()=>{SFX.tap();go("menu")}));
+/* cog: TAP = back one level, HOLD ~0.6 s = home from anywhere.
+   Levels: scanner result -> scanning; Wanted scanner -> suspect gallery -> home; citation card -> list -> home; everything else -> home. */
+function backLevel(){
+  if(cur==="ss"){if($("#ss").classList.contains("result")){resetScanner();startScan();return}
+    if(M.wanted){go("gal");return}}
+  if(cur==="cit"&&$("#citOv").classList.contains("on")){window.citClose();return}
+  go("menu");
+}
+$$("[data-home]").forEach(b=>{let tm=null;
+  b.addEventListener("pointerdown",()=>{clearTimeout(tm);tm=setTimeout(()=>{tm=null;SFX.tap();go("menu")},600)});
+  const up=()=>{if(!tm)return;clearTimeout(tm);tm=null;SFX.tap();backLevel()};
+  b.addEventListener("pointerup",up);
+  ["pointercancel","pointerleave"].forEach(e=>b.addEventListener(e,()=>{clearTimeout(tm);tm=null}));
+  b.addEventListener("contextmenu",e=>e.preventDefault());
+});
 
 /* ============================================================
    SHAPES
