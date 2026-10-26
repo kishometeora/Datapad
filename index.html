@@ -265,7 +265,9 @@ body.aurOn .headline .flip{font-size:.74em}
 #ss[data-mode="wanted"] #qBars{display:block}
 #ss[data-mode="wanted"] #lights:active{background:none}   /* no give-away highlight while holding */
 #ss[data-mode="wanted"] #lights{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-#vMatch{padding:20px 16px 22px;justify-content:space-evenly}
+#vMatch{padding:20px 16px 22px;justify-content:flex-start;gap:10px}
+/* M2a: the text under the portrait sits in the exact vertical middle of the space left (empty lines take no room) */
+#vMatch .mtext{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%}
 #vMatch .mrow{display:flex;align-items:stretch;gap:18px;height:310px}
 #vMatch .mname{font-size:26px;font-weight:900;letter-spacing:.06em;white-space:nowrap;text-align:center}
 #vMatch .mpic{position:relative;width:240px;flex:none}
@@ -292,10 +294,10 @@ body.aurOn .headline .flip{font-size:.74em}
 #vMatch .mscore:empty{visibility:hidden}
 #vMatch .mcap{display:none}
 /* before / during the scan the score line becomes an amber flashing prompt */
-#vMatch .mscore.pr{font-size:34px;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6);display:flex;align-items:center;justify-content:center}
+#vMatch .mscore.pr{white-space:nowrap;font-size:34px;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6);display:flex;align-items:center;justify-content:center}
 #vMatch .mtick{position:absolute;left:0;right:0;border-top:3px solid #000}
-#vMatch .mscore{font-size:76px;font-weight:900;line-height:1;min-height:76px;text-shadow:0 0 12px rgba(var(--rgb),.6)}
-#vMatch .mword{font-size:28px;font-weight:900;letter-spacing:.05em;min-height:34px;white-space:nowrap;text-align:center}
+#vMatch .mscore{font-size:96px;font-weight:900;line-height:1;text-shadow:0 0 12px rgba(var(--rgb),.6)}
+#vMatch .mword{font-size:32px;font-weight:900;letter-spacing:.05em;min-height:34px;white-space:nowrap;text-align:center}
 #citIss{display:none;position:absolute;inset:0;z-index:4;background:#000;flex-direction:column;align-items:center;justify-content:center;gap:22px}
 #citOv.iss #citIss{display:flex}#citOv.iss>*:not(#citIss){visibility:hidden}
 #citIss .iT{font-size:30px;font-weight:900;letter-spacing:.08em;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6);white-space:nowrap}
@@ -304,8 +306,8 @@ body.aurOn .headline .flip{font-size:.74em}
 #citOv.iss .iB i{animation:issue .4s linear forwards}@keyframes issue{to{width:100%}}
 #vMatch #mRef{margin:-2px 0 6px;text-align:center}
 .tref{margin-top:6px;font-size:13px;letter-spacing:.14em;color:#fff;opacity:.55;min-height:16px;white-space:nowrap}
-#vMatch .mcharge{font-size:18px;letter-spacing:.04em;color:#fff;opacity:.9;min-height:22px;max-width:360px;text-align:center}
-#vMatch .mword:empty,#vMatch .mcharge:empty{visibility:hidden}
+#vMatch .mcharge{font-size:21px;letter-spacing:.04em;color:#fff;opacity:.9;min-height:22px;max-width:360px;text-align:center}
+#vMatch .mword:empty,#vMatch .mcharge:empty{display:none}
 body.blkOff :is(#citOv .cx,#citOv .cp,#askId,#vMatch .mscore.pr,#panel.pass #resFoot,#vMatch.done .mcharge){opacity:0}
 /* bottom row */
 #ss .bot{display:flex;gap:12px;height:96px;flex:none}
@@ -594,9 +596,9 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
         <div class="mbar"><div class="mglow"><div class="mclip"><div class="mfill" id="mFill"></div><i class="mtick" style="bottom:25%"></i><i class="mtick" style="bottom:50%"></i><i class="mtick" style="bottom:75%"></i></div></div><svg class="mout" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="70,99.5 99.5,99.5 99.5,.5 5,.5" vector-effect="non-scaling-stroke"/></svg></div>
       </div>
       <div class="en mcap" id="mCap"></div>
-      <div class="en mscore" id="mScore">0%</div>
+      <div class="mtext"><div class="en mscore" id="mScore">0%</div>
       <div class="en mword" id="mWord"></div>
-      <div class="en mcharge" id="mCharge"></div>
+      <div class="en mcharge" id="mCharge"></div></div>
     </div>
     <div class="view" id="vRes">
       <div class="en" id="resTop"></div>
