@@ -146,7 +146,9 @@ body.glitch .flip{opacity:.15}
 #ss.scanning .sonar .p2{animation-delay:.8s}
 @keyframes ping{from{transform:scale(.3);opacity:1}to{transform:scale(1.25);opacity:0}}
 /* droid mode: top-right becomes a 3-way target selector */
-#tsel{position:absolute;inset:0;display:none;align-items:center;justify-content:space-around;padding:0 10px}
+#tsel{position:absolute;inset:-16px -12px;display:none;align-items:center;justify-content:space-around;padding:0 22px;z-index:4}
+#tsel button{pointer-events:none}
+#tsel button.pick img{opacity:1;filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 8px rgba(255,255,255,.8))}
 #ss[data-mode="droid"] #tsel{display:flex}#ss[data-mode="droid"] #cxAur{display:none}
 #ss[data-mode="droid"] .cx-tr{opacity:1}
 #tsel button{width:46px;height:46px;background:none;border:0;display:flex;align-items:center;justify-content:center;border-radius:4px}
@@ -862,8 +864,13 @@ function rollNext(){next=Math.random()<M.odds?"fail":"pass";nextTarget=Math.floo
   }
   step();
 })();
-$$("#tsel button").forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();if(state==="processing")return;
-  nextTarget=+b.dataset.t;next="fail";showLights();SFX.tap()}));   /* picking a target also forces FAIL */
+/* glove-friendly: a tap anywhere on the selector (or just around it) steps to the next target — plans → R2 → 3PO →
+   and forces FAIL. The first tap after a pass picks the target already queued. The chosen icon holds lit briefly. */
+$("#tsel").addEventListener("click",e=>{e.stopPropagation();if(state==="processing"||state==="holding")return;
+  if(next==="fail")nextTarget=(nextTarget+1)%3;
+  next="fail";showLights();SFX.tap();
+  const b=$$("#tsel button");b.forEach((x,k)=>x.classList.toggle("pick",k===nextTarget));
+  clearTimeout(window._pickT);window._pickT=setTimeout(()=>b.forEach(x=>x.classList.remove("pick")),700);});
 setMode("id");
 $("#lights").addEventListener("click",()=>{if(state==="processing")return;next=next==="pass"?"fail":"pass";showLights();SFX.tap()});
 
