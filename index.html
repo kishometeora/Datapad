@@ -1227,20 +1227,20 @@ function ishow(i,anim){
    CITATIONS — tap an offence to issue it full screen (red flash + alarm once). Tap to close.
    ============================================================ */
 const CITES=[
- ["NO PARKING","PARKED IN A RESTRICTED ZONE","Move this vehicle by Imperial order","car","CLEAR THIS SECTOR"],
- ["NO LOITERING","LOITERING IN A SECURE SECTOR","Move along. This area is under Imperial lockdown","loiter","MOVE ALONG"],
+ ["NO PARKING","PARKED IN A RESTRICTED ZONE","Vehicle will be impounded by order of the Empire","car","RESTRICTED ZONE"],
+ ["NO LOITERING","LOITERING IN A SECURE SECTOR","This area is under Imperial lockdown","loiter","MOVE ALONG"],
  ["REBEL","WEARING REBEL INSIGNIA","Your identity has been logged by the ISB","rebel","IDENTITY LOGGED"],
- ["JEDI DETECTED","SUSPECTED JEDI","Report to the Inquisitorius immediately","jedi","INQUISITORS NOTIFIED"],
+ ["JEDI DETECTED","SUSPECTED JEDI","Order 66 protocols in effect","jedi","FORCE SENSITIVE"],
  ["LIGHTSABER","LIGHTSABER DETECTED","Jedi weapons are forbidden by Imperial decree","saber","UNLICENSED WEAPON"],
- ["CREATURE","UNLICENSED CREATURE","All creatures must be registered with the Imperial Bureau of Standards","dog","PERMIT REQUIRED"],
- ["UNREGISTERED","UNREGISTERED TRANSPORTATION","This vehicle has been logged for impound","pram","PERMIT REQUIRED"],
- ["TROLLEY","UNLICENSED TROLLEY","All wheeled transports must display an Imperial permit","trolley","PERMIT REQUIRED"],
- ["ILLEGAL OUTPOST","UNREGISTERED STRUCTURE","This outpost has been logged for demolition","outpost","PERMIT REQUIRED"],
- ["SUSPICIOUS CARGO","SUSPICIOUS CARGO","Smuggling in this sector carries a heavy penalty","cargo","PERMIT REQUIRED"],
- ["UNREGISTERED FREIGHTER","UNREGISTERED FREIGHTER","Unregistered freighters may not dock in this sector","freighter","PERMIT REQUIRED"],
+ ["UNREGISTERED BEAST","UNLICENSED CREATURE","All creatures must be registered with the Empire","dog","PERMIT REQUIRED"],
+ ["UNREGISTERED","UNREGISTERED TRANSPORTATION","This transport must be registered with the Empire","pram","PERMIT REQUIRED"],
+ ["UNREGISTERED TRANSPORT","UNLICENSED TROLLEY","Return this hauler to its depot","trolley","PERMIT REQUIRED"],
+ ["ILLEGAL OUTPOST","UNREGISTERED STRUCTURE","Dismantle this structure by Imperial order","outpost","PERMIT REQUIRED"],
+ ["SUSPICIOUS CARGO","SUSPICIOUS CARGO","Smuggling in this sector carries a heavy penalty","cargo","SMUGGLING SUSPECTED"],
+ ["UNREGISTERED FREIGHTER","UNREGISTERED FREIGHTER","This freighter has been logged for impound","freighter","PERMIT REQUIRED"],
  ["BAD JOKE","MADE AN OBVIOUS JOKE","We've heard it before","jester","NOT FUNNY"],
  ["FIST BUMP REFUSED","REFUSING A FIST BUMP","Return the trooper's fist bump immediately","fist","MORALE DAMAGED"],
- ["QUESTION LIMIT","ASKING TOO MANY QUESTIONS","No further questions. Move along","question","QUESTION LIMIT REACHED"]
+ ["QUESTION LIMIT","ASKING TOO MANY QUESTIONS","No further questions. Move along","question","TOO MANY QUESTIONS"]
 ];
 (function buildCites(){
   const fx=t=>`<span class="fx3"><span class="e">${t}</span><span class="a" aria-hidden="true">${t}</span></span>`;
