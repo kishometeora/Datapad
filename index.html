@@ -92,10 +92,11 @@ body.glitch .flip{opacity:.15}
 .bar.d{background:rgba(var(--rgb),.3);box-shadow:none}
 .bar.ping{background:#fff;box-shadow:0 0 10px #fff}
 #menu .embwrap{width:170px;height:170px;flex:none;touch-action:none;animation:pulse 4s ease-in-out infinite;position:relative}
-#bigClock{display:none;position:absolute;left:0;top:0;bottom:0;right:186px;flex-direction:column;align-items:center;justify-content:center;font-size:66px;line-height:1.05;text-shadow:0 0 8px rgba(var(--rgb),.6)}
+#bigClock{display:none;position:absolute;left:0;top:0;bottom:0;right:186px;flex-direction:column;align-items:center;justify-content:center;font-family:Orb;font-weight:900;font-size:76px;line-height:1;letter-spacing:.02em;text-shadow:0 0 8px rgba(var(--rgb),.6)}
 #menu.stats .bars{visibility:hidden}#menu.stats #bigClock{display:flex}
 /* hidden stats: small count in each tile's corner while the cog is held (+3 s) */
-.tcount{display:none;position:absolute;right:10px;bottom:8px;font-family:Orb;font-weight:700;font-size:14px;letter-spacing:.06em;color:var(--c);opacity:.6}
+#menu.stats #grid .tile[data-k="scan"] .ta,#menu.stats #grid .tile[data-k="droid"] .ta,#menu.stats #grid .tile[data-k="wanted"] .ta,#menu.stats #grid .tile[data-k="cite"] .ta{transform:translate(-30%,-24%) scale(.55)}   /* icon tucks into the corner so the count has room */
+.tcount{display:none;position:absolute;right:16px;bottom:12px;font-family:Orb;font-weight:900;font-size:56px;line-height:1;color:var(--c);text-shadow:0 0 8px rgba(var(--rgb),.6)}
 #menu.stats .tcount{display:block}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.82}}
 #menu .low{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px}
@@ -464,7 +465,7 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
         <div class="brow"><div class="bar" style="width:40px"></div><div class="bar" style="width:40px"></div><div class="bar d" style="width:50px"></div></div>
         <div class="aur dimtxt" id="mAur2" style="font-size:22px;margin-top:10px;white-space:nowrap;overflow:hidden">ID 7</div>
       </div>
-      <div class="aur" id="bigClock"></div><div class="embwrap"><img class="emb" src="emblems/imperial.png" alt=""></div>
+      <div id="bigClock"></div><div class="embwrap"><img class="emb" src="emblems/imperial.png" alt=""></div>
     </div>
     <div class="low"><div class="aur dimtxt" id="mAur3">SECTOR SEVEN</div><div class="pips" id="mPips"><i class="on"></i><i></i><i class="on"></i></div></div>
   </div>
@@ -1232,7 +1233,7 @@ showSuspect();
   const swap={tcDroid:()=>{di=step(d,di)},tcQr:()=>{qi=step(q,qi)},tcEnl:()=>{ei=step(en,ei)},tcCit:()=>{ci=step(ct,ci)}};
   const tas=[...document.querySelectorAll("#grid .ta")];
   tileRipple=()=>{
-    if(cur!=="menu")return;
+    if(cur!=="menu"||$("#menu").classList.contains("stats"))return;   /* no flicker while the hidden stats are up */
     tas.forEach((t,n)=>setTimeout(()=>{
       t.classList.remove("fz");void t.offsetWidth;t.classList.add("fz");
       const c=t.querySelector(".tcyc");if(c&&swap[c.id])setTimeout(swap[c.id],120);
