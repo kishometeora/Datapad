@@ -353,9 +353,13 @@ body.blkOff :is(#citOv .cx,#citOv .cp,#askId,#vMatch .mscore.pr,#panel.pass #res
 #iOv.proc .iB i{animation:issue .6s linear forwards}
 #iRes .iScore{font-size:120px;font-weight:900;line-height:1;text-shadow:0 0 14px rgba(var(--red-rgb),.7)}
 #iRes .iFail{font-size:30px;font-weight:900;letter-spacing:.05em;text-shadow:0 0 10px rgba(var(--red-rgb),.6)}
+#iRes .iFin{display:flex;flex-direction:column;align-items:center;gap:12px;visibility:hidden}#iOv.done .iFin{visibility:visible}
+#iRes .iPun{font-size:20px;font-weight:900;letter-spacing:.06em;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6)}
+#iRes .iLog span.new,#iRes .iLog b.new{opacity:1;text-shadow:0 0 8px #fff}
 #iRes .iVerd{font-size:19px;line-height:1.35;letter-spacing:.04em;color:#fff;max-width:360px}
-#iRes .iLog{display:grid;grid-template-columns:auto auto;gap:3px 18px;font-size:13px;letter-spacing:.08em;color:#fff;opacity:.6;margin-top:6px;text-align:left}
-#iRes .iLog b{font-weight:700;text-align:right}
+#iRes .iLog{display:grid;grid-template-columns:auto auto;gap:4px 18px;font-size:14px;letter-spacing:.08em;color:#fff;margin-top:6px;text-align:left;min-height:170px;align-content:start}
+#iRes .iLog span,#iRes .iLog b{opacity:.7}
+#iRes .iLog b{font-weight:700;text-align:right;color:var(--red)}
 #citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:space-evenly;gap:14px;padding:10px 22px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
 #citOv.on{display:flex}
 #citOv .cic{position:relative;width:230px;height:230px}
@@ -637,7 +641,7 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
     <button class="box btn en" id="iGo">VERDICT</button>
     <div id="iOv">
       <div id="iProc"><div class="en iT">INSPECTING</div><div class="iB"><i></i></div></div>
-      <div id="iRes"><div class="en iScore" id="iScore"></div><div class="en iFail" id="iFail"></div><div class="en iVerd" id="iVerd"></div><div class="en iLog" id="iLog"></div></div>
+      <div id="iRes"><div class="en iScore" id="iScore"></div><div class="iFin"><div class="en iFail" id="iFail"></div><div class="en iVerd" id="iVerd"></div><div class="en iPun" id="iPun"></div></div><div class="en iLog" id="iLog"></div></div>
     </div>
   </div>
 </section>
@@ -1397,25 +1401,29 @@ const CITES=[
   $("#ilist").innerHTML=FAULTS.map((f,i)=>f.length===1?`<div class="en ihd">${f[0]}</div>`:`<button class="ibtn" data-i="${i}"><span>${f[0]}</span><i></i></button>`).join("");
   $$("#ilist .ibtn").forEach(b=>b.addEventListener("click",()=>{SFX.tap();b.classList.toggle("on")}));
   const rnd2=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+  const BANDS=[[-20,"BARELY ADEQUATE. STILL A DISGRACE","EXTRA DRILL"],[-45,"A DISGRACE TO THE EMPIRE","KITCHEN DUTY"],[-75,"REASSIGNED TO SANITATION","LATRINE DUTY"],[-1e9,"REPORT TO THE KESSEL MINES","CONFINED TO BARRACKS"]];
+  let tms=[];const later2=(f,ms)=>tms.push(setTimeout(f,ms));
+  /* VERDICT: QI-style tally. Score on top counts down as each fault drops in (tick each), then the verdict + punishment land with a falling tone */
   $("#iGo").addEventListener("click",()=>{if(ov.classList.contains("on"))return;
-    ov.classList.add("on","proc");const pr=play("processing");
-    tm=setTimeout(()=>{tm=null;if(pr){try{pr.src.stop()}catch(e){}}
-      const lines=[];let tot=0;
-      $$("#ilist .ibtn.on").forEach(b=>{const f=FAULTS[+b.dataset.i],v=f[1]+rnd2(-3,3);tot+=v;lines.push([f[0],v])});
-      const gd=rnd2(3,9);tot+=gd;lines.push(["GENERAL DISAPPOINTMENT",gd]);
-      $("#iScore").textContent="-"+tot;
-      $("#iFail").innerHTML=FA("INSPECTION FAILED");
-      $("#iVerd").textContent=VERDICTS.find(v=>-tot>v[0])[1];
-      {const gdl=lines.pop(),top=lines.sort((a,b)=>b[1]-a[1]);let show=top;   /* keep the list short: worst 7, then the rest summed */
-       if(top.length>8){const rest=top.slice(7);show=top.slice(0,7).concat([[`+ ${rest.length} MORE`,rest.reduce((t,l)=>t+l[1],0)]])}
-       $("#iLog").innerHTML=show.concat([gdl]).map(l=>`<span>${l[0]}</span><b>-${l[1]}</b>`).join("");}
-      ov.classList.remove("proc");ov.classList.add("res");protectReveal();
+    const lines=[];$$("#ilist .ibtn.on").forEach(b=>{const f=FAULTS[+b.dataset.i];lines.push([f[0],f[1]+rnd2(-3,3)])});
+    lines.sort((a,b)=>b[1]-a[1]);let show=lines;
+    if(lines.length>8){const rest=lines.slice(7);show=lines.slice(0,7).concat([[`+ ${rest.length} MORE`,rest.reduce((t,l)=>t+l[1],0)]])}
+    show=show.concat([["GENERAL DISAPPOINTMENT",rnd2(3,9)]]);
+    const tot=show.reduce((t,l)=>t+l[1],0),band=BANDS.find(v=>-tot>v[0]);
+    $("#iScore").textContent="0";$("#iLog").innerHTML="";$("#iFail").innerHTML=FA("INSPECTION FAILED");$("#iVerd").textContent=band[1];$("#iPun").textContent="PUNISHMENT · "+band[2];
+    ov.classList.add("on","res");ov.classList.remove("done");
+    const step=Math.min(250,2000/show.length);let run=0;
+    show.forEach((l,i)=>later2(()=>{run+=l[1];$("#iScore").textContent="-"+run;
+      $$("#iLog .new").forEach(e=>e.classList.remove("new"));
+      $("#iLog").insertAdjacentHTML("beforeend",`<span class="new">${l[0]}</span><b class="new">-${l[1]}</b>`);SFX.chirp()},350+i*step));
+    later2(()=>{$$("#iLog .new").forEach(e=>e.classList.remove("new"));ov.classList.add("done");protectReveal();
       const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
-      if(!play("fail"))SFX.klaxon();
-    },600)});
-  const close=()=>{clearTimeout(tm);tm=null;ov.classList.remove("on","proc","res")};
+      tone(392,.32,{type:"square",v:.06,f2:370});tone(311,.9,{type:"square",v:.06,f2:196,at:.36});   /* falling 'failed' tone */
+    },350+show.length*step+250);
+  });
+  const close=()=>{clearTimeout(tm);tm=null;tms.forEach(clearTimeout);tms=[];ov.classList.remove("on","proc","res","done")};
   /* tap the result -> clear the checklist for the next trooper */
-  ov.addEventListener("click",()=>{if(!ov.classList.contains("res"))return;SFX.tap();window.inspReset()});
+  ov.addEventListener("click",()=>{if(!ov.classList.contains("done"))return;SFX.tap();window.inspReset()});
   window.inspBack=close;   /* cog tap: back to the checklist, ticks kept */
   window.inspReset=()=>{close();$$("#ilist .ibtn").forEach(b=>b.classList.remove("on"));$("#ilist").scrollTop=0};
 })();
