@@ -266,6 +266,9 @@ body.aurOn .headline .flip{font-size:.74em}
 #vMatch .mfill{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--c);box-shadow:0 0 10px rgba(var(--rgb),.7)}
 #vMatch .mfill.settle{transition:height .45s cubic-bezier(.2,.7,.2,1)}
 #vMatch .mscore:empty{visibility:hidden}
+#vMatch .mcap{font-size:16px;letter-spacing:.2em;opacity:.85;min-height:20px;margin-bottom:-10px}
+/* before / during the scan the score line becomes an amber flashing prompt */
+#vMatch .mscore.pr{font-size:34px;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6);display:flex;align-items:center;justify-content:center;animation:cxf 1s steps(1) infinite}
 #vMatch .mtick{position:absolute;left:0;right:0;border-top:2px dashed rgba(255,255,255,.45)}
 #vMatch .mscore{font-size:76px;font-weight:900;line-height:1;min-height:76px;text-shadow:0 0 12px rgba(var(--rgb),.6)}
 #vMatch .mword{font-size:28px;font-weight:900;letter-spacing:.05em;min-height:34px;white-space:nowrap;text-align:center}
@@ -519,6 +522,7 @@ body.aurOn .fx2>.e{visibility:hidden}body.aurOn .fx2>.a{visibility:visible}body.
         <div class="mpic"><svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%"><path class="md" d="M1 10V1h10M89 1h10v9M99 90v9H89M11 99H1V90" vector-effect="non-scaling-stroke"/></svg><img id="mImg" src="suspects/_placeholder.png" alt=""></div>
         <div class="mbar"><div class="mfill" id="mFill"></div><i class="mtick" style="bottom:25%"></i><i class="mtick" style="bottom:50%"></i><i class="mtick" style="bottom:75%"></i></div>
       </div>
+      <div class="en mcap" id="mCap"></div>
       <div class="en mscore" id="mScore">0%</div>
       <div class="en mword" id="mWord"></div>
       <div class="en mcharge" id="mCharge"></div>
@@ -985,18 +989,19 @@ function reveal(result){
 const MATCH_MS=3000,BANDS=[[0,"NO MATCH"],[25,"LOW MATCH"],[50,"POSSIBLE MATCH"],[75,"WANTED"]];
 let holdT0=0,holdRaf=0,holdLvl=0,holdCross=0,ph1=0,ph2=0;
 const band=p=>p>=75?3:p>=50?2:p>=25?1:0;
-function paintBar(p,showPct){$("#mFill").style.height=p+"%";$("#mScore").textContent=showPct?Math.round(p)+"%":"";
+function paintBar(p,showPct){$("#mFill").style.height=p+"%";if(showPct){$("#mScore").classList.remove("pr");$("#mScore").textContent=Math.round(p)+"%";$("#mCap").textContent="IDENTITY MATCH"}
   const pn=$("#panel");[0,1,2,3].forEach(b=>pn.classList.toggle("mb"+b,b===band(p)))}
 /* suspect search opens straight on the match screen: bar at zero, no score */
 function wantedIdle(){const sp=SUSPECTS[S.suspect];$("#mImg").src=sp.src;
   $("#mName").textContent=sp.name;$("#mName").style.fontSize=Math.min(28,Math.floor(350/(sp.name.length*.86)))+"px";$("#mWord").textContent="";$("#mCharge").textContent="";
-  $("#vMatch").classList.remove("done");$("#mFill").classList.remove("settle");$("#mFill").style.height="0%";$("#mScore").textContent="";
+  $("#vMatch").classList.remove("done");$("#mFill").classList.remove("settle");$("#mFill").style.height="0%";$("#mCap").textContent="";$("#mScore").classList.add("pr");$("#mScore").textContent="SCAN SUSPECT";
   $("#panel").classList.remove("mb0","mb1","mb2","mb3");view("vMatch")}
 $("#vMatch .mpic").addEventListener("click",e=>{if(!M.wanted||state!=="scanning")return;e.stopPropagation();SFX.tap();go("gal")});
 /* tap VERDICT: the bar jumps about for 2 s, then lands at a random score inside the quarter set by the lights */
 function wantedScan(){
   if(!M.wanted||state!=="scanning")return;
   state="processing";SFX.tap();SFX.processing();$("#ss").classList.remove("scanning");$("#ss").classList.add("busy");
+  $("#mScore").textContent="SCANNING...";
   ph1=Math.random()*9;ph2=Math.random()*9;$("#mFill").classList.remove("settle");
   const t0=performance.now();
   const tick=t=>{const dt=t-t0;
