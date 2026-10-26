@@ -230,6 +230,10 @@ body.glitch .flip{opacity:.15}
 #vRes .sym{width:190px;height:190px}
 .headline{font-size:46px;line-height:1.15;min-height:110px;display:flex;flex-direction:column;justify-content:center}
 .headline > div{white-space:nowrap}
+.headline .rbig{font-weight:900;line-height:1.05}
+.headline .rsmall{font-size:24px;letter-spacing:.2em;opacity:.85;margin-top:6px}
+#ss:not([data-mode="wanted"]) #vRes .sym{width:240px;height:240px}
+#ss:not([data-mode="wanted"]) #vRes{gap:26px}
 body.aurOn .headline .flip{font-size:.74em}
 .meter rect{transition:fill .15s}
 .meter rect.e{fill:transparent;stroke:rgba(var(--rgb),.35);stroke-width:1.2}
@@ -254,11 +258,15 @@ body.aurOn .headline .flip{font-size:.74em}
 #cit .cbtn:active{background:rgba(var(--rgb),.15)}
 #citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:space-evenly;gap:14px;padding:10px 22px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
 #citOv.on{display:flex}
-#citOv .cic{position:relative;width:180px;height:180px}
-#citOv .cic>*{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .06s}
-#citOv .cic>.on{opacity:1}
-#citOv .cic img{filter:url(#tRed) drop-shadow(0 0 5px var(--red))}
-#citOv .cic svg{fill:var(--red);filter:drop-shadow(0 0 5px var(--red))}
+#citOv .cic{position:relative;width:230px;height:230px}
+#citOv .cic>svg{position:absolute;inset:0;width:100%;height:100%}
+#citOv #citIc{padding:34px}
+/* the cross-out flashes over the topic icon */
+#citOv .cx{animation:cxf 1s steps(1) infinite}
+@keyframes cxf{0%,65%{opacity:1}66%,100%{opacity:0}}
+#citOv .cp{font-size:26px;font-weight:900;letter-spacing:.04em;white-space:nowrap;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6);animation:cxf 1s steps(1) infinite}
+#citOv .cp:empty{display:none}
+#citOv .cic svg{fill:var(--red);filter:drop-shadow(0 0 4px var(--red))}
 #citOv .cic image{filter:url(#tRed)}
 /* citation text: own flip timer, mostly English so the crowd can read it */
 .fx3{display:inline-grid;justify-items:center;align-items:center;transition:opacity .08s}.fx3>span{grid-area:1/1}
@@ -515,7 +523,7 @@ body.aurOn .fx2>.e{visibility:hidden}body.aurOn .fx2>.a{visibility:visible}body.
   </div>
   <div style="flex:1;min-height:0;position:relative;display:flex">
     <div class="clist" id="clist"></div>
-    <div id="citOv"><div class="en cw" id="citW"></div><div class="cic"><img class="on" src="emblems/imperial.png" alt=""><svg id="citIc" viewBox="0 0 100 100"></svg></div><div class="en ct" id="citT"></div><div class="en co" id="citO"></div><div class="cr" id="citR"></div></div>
+    <div id="citOv"><div class="en cw" id="citW"></div><div class="cic"><svg id="citIc" viewBox="0 0 100 100"></svg><svg class="cx" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="var(--red)" stroke-width="7"/><path d="M22 22 78 78" stroke="#000" stroke-width="17"/><path d="M17 17 83 83" stroke="var(--red)" stroke-width="7"/></svg></div><div class="en cp" id="citP"></div><div class="cr" id="citR"></div></div>
   </div>
 </section>
 
@@ -675,7 +683,11 @@ function flip(){
   setTimeout(flip,aur?FLIP_EN:FLIP_AUR);
 }
 setTimeout(flip,FLIP_EN);
-function setHeadline(lines){$("#resHead").innerHTML=lines.map(l=>{const fs=Math.min(46,Math.floor(330/(l.length*.86)));return `<div style="font-size:${fs}px" class="${fs<40?"sub":""}"><span class="flip" data-t="${l}">${l}</span></div>`}).join("")}
+/* ID + droid results: English only (no flip). Big lines fill the width; a line starting "~" is a small caption. */
+function setHeadline(lines){if(!M.wanted){$("#resHead").innerHTML=lines.map(l=>l[0]==="~"
+    ?`<div class="rsmall">${l.slice(1)}</div>`
+    :`<div class="rbig" style="font-size:${Math.min(76,Math.floor(340/(l.length*.86)))}px">${l}</div>`).join("");return}
+  $("#resHead").innerHTML=lines.map(l=>{const fs=Math.min(46,Math.floor(330/(l.length*.86)));return `<div style="font-size:${fs}px" class="${fs<40?"sub":""}"><span class="flip" data-t="${l}">${l}</span></div>`}).join("")}
 function setStatus(t){const el=$("#statusTxt");el.dataset.t=t;el.textContent=t}
 
 /* ============================================================
@@ -780,9 +792,9 @@ $("#menu .embwrap").addEventListener("click",()=>{const el=$("#mAur2");if(Date.n
 /* ---- scanner modes: ID scanner and droid scanner share one screen ---- */
 const DROID_IC=`<svg viewBox="0 0 40 40"><g fill="none" stroke="#34D058" stroke-width="3" style="filter:drop-shadow(0 0 2px #34D058)"><rect x="11" y="4" width="18" height="12" rx="2"/><circle cx="20" cy="10" r="2.5" fill="#34D058"/><rect x="8" y="18" width="24" height="12" rx="1"/><path d="M12 30v7M28 30v7M8 37h8M24 37h8"/></g></svg>`;
 const MODES={
-  id:{odds:1/3,k:["tp","tf","count"],passIc:`<img src="emblems/imperial.png" alt="" style="filter:url(#tGrn) drop-shadow(0 0 3px #34D058)">`,failIc:`<img src="emblems/rebel.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/rebel.png",failHead:["REBEL","DETECTED"],passHead:["APPROVED"]},
+  id:{odds:1/3,k:["tp","tf","count"],passIc:`<img src="emblems/imperial.png" alt="" style="filter:url(#tGrn) drop-shadow(0 0 3px #34D058)">`,failIc:`<img src="emblems/rebel.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/rebel.png",failHead:["REBEL","~DETECTED"],passHead:["APPROVED"]},
   wanted:{odds:1/2,k:["wp","wf","wcount"],passIc:"",failIc:"",wanted:true},
-  droid:{odds:1/2,k:["dp","df","dcount"],passIc:DROID_IC,failIc:`<img src="emblems/deathstar.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/deathstar.png",failHead:["PLANS","DETECTED"],targets:true,passHead:["NOT THE","DROID","WE'RE LOOKING FOR"]}
+  droid:{odds:1/2,k:["dp","df","dcount"],passIc:DROID_IC,failIc:`<img src="emblems/deathstar.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/deathstar.png",failHead:["PLANS","~DETECTED"],targets:true,passHead:["NOT THE","DROID"]}
 };
 let mode="id",M=MODES.id;
 function setMode(m){mode=m;M=MODES[m];$("#ss").dataset.mode=m;rollNext();if(typeof showLights==="function")showLights();$("#tPassIc").innerHTML=M.passIc;$("#tFailIc").innerHTML=M.failIc;paintTally()}
@@ -846,7 +858,7 @@ $("#droidSchem").innerHTML=`
  <circle class="dm" cx="150" cy="135" r="112" stroke-dasharray="6 8"/>
  <image id="cyc" href="emblems/deathstar.png" x="55" y="40" width="190" height="190"/>
  <path class="dm" d="M30 258h240M40 252v12M80 252v12M120 252v12M160 252v12M200 252v12M240 252v12"/>`;
-const TARGETS=[["emblems/deathstar.png",["PLANS","DETECTED"]],["emblems/r2.png",["ASTROMECH","DETECTED"]],["emblems/c3po_solid.png",["PROTOCOL DROID","DETECTED"]]];
+const TARGETS=[["emblems/deathstar.png",["PLANS","~DETECTED"]],["emblems/r2.png",["R2 UNIT","~DETECTED"]],["emblems/c3po_solid.png",["3PO UNIT","~DETECTED"]]];
 let cycT=null;
 function startCycle(){let i=0;const im=$("#cyc");clearInterval(cycT);cycT=setInterval(()=>{i=(i+1)%TARGETS.length;im.setAttribute("href",TARGETS[i][0])},170)}
 function stopCycle(){clearInterval(cycT);cycT=null}
@@ -881,7 +893,7 @@ function reveal(result){
     const fit=(t,max,w)=>Math.min(max,Math.floor(w/(t.length*.86)));
     const fl=t=>`<span class="flip" data-t="${t}">${t}</span>`;
     $("#resTop").innerHTML=fl(M.top);$("#resFoot").innerHTML=fl(M.foot);$("#resFoot").style.fontSize=fit(M.foot,18,340)+"px";}
-  if(!M.wanted){$("#resFoot").innerHTML=`<span class="flip" data-t="MOVE ALONG">MOVE ALONG</span>`;$("#resFoot").style.fontSize="24px"}
+  if(!M.wanted){$("#resFoot").textContent="MOVE ALONG";$("#resFoot").style.fontSize="24px"}
   if(M.targets&&result==="fail"){const t=TARGETS[nextTarget];M.failImg=t[0];M.failHead=t[1]}
   /* full-screen flash: red straight away on a fail; green lands with the third bar on a pass */
   const flash=c=>{const f=$("#flash");f.style.background=c;f.classList.remove("go");void f.offsetWidth;f.classList.add("go")};
@@ -1067,27 +1079,24 @@ const CITES=[
  ["REBEL","WEARING REBEL INSIGNIA","Your identity has been logged by the ISB","rebel"],
  ["JEDI DETECTED","SUSPECTED JEDI","Report to the Inquisitorius immediately","jedi"],
  ["LIGHTSABER","LIGHTSABER DETECTED","Jedi weapons are forbidden by Imperial decree","saber"],
- ["CREATURE","UNLICENSED CREATURE","All creatures must be registered with the Imperial Bureau of Standards","dog"],
- ["UNREGISTERED","UNREGISTERED TRANSPORTATION","This vehicle has been logged for impound","pram"],
+ ["CREATURE","UNLICENSED CREATURE","All creatures must be registered with the Imperial Bureau of Standards","dog","PERMIT REQUIRED"],
+ ["UNREGISTERED","UNREGISTERED TRANSPORTATION","This vehicle has been logged for impound","pram","PERMIT REQUIRED"],
  ["BAD JOKE","MADE AN OBVIOUS JOKE","We've heard it before","jester"]
 ];
-const CIT_EN=FLIP_EN,CIT_AUR=FLIP_AUR,CIT_SWAP=1400;   /* 75/25 like everything else; cog/icon swap every 1.4 s */
 (function buildCites(){
   const fx=t=>`<span class="fx3"><span class="e">${t}</span><span class="a" aria-hidden="true">${t}</span></span>`;
   $("#clist").innerHTML=CITES.map((c,i)=>`<button class="cbtn" data-i="${i}" aria-label="${c[0]}"><svg viewBox="0 0 100 100">${CIC[c[3]]}</svg></button>`).join("");
-  let snd=null,tF=null,tS=null;const ov=$("#citOv");
-  const flip=()=>{const aur=ov.classList.contains("aurOn");ov.classList.add("glitch");
-    setTimeout(()=>{ov.classList.toggle("aurOn",!aur);ov.classList.remove("glitch")},90);tF=setTimeout(flip,aur?CIT_EN:CIT_AUR)};
-  const swap=()=>{[...ov.querySelectorAll(".cic>*")].forEach(e=>e.classList.toggle("on"));tS=setTimeout(swap,CIT_SWAP)};
-  const close=()=>{ov.classList.remove("on","aurOn");clearTimeout(tF);clearTimeout(tS);if(snd&&AC){try{snd.src.stop()}catch(e){}snd=null}};
+  /* citation screen: English only; big word · topic icon with flashing cross-out · problem line (if any) · order */
+  let snd=null;const ov=$("#citOv");
+  const close=()=>{ov.classList.remove("on");if(snd&&AC){try{snd.src.stop()}catch(e){}snd=null}};
   $$("#clist .cbtn").forEach(b=>b.addEventListener("click",()=>{
     const c=CITES[+b.dataset.i];
     close();
     {const ws=c[0].split(" "),lw=Math.max(...ws.map(w=>w.length));   /* two-word titles go on two lines, sized by the longer word */
-    $("#citW").innerHTML=ws.map(fx).join("<br>");$("#citW").style.fontSize=Math.min(ws.length>1?64:80,Math.floor(336/(lw*.88)))+"px";}
-    $("#citT").innerHTML=fx("IMPERIAL CITATION");$("#citO").innerHTML=fx(c[1]);$("#citR").textContent=c[2];
-    $("#citIc").innerHTML=`<g transform="translate(50 50) scale(.6) translate(-50 -50)">${CIC[c[3]]}</g><circle cx="50" cy="50" r="44" fill="none" stroke="var(--red)" stroke-width="8"/><path d="M24 24 76 76" stroke="#000" stroke-width="16"/><path d="M19 19 81 81" stroke="var(--red)" stroke-width="8"/>`;ov.querySelector(".cic img").classList.add("on");$("#citIc").classList.remove("on");
-    ov.classList.add("on");tF=setTimeout(flip,CIT_EN);tS=setTimeout(swap,CIT_SWAP);
+    $("#citW").innerHTML=ws.join("<br>");$("#citW").style.fontSize=Math.min(ws.length>1?64:80,Math.floor(336/(lw*.88)))+"px";}
+    $("#citP").textContent=c[4]||"";$("#citR").textContent=c[2];
+    $("#citIc").innerHTML=CIC[c[3]];
+    ov.classList.add("on");
     const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
     snd=play("alert_loop");if(!snd)SFX.klaxon();
   }));
