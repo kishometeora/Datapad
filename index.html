@@ -96,13 +96,13 @@ body.glitch .flip{opacity:.15}
 #menu.stats .bars{visibility:hidden}#menu.stats #bigClock{display:flex}
 /* hidden stats: small count in each tile's corner while the cog is held (+3 s) */
 #menu.stats #grid .tile[data-k="scan"] .ta,#menu.stats #grid .tile[data-k="droid"] .ta,#menu.stats #grid .tile[data-k="wanted"] .ta,#menu.stats #grid .tile[data-k="cite"] .ta{transform:translate(-30%,-24%) scale(.55)}   /* icon tucks into the corner so the count has room */
-.tcount{display:none;position:absolute;right:16px;bottom:12px;font-family:Orb;font-weight:900;font-size:56px;line-height:1;color:var(--c);text-shadow:0 0 8px rgba(var(--rgb),.6)}
+.tcount{display:none;position:absolute;right:12px;bottom:12px;font-family:Orb;font-weight:900;font-size:44px;line-height:1;color:var(--c);text-shadow:0 0 8px rgba(var(--rgb),.6)}
 #menu.stats .tcount{display:block}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.82}}
 #menu .low{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px}
 #menu .low .aur{font-size:20px;white-space:nowrap;overflow:hidden}
 .pips{display:flex;gap:8px}.pips i{width:14px;height:14px;border-radius:2px;background:rgba(var(--rgb),.3)}.pips i.on{background:var(--c);box-shadow:0 0 4px rgba(var(--rgb),.6)}
-#grid{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);gap:1px;background:rgba(var(--rgb),.22)}
+#grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:1px;background:rgba(var(--rgb),.22)}
 .tile{background:#000;display:flex;align-items:center;justify-content:center;border:0}
 .tile svg{width:100px;height:100px}
 .tile svg.tsus{width:120px;height:120px}
@@ -890,6 +890,7 @@ function ticks(cx,cy,r,n,len){let d="";for(let i=0;i<n;i++){const a=i*2*Math.PI/
    MENU
    ============================================================ */
 const IC={
+ stars:`<g style="fill:var(--c)"><circle cx="34" cy="44" r="17"/><path d="M62 10l2.6 6.4L71 19l-6.4 2.6L62 28l-2.6-6.4L53 19l6.4-2.6z"/><circle cx="66" cy="50" r="3"/><circle cx="14" cy="16" r="3"/><circle cx="58" cy="70" r="2.4"/><circle cx="10" cy="66" r="2.4"/></g><ellipse cx="34" cy="44" rx="30" ry="8" fill="none" stroke="#000" stroke-width="7" transform="rotate(-18 34 44)"/><ellipse cx="34" cy="44" rx="30" ry="8" fill="none" style="stroke:var(--c)" stroke-width="3" transform="rotate(-18 34 44)"/>`,
  insp:`<rect x="12" y="10" width="56" height="66" rx="6" style="fill:var(--c)"/><rect x="27" y="4" width="26" height="13" rx="3" style="fill:var(--c)" stroke="#000" stroke-width="3"/><g fill="#000"><rect x="20" y="26" width="11" height="11" rx="2"/><rect x="36" y="29" width="25" height="5" rx="2"/><rect x="20" y="43" width="11" height="11" rx="2"/><rect x="36" y="46" width="25" height="5" rx="2"/><rect x="20" y="60" width="11" height="11" rx="2"/><rect x="36" y="63" width="18" height="5" rx="2"/></g><path d="M22 28l7 7M29 28l-7 7M22 45l7 7M29 45l-7 7" stroke="var(--c)" stroke-width="2.4" stroke-linecap="round"/>`,
  scan:`<g style="fill:var(--c)"><rect x="30" y="7" width="20" height="13" rx="3"/><rect x="4" y="16" width="72" height="54" rx="7"/></g><rect x="35" y="11" width="10" height="4" rx="1" fill="#000"/><rect x="11" y="26" width="24" height="35" rx="2" fill="#000"/><g style="fill:var(--c)"><circle cx="23" cy="38" r="6"/><path d="M14 59c1-7 5-10 9-10s8 3 9 10z"/></g><g fill="#000"><rect x="41" y="29" width="28" height="6" rx="1"/><rect x="41" y="41" width="21" height="6" rx="1"/><rect x="41" y="53" width="26" height="6" rx="1"/></g>`,
  droid:`<path class="ln" d="M6 46h10V30h10v24h10V22h10v32h10V38h10v8h8"/><path class="dm" d="M6 66h68M10 62v8M24 62v8M38 62v8M52 62v8M66 62v8"/><path class="md" d="M6 14h20M54 14h20"/>`,
@@ -901,7 +902,7 @@ const IC={
  signup:`<path class="ln" d="M8 14 18 24 8 34"/><rect class="fl" x="26" y="20" width="46" height="8"/><rect class="fd" x="26" y="38" width="34" height="8"/><rect class="fd" x="26" y="56" width="40" height="8"/><path class="md" d="M10 50h8M10 60h8"/>`,
  holo:`<path class="ln" d="M24 72h32"/><path class="md" d="M34 66h12v6H34Z"/><path class="md" d="M40 64 16 14M40 64 64 14"/><path class="ln" d="M22 26h36M26 36h28M30 46h20"/><path class="dm" d="M16 14h48"/>`
 };
-const TILES=[["scan","ss","id"],["droid","ss","droid"],["wanted","gal"],["cite","cit"],["insp","insp"],["signup","enl"],["qr","info"],["blank"]];   /* spare slot: holo-message or starfield when built */
+const TILES=[["scan","ss","id"],["droid","ss","droid"],["wanted","gal"],["cite","cit"],["insp","insp"],["signup","enl"],["qr","info"],["holo"],["stars"]];   /* holo-message + starfield: dimmed placeholders until built */
 const TBR=`<svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 14V1h13M86 1h13v13M99 86v13H86M14 99H1V86" vector-effect="non-scaling-stroke"/></svg>`;
 /* topic icons (simple solid silhouettes, 100×100) shown alternately with the Imperial cog */
 const CIC={
