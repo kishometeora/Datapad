@@ -284,6 +284,7 @@ body.aurOn .headline .flip{font-size:.74em}
 #vMatch .mtick{position:absolute;left:0;right:0;border-top:2px dashed rgba(255,255,255,.45)}
 #vMatch .mscore{font-size:76px;font-weight:900;line-height:1;min-height:76px;text-shadow:0 0 12px rgba(var(--rgb),.6)}
 #vMatch .mword{font-size:28px;font-weight:900;letter-spacing:.05em;min-height:34px;white-space:nowrap;text-align:center}
+.tref{margin-top:6px;font-size:13px;letter-spacing:.14em;color:#fff;opacity:.55;min-height:16px;white-space:nowrap}
 #vMatch .mcharge{font-size:18px;letter-spacing:.04em;color:#fff;opacity:.9;min-height:22px;max-width:360px;text-align:center}
 #vMatch .mword:empty,#vMatch .mcharge:empty{visibility:hidden}
 body.blkOff :is(#citOv .cx,#citOv .cp,#askId,#vMatch .mscore.pr,#panel.pass #resFoot,#vMatch.done .mcharge){opacity:0}
@@ -540,7 +541,7 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
       <div class="en mcap" id="mCap"></div>
       <div class="en mscore" id="mScore">0%</div>
       <div class="en mword" id="mWord"></div>
-      <div class="en mcharge" id="mCharge"></div>
+      <div class="en mcharge" id="mCharge"></div><div class="en tref" id="mRef"></div>
     </div>
     <div class="view" id="vRes">
       <div class="en" id="resTop"></div>
@@ -588,7 +589,7 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
   </div>
   <div style="flex:1;min-height:0;position:relative;display:flex">
     <div class="clist" id="clist"></div>
-    <div id="citOv"><div class="en cw" id="citW"></div><div class="cic"><svg id="citIc" viewBox="0 0 100 100"></svg><svg class="cx" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="var(--red)" stroke-width="7"/><path d="M22 22 78 78" stroke="#000" stroke-width="17"/><path d="M17 17 83 83" stroke="var(--red)" stroke-width="7"/></svg></div><div class="en cp" id="citP"></div><div class="cr" id="citR"></div></div>
+    <div id="citOv"><div class="en cw" id="citW"></div><div class="cic"><svg id="citIc" viewBox="0 0 100 100"></svg><svg class="cx" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="var(--red)" stroke-width="7"/><path d="M22 22 78 78" stroke="#000" stroke-width="17"/><path d="M17 17 83 83" stroke="var(--red)" stroke-width="7"/></svg></div><div class="en cp" id="citP"></div><div class="cr" id="citR"></div><div class="en tref" id="citRef"></div></div>
   </div>
 </section>
 
@@ -658,6 +659,11 @@ const FAIL_ODDS=1/3;   /* ID scanner; the droid scanner uses 1/2 (see MODES) */
 const S={vol:2,count:0,tp:0,tf:0,dcount:0,dp:0,df:0,wcount:0,wp:0,wf:0,suspect:0};      // vol: 0 off,1 low,2 med,3 high
 try{Object.assign(S,JSON.parse(localStorage.getItem("datapad")||"{}"))}catch(e){}
 const save=()=>{try{localStorage.setItem("datapad",JSON.stringify(S))}catch(e){}};
+/* TROOP COUNTERS: everything counts from the last reset (settings RESET, or automatically after 8 h of no use) */
+S.citT=S.citT||0;S.citN=S.citN||{};S.supT=S.supT||0;S.supN=S.supN||{};S.use=S.use||{};S.last=S.last||0;
+function resetAll(){S.count=0;S.dcount=0;S.wcount=0;S.citT=0;S.citN={};S.supT=0;S.supN={};S.use={};save()}
+function touch(){const now=Date.now();if(S.last&&now-S.last>8*3600e3)resetAll();S.last=now;save()}
+const ref3=n=>String(n%1000).padStart(3,"0");
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 
@@ -793,8 +799,8 @@ function go(id,mode){
   const n=$("#"+id);n.classList.add("on","enter");setTimeout(()=>n.classList.remove("enter"),300);
   cur=id;
   if(id==="set")openSettings();
-  if(id==="info")ishow(START,false);
-  if(id==="enl")eshow(0,false);
+  if(id==="info"){ishow(START,false);touch();S.use.info=(S.use.info||0)+1;save()}
+  if(id==="enl"){eshow(0,false);touch();S.use.enl=(S.use.enl||0)+1;save()}
   if(cur!=="cit"&&window.citClose)citClose();
   if(id==="ss"){resetScanner();startScan()}   /* every scanner starts scanning as soon as it opens */
 }
@@ -901,7 +907,7 @@ function paintTally(){
   $$("#tPass .dot").forEach((d,i)=>d.classList.toggle("on",i<S[p]));
   $$("#tFail .dot").forEach((d,i)=>d.classList.toggle("on",i<S[f]));
   $("#cnt").textContent=String(S[c]).padStart(3,"0");
-  $("#setCnt").textContent=`ID ${String(S.count).padStart(3,"0")} · DROID ${String(S.dcount).padStart(3,"0")}`;
+  $("#setCnt").textContent=`ID ${ref3(S.count)} · DROID ${ref3(S.dcount)} · CIT ${ref3(S.citT)}`;
 }
 
 let state="idle",next="pass",timers=[],aurT=null;
@@ -1010,7 +1016,7 @@ function reveal(result){
   if(result==="fail")flash("var(--red-flash)");
   setPanel(result);view("vRes");setStatus("COMPLETE");
   /* counter + tally */
-  {const[p,f,c]=M.k;S[c]++;if(result==="pass")S[p]=Math.min(10,S[p]+1);else S[f]=Math.min(10,S[f]+1);save();paintTally();}
+  touch();{const[p,f,c]=M.k;S[c]++;if(result==="pass")S[p]=Math.min(10,S[p]+1);else S[f]=Math.min(10,S[f]+1);save();paintTally();}
   if(result==="fail"){
     if(!M.wanted)$("#resSym").innerHTML=FAILSYM();setHeadline(M.failHead);SFX.fail();
   }else{
@@ -1036,7 +1042,7 @@ function paintBar(p,showPct){$("#mFill").style.height=p+"%";if(showPct){$("#mSco
   const pn=$("#panel");[0,1,2,3].forEach(b=>pn.classList.toggle("mb"+b,b===band(p)))}
 /* suspect search opens straight on the match screen: bar at zero, no score */
 function wantedIdle(){const sp=SUSPECTS[S.suspect];$("#mImg").src=sp.src;$("#mImgG").src=sp.src;
-  $("#mName").innerHTML=FA(sp.name);$("#mName").style.fontSize=Math.min(28,Math.floor(350/(sp.name.length*.86)))+"px";$("#mWord").textContent="";$("#mCharge").textContent="";
+  $("#mName").innerHTML=FA(sp.name);$("#mName").style.fontSize=Math.min(28,Math.floor(350/(sp.name.length*.86)))+"px";$("#mWord").textContent="";$("#mCharge").textContent="";$("#mRef").textContent="";
   $("#vMatch").classList.remove("done");$("#mFill").classList.remove("settle");$("#mFill").style.height="0%";$("#mCap").textContent="";$("#mScore").classList.add("pr");$("#mScore").textContent="SCAN SUSPECT";
   $("#panel").classList.remove("mb0","mb1","mb2","mb3");view("vMatch")}
 $("#vMatch .mpic").addEventListener("click",e=>{if(!M.wanted||state!=="scanning")return;e.stopPropagation();SFX.tap();go("gal")});
@@ -1061,12 +1067,13 @@ function holdEnd(){
     state="result";$("#vMatch").classList.add("done");
     /* X% · SUSPECT MATCH · white line carries the verdict */
     $("#mWord").innerHTML=FA("SUSPECT MATCH");protectReveal();
+    touch();S.supT++;S.supN[sp.src]=(S.supN[sp.src]||0)+1;$("#mRef").textContent="FILE "+ref3(S.supT)+"-"+ref3(S.supN[sp.src]);
     $("#mCharge").textContent=(["NOT A MATCH · MOVE ALONG","LOW MATCH · MOVE ALONG","POSSIBLE MATCH · HELD FOR QUESTIONING","WANTED · "+rnd(sp.crimes)][b]);
     const f=$("#flash");f.style.background=["var(--grn-flash)","#C98A12","#D9600F","var(--red-flash)"][b];f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
     if(b===3)SFX.fail();
     else if(b===2){const r=play("processing");if(r)later(()=>{try{const t=AC.currentTime;r.g.gain.setValueAtTime(r.g.gain.value,t);r.g.gain.exponentialRampToValueAtTime(.0001,t+.15);r.src.stop(t+.2)}catch(e){}},650)}
     else SFX.passSound()||SFX.calm();
-    {const[pk,fk,c]=M.k;S[c]++;if(b===3)S[fk]=Math.min(10,S[fk]+1);else S[pk]=Math.min(10,S[pk]+1);save();paintTally();}
+    touch();{const[pk,fk,c]=M.k;S[c]++;if(b===3)S[fk]=Math.min(10,S[fk]+1);else S[pk]=Math.min(10,S[pk]+1);save();paintTally();}
     rollNext();showLights();   /* lights re-pick for the next person */
     $("#ss").classList.remove("busy");later(()=>$("#ss").classList.add("result"),300);
   },480);
@@ -1251,6 +1258,7 @@ const CITES=[
   $$("#clist .cbtn").forEach(b=>b.addEventListener("click",()=>{
     const c=CITES[+b.dataset.i];
     close();
+    touch();S.citT++;S.citN[c[3]]=(S.citN[c[3]]||0)+1;save();$("#citRef").textContent="REF "+ref3(S.citT)+"-"+ref3(S.citN[c[3]]);
     {const ws=c[0].split(" "),lw=Math.max(...ws.map(w=>w.length));   /* two-word titles go on two lines, sized by the longer word */
     $("#citW").innerHTML=ws.map(FA).join("<br>");protectReveal();$("#citW").style.fontSize=Math.min(ws.length>1?64:80,Math.floor(336/(lw*.88)))+"px";}
     $("#citP").textContent=c[4]||"";$("#citP").style.fontSize=c[4]?Math.min(26,Math.floor(336/(c[4].length*.86)))+"px":"";$("#citR").innerHTML=FA(c[2]);
@@ -1325,7 +1333,7 @@ function commitSettings(){Object.assign(S,pending);save();if(master)master.gain.
 $("#bSave").addEventListener("click",()=>{commitSettings();$("#bSave").classList.add("saved");SFX.armed()});
 $("#bWall").addEventListener("click",()=>{SFX.tap();$("#wallOv").classList.add("on")});
 $("#wallClose").addEventListener("click",()=>{SFX.tap();$("#wallOv").classList.remove("on")});
-$("#bReset").addEventListener("click",()=>{S.count=0;S.dcount=0;save();paintTally();$("#bReset").textContent="DONE";SFX.armed()});
+$("#bReset").addEventListener("click",()=>{resetAll();paintTally();$("#bReset").textContent="DONE";SFX.armed()});
 
 /* ============================================================
    MISC
