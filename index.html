@@ -242,6 +242,11 @@ body.aurOn .headline .flip{font-size:.74em}
 .meter rect{transition:fill .15s}
 .meter rect.e{fill:transparent;stroke:rgba(var(--rgb),.35);stroke-width:1.2}
 #panel{color:var(--c)}
+/* ID scanner: flashing PRESENT ID over the verdict ring while scanning (taps pass straight through to VERDICT) */
+#askId{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;
+  padding:10px 18px;background:rgba(0,0,0,.82);border:2px solid var(--amb);border-radius:6px;color:var(--amb);
+  font-size:32px;font-weight:900;letter-spacing:.06em;white-space:nowrap;text-shadow:0 0 8px rgba(var(--amb-rgb),.6);animation:cxf 1s steps(1) infinite}
+#ss[data-mode="id"].scanning #askId{display:block}
 /* ===== WANTED: one result screen built around a match score ===== */
 #panel.mb0{--c:var(--grn);--rgb:var(--grn-rgb)}#panel.mb1{--c:var(--amb);--rgb:var(--amb-rgb)}
 #panel.mb2{--c:#FF7A1A;--rgb:255,122,26}#panel.mb3{--c:var(--red);--rgb:var(--red-rgb)}
@@ -439,6 +444,7 @@ body.aurOn .fx2>.e{visibility:hidden}body.aurOn .fx2>.a{visibility:visible}body.
         <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--c)" stop-opacity="0"/><stop offset="1" stop-color="var(--c)" stop-opacity=".25"/></linearGradient></defs>
       </svg>
       <button id="vtap" aria-label="verdict"></button>
+      <div id="askId" class="en">PRESENT ID</div>
       <button id="wPortrait" aria-label="change suspect"><svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 12V1h11M88 1h11v11M99 88v11H88M12 99H1V88" vector-effect="non-scaling-stroke"/></svg><img id="wImg" src="suspects/_placeholder.png" alt=""></button>
 
       <!-- complications -->
