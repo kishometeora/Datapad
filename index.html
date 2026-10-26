@@ -333,8 +333,10 @@ body.blkOff :is(#citOv .cx,#citOv .cp,#askId,#vMatch .mscore.pr,#panel.pass #res
 #cit .cbtn{display:flex;align-items:center;justify-content:flex-start;gap:22px;padding:0 18px;flex:0 0 90px;min-height:90px;white-space:nowrap;background:none;border:2px solid rgba(var(--rgb),.4);border-radius:4px;color:var(--c);font-family:Orb;font-weight:700;font-size:19px;letter-spacing:.1em;text-align:left}
 #cit .cbtn:active{background:rgba(var(--rgb),.15)}
 /* ---------- Trooper Inspection ---------- */
-#insp .ilist{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
-#insp .ibtn{flex:1 1 0;min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px 0 18px;background:none;border:2px solid rgba(var(--rgb),.4);border-radius:4px;color:var(--c);font-family:Orb;font-weight:700;font-size:19px;letter-spacing:.06em;text-align:left}
+#insp .ilist{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+#insp .ihd{flex:none;font-size:14px;font-weight:700;letter-spacing:.16em;color:var(--amb);opacity:.85;padding:8px 2px 0}
+#insp .ihd:first-child{padding-top:0}
+#insp .ibtn{flex:none;height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px 0 18px;background:none;border:2px solid rgba(var(--rgb),.4);border-radius:4px;color:var(--c);font-family:Orb;font-weight:700;font-size:19px;letter-spacing:.06em;text-align:left}
 #insp .ibtn i{flex:none;width:38px;height:38px;border:3px solid rgba(var(--rgb),.5);border-radius:4px;position:relative}
 #insp .ibtn.on{border-color:rgba(var(--red-rgb),.7)}
 #insp .ibtn.on i{border-color:var(--red);box-shadow:0 0 8px rgba(var(--red-rgb),.6)}
@@ -1387,11 +1389,12 @@ const CITES=[
    Tick faults, VERDICT -> 0.6 s INSPECTING -> QI-style score, always negative.
    ============================================================ */
 (function(){
-  const FAULTS=[["HELMET OFF",20],["PHONE OUT",15],["VOICE BOX TOO LOUD",10],["DIRTY ARMOUR",12],["DAMAGED ARMOUR",18],["UNPRESSED UNIFORM",8],["UNSHAVEN",5],["LATE",25]];
+  const FAULTS=[["KIT & ARMOUR"],["HELMET OFF",20],["PHONE OUT",15],["VOICE BOX TOO LOUD",10],["DIRTY ARMOUR",12],["DAMAGED ARMOUR",18],["UNPRESSED UNIFORM",8],["UNSHAVEN",5],
+    ["CONDUCT"],["LATE",25],["ASLEEP ON DUTY",24],["REFUSING ORDERS",22],["UNAUTHORISED DANCING",17],["TALKING BACK",14],["WANDERING OFF",13],["COMPLAINING",12],["SHOWING OFF",11],["SITTING DOWN",10],["LAUGHING",9],["LEANING ON WALL",8],["DAWDLING",7],["SLOUCHING",6]];   /* one-item entries are group headings */
   const VERDICTS=[[-20,"BARELY ADEQUATE. STILL A DISGRACE"],[-45,"A DISGRACE TO THE EMPIRE"],[-75,"REASSIGNED TO SANITATION"],[-1e9,"REPORT TO THE KESSEL MINES"]];
   const ov=$("#iOv");let tm=null;
   $("#inspHead").innerHTML=`<span class="fx2"><span class="e">TROOPER INSPECTION</span><span class="a" aria-hidden="true">TROOPER INSPECTION</span></span>`;
-  $("#ilist").innerHTML=FAULTS.map((f,i)=>`<button class="ibtn" data-i="${i}"><span>${f[0]}</span><i></i></button>`).join("");
+  $("#ilist").innerHTML=FAULTS.map((f,i)=>f.length===1?`<div class="en ihd">${f[0]}</div>`:`<button class="ibtn" data-i="${i}"><span>${f[0]}</span><i></i></button>`).join("");
   $$("#ilist .ibtn").forEach(b=>b.addEventListener("click",()=>{SFX.tap();b.classList.toggle("on")}));
   const rnd2=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
   $("#iGo").addEventListener("click",()=>{if(ov.classList.contains("on"))return;
@@ -1403,16 +1406,18 @@ const CITES=[
       $("#iScore").textContent="-"+tot;
       $("#iFail").innerHTML=FA("INSPECTION FAILED");
       $("#iVerd").textContent=VERDICTS.find(v=>-tot>v[0])[1];
-      $("#iLog").innerHTML=lines.map(l=>`<span>${l[0]}</span><b>-${l[1]}</b>`).join("");
+      {const gdl=lines.pop(),top=lines.sort((a,b)=>b[1]-a[1]);let show=top;   /* keep the list short: worst 7, then the rest summed */
+       if(top.length>8){const rest=top.slice(7);show=top.slice(0,7).concat([[`+ ${rest.length} MORE`,rest.reduce((t,l)=>t+l[1],0)]])}
+       $("#iLog").innerHTML=show.concat([gdl]).map(l=>`<span>${l[0]}</span><b>-${l[1]}</b>`).join("");}
       ov.classList.remove("proc");ov.classList.add("res");protectReveal();
       const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
       if(!play("fail"))SFX.klaxon();
     },600)});
   const close=()=>{clearTimeout(tm);tm=null;ov.classList.remove("on","proc","res")};
   /* tap the result -> clear the checklist for the next trooper */
-  ov.addEventListener("click",()=>{if(!ov.classList.contains("res"))return;SFX.tap();close();$$("#ilist .ibtn").forEach(b=>b.classList.remove("on"))});
+  ov.addEventListener("click",()=>{if(!ov.classList.contains("res"))return;SFX.tap();window.inspReset()});
   window.inspBack=close;   /* cog tap: back to the checklist, ticks kept */
-  window.inspReset=()=>{close();$$("#ilist .ibtn").forEach(b=>b.classList.remove("on"))};
+  window.inspReset=()=>{close();$$("#ilist .ibtn").forEach(b=>b.classList.remove("on"));$("#ilist").scrollTop=0};
 })();
 
 /* ============================================================
