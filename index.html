@@ -254,12 +254,17 @@ body.aurOn .headline .flip{font-size:.74em}
 /* ===== WANTED: one result screen built around a match score ===== */
 #panel.mb0{--c:var(--grn);--rgb:var(--grn-rgb)}#panel.mb1{--c:var(--amb);--rgb:var(--amb-rgb)}
 #panel.mb2{--c:#FF7A1A;--rgb:255,122,26}#panel.mb3{--c:var(--red);--rgb:var(--red-rgb)}
-#qBars{display:none;align-items:flex-end;gap:7px;height:40px}
-#qBars b{display:block;width:12px;border-radius:2px;border:2px solid rgba(var(--rgb),.35)}
-#qBars b:nth-child(1){height:25%}#qBars b:nth-child(2){height:50%}#qBars b:nth-child(3){height:75%}#qBars b:nth-child(4){height:100%}
-#qBars b.on{background:var(--c);border-color:var(--c);box-shadow:0 0 6px rgba(var(--rgb),.7)}
+/* Wanted override dial (D1): rotating Imperial block ring, faint wedge = the score set for the next scan */
+#qBars{display:none;width:78px;height:78px}
+#wDial{width:100%;height:100%;overflow:visible}
+#wDial .dring{fill:rgba(230,234,238,.55);transform-origin:0 0;animation:dspin 24s linear infinite}
+@keyframes dspin{to{transform:rotate(360deg)}}
+#wDial .dwedge{fill:rgba(230,234,238,.22);stroke:rgba(230,234,238,.8);stroke-width:1.2}
+#wDial .dspokes{stroke:rgba(230,234,238,.25);stroke-width:.8}
 #ss[data-mode="wanted"] #lPass,#ss[data-mode="wanted"] #lFail{display:none}
-#ss[data-mode="wanted"] #qBars{display:flex}
+#ss[data-mode="wanted"] #qBars{display:block}
+#ss[data-mode="wanted"] #lights:active{background:none}   /* no give-away highlight while holding */
+#ss[data-mode="wanted"] #lights{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #vMatch{padding:20px 16px 22px;justify-content:space-evenly}
 #vMatch .mrow{display:flex;align-items:stretch;gap:18px;height:310px}
 #vMatch .mname{font-size:26px;font-weight:900;letter-spacing:.06em;white-space:nowrap;text-align:center}
@@ -567,7 +572,7 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
   </div>
 
   <div class="bot">
-    <button class="box btn" id="lights" aria-label="next result"><i id="lPass"></i><i id="lFail"></i><span id="qBars"><b></b><b></b><b></b><b></b></span></button>
+    <button class="box btn" id="lights" aria-label="next result"><i id="lPass"></i><i id="lFail"></i><span id="qBars"><svg id="wDial" viewBox="-50 -50 100 100"><circle r="47" fill="none" stroke="rgba(230,234,238,.55)" stroke-width="2.5"/><g class="dring"></g><path class="dwedge"/><g class="dspokes"></g><circle r="9" fill="rgba(230,234,238,.85)"/><path d="M0-9v4M0 9v-4M-9 0h4M9 0h-4" stroke="#000" stroke-width="1.6"/></svg></span></button>
     <button class="box btn" id="bStart" aria-label="verdict">
       <svg width="52" height="52" viewBox="0 0 52 52" id="icVerdict"><circle class="md" cx="26" cy="26" r="22"/><circle class="fl" cx="26" cy="26" r="12"/></svg>
     </button>
@@ -938,10 +943,29 @@ let state="idle",next="pass",timers=[],aurT=null;
 const later=(fn,ms)=>timers.push(setTimeout(fn,ms));
 const clearTimers=()=>{timers.forEach(clearTimeout);timers=[]};
 let nextTarget=Math.floor(Math.random()*3);   /* droid scanner: which target a fail will "find" */
-function showLights(){$$("#qBars b").forEach((b,i)=>b.classList.toggle("on",i<wq));$("#lPass").classList.toggle("on",next==="pass");$("#lFail").classList.toggle("on",next==="fail");
+function showLights(){setDial(wset);$("#lPass").classList.toggle("on",next==="pass");$("#lFail").classList.toggle("on",next==="fail");
   }
-let wq=1+Math.floor(Math.random()*4);   /* suspect search: 1–4 lights = which quarter the match lands in (equal odds) */
-function rollNext(){next=Math.random()<M.odds?"fail":"pass";nextTarget=Math.floor(Math.random()*3);wq=1+Math.floor(Math.random()*4)}
+/* suspect search override: the dial shows the score set for the next scan (random each time).
+   HOLD the dial button to set it: 5 s = 100%, scaling down. Result lands within ±4% of it (kept 0–100). */
+let wset=Math.random()*100;
+const dP=(r,a)=>{a=(a-90)*Math.PI/180;return [r*Math.cos(a),r*Math.sin(a)]};
+function setDial(p){const w=document.querySelector("#wDial .dwedge");if(!w)return;p=Math.max(0,Math.min(100,p));
+  if(p>=99.9){w.setAttribute("d","M0 -33A33 33 0 1 1 0 33A33 33 0 1 1 0 -33Z");return}
+  const a=3.6*p,[x,y]=dP(33,a);w.setAttribute("d",p<=0.1?"":`M0 0L0 -33A33 33 0 ${a>180?1:0} 1 ${x.toFixed(2)} ${y.toFixed(2)}Z`)}
+(function(){let seed=4;const rr=()=>{seed=(seed*16807)%2147483647;return seed/2147483647},pick=a=>a[Math.floor(rr()*a.length)];
+  const arc=(r1,r2,a1,a2)=>{const[x1,y1]=dP(r2,a1),[x2,y2]=dP(r2,a2),[x3,y3]=dP(r1,a2),[x4,y4]=dP(r1,a1);
+    return `M${x1.toFixed(2)} ${y1.toFixed(2)}A${r2} ${r2} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)}L${x3.toFixed(2)} ${y3.toFixed(2)}A${r1} ${r1} 0 0 0 ${x4.toFixed(2)} ${y4.toFixed(2)}Z`};
+  let d="",a=0;while(a<356){const w=pick([3,4,6,8,10]),h=pick([[36,40],[36,42],[37,41],[35,43]]);d+=arc(h[0],h[1],a,Math.min(a+w,358));a+=w+pick([2,3,4])}
+  document.querySelector("#wDial .dring").innerHTML=`<path d="${d}"/>`;
+  document.querySelector("#wDial .dspokes").innerHTML=[0,45,90,135,180,225,270,315].map(a=>{const[x,y]=dP(33,a);return `<path d="M0 0L${x.toFixed(1)} ${y.toFixed(1)}"/>`}).join("");
+  /* hold-to-set */
+  const L=document.getElementById("lights");let t0=0,raf=0,held=false;
+  L.addEventListener("pointerdown",e=>{if(!M.wanted||state==="processing"||state==="settling")return;held=true;t0=performance.now();
+    const f=()=>{if(!held)return;setDial(Math.min(100,(performance.now()-t0)/50));raf=requestAnimationFrame(f)};f()});
+  const up=()=>{if(!held)return;held=false;cancelAnimationFrame(raf);wset=Math.min(100,(performance.now()-t0)/50);setDial(wset)};
+  ["pointerup","pointercancel"].forEach(ev=>L.addEventListener(ev,up));window.addEventListener("pointerup",up);
+})();
+function rollNext(){next=Math.random()<M.odds?"fail":"pass";nextTarget=Math.floor(Math.random()*3);wset=Math.random()*100}
 /* selector sequence: icons light white in turn; the chosen target flashes twice (only when the next result is a fail) */
 (function seq(){
   const btns=$$("#tsel button");let i=0;
@@ -966,8 +990,8 @@ $("#tsel").addEventListener("click",e=>{e.stopPropagation();if(state==="processi
   clearTimeout(window._pickT);window._pickT=setTimeout(()=>b.forEach(x=>x.classList.remove("pick")),700);});
 setMode("id");
 $("#lights").addEventListener("click",()=>{if(state==="processing")return;
-  if(M.wanted)wq=wq%4+1;else next=next==="pass"?"fail":"pass";   /* suspect search: tap cycles 1 → 2 → 3 → 4 lights */
-  showLights();SFX.tap()});
+  if(M.wanted)return;   /* suspect search uses hold-to-set (see the dial) */
+  next=next==="pass"?"fail":"pass";showLights();SFX.tap()});
 
 function view(id){$$("#ss .view").forEach(v=>v.classList.toggle("on",v.id===id))}
 function setPanel(cls){const p=$("#panel");p.classList.remove("fail","pass");if(cls)p.classList.add(cls)}
@@ -1081,7 +1105,7 @@ function wantedScan(){
     paintBar(Math.max(2,Math.min(98,50+30*Math.sin(dt/140+ph1)+18*Math.sin(dt/53+ph2))),false);
     if(state==="processing"&&dt<2000)holdRaf=requestAnimationFrame(tick)};
   holdRaf=requestAnimationFrame(tick);
-  later(()=>{cancelAnimationFrame(holdRaf);procStop();holdLvl=(wq-1)*25+Math.floor(Math.random()*25)+(wq===4?1:0);holdEnd()},2000);
+  later(()=>{cancelAnimationFrame(holdRaf);procStop();holdLvl=Math.max(0,Math.min(100,Math.round(wset+(Math.random()*8-4))));holdEnd()},2000);
 }
 function holdEnd(){
   state="settling";let p=Math.round(holdLvl);
