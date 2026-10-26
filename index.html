@@ -299,7 +299,7 @@ body.aurOn .headline .flip{font-size:.74em}
 #citIss .iT{font-size:30px;font-weight:900;letter-spacing:.08em;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6);white-space:nowrap}
 #citIss .iB{width:300px;height:26px;border:3px solid var(--red);padding:3px}
 #citIss .iB i{display:block;height:100%;width:0;background:var(--red);box-shadow:0 0 8px rgba(var(--red-rgb),.6)}
-#citOv.iss .iB i{animation:issue .8s linear forwards}@keyframes issue{to{width:100%}}
+#citOv.iss .iB i{animation:issue .4s linear forwards}@keyframes issue{to{width:100%}}
 #vMatch #mRef{margin:-2px 0 6px;text-align:center}
 .tref{margin-top:6px;font-size:13px;letter-spacing:.14em;color:#fff;opacity:.55;min-height:16px;white-space:nowrap}
 #vMatch .mcharge{font-size:18px;letter-spacing:.04em;color:#fff;opacity:.9;min-height:22px;max-width:360px;text-align:center}
@@ -1323,13 +1323,13 @@ const CITES=[
     $("#citW").innerHTML=ws.map(FA).join("<br>");protectReveal();$("#citW").style.fontSize=Math.min(ws.length>1?64:80,Math.floor(336/(lw*.88)))+"px";}
     $("#citP").textContent=c[4]||"";$("#citP").style.fontSize=c[4]?Math.min(26,Math.floor(336/(c[4].length*.86)))+"px":"";$("#citR").innerHTML=FA(c[2]);
     $("#citIc").innerHTML=CIC[c[3]];
-    /* C1: 0.8 s "ISSUING CITATION" build-up, then the card lands with the red flash + alarm */
+    /* C1: 0.4 s "ISSUING CITATION" build-up, then the card lands with the red flash + alarm */
     ov.classList.add("on","iss");head("CITATION");
     const pr=play("processing");
     issT=setTimeout(()=>{issT=null;ov.classList.remove("iss");protectReveal();
       if(pr){try{pr.src.stop()}catch(e){}}
       const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
-      snd=play("alert_loop");if(!snd)SFX.klaxon();},800);
+      snd=play("alert_loop");if(!snd)SFX.klaxon();},400);
   }));
   $("#citOv").addEventListener("click",()=>{SFX.tap();close()});
   window.citClose=close;
