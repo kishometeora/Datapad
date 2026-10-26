@@ -186,9 +186,8 @@ body.glitch .flip{opacity:.15}
 #resTop{font-size:44px;letter-spacing:.14em;text-shadow:0 0 14px rgba(var(--rgb),.7)}
 #resFoot{font-size:16px;letter-spacing:.08em;opacity:.9}
 @keyframes wblink{0%,55%{opacity:1}56%,100%{opacity:.2}}
-#ss[data-mode="wanted"] #panel.fail #resHead,#ss[data-mode="wanted"] #panel.pass #resFoot{animation:wblink .9s steps(1) infinite}
 /* ID + droid scanners: flashing MOVE ALONG under the headline on a pass */
-#ss:not([data-mode="wanted"]) #panel.pass #resFoot{display:block;animation:wblink .9s steps(1) infinite;margin-top:6px}
+#ss:not([data-mode="wanted"]) #panel.pass #resFoot{display:block;margin-top:6px}
 #ss[data-mode="wanted"] #resPWrap{width:180px;height:225px}
 #ss[data-mode="wanted"] .headline{min-height:0}
 
@@ -245,7 +244,7 @@ body.aurOn .headline .flip{font-size:.74em}
 /* ID scanner: flashing PRESENT ID over the verdict ring while scanning (taps pass straight through to VERDICT) */
 #askId{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;
   padding:10px 18px;background:rgba(0,0,0,.82);border:2px solid var(--amb);border-radius:6px;color:var(--amb);
-  font-size:32px;font-weight:900;letter-spacing:.06em;white-space:nowrap;text-shadow:0 0 8px rgba(var(--amb-rgb),.6);animation:cxf 1s steps(1) infinite}
+  font-size:32px;font-weight:900;letter-spacing:.06em;white-space:nowrap;text-shadow:0 0 8px rgba(var(--amb-rgb),.6)}
 #ss[data-mode="id"].scanning #askId,#ss[data-mode="droid"].scanning #askId{display:block}
 /* ===== WANTED: one result screen built around a match score ===== */
 #panel.mb0{--c:var(--grn);--rgb:var(--grn-rgb)}#panel.mb1{--c:var(--amb);--rgb:var(--amb-rgb)}
@@ -268,13 +267,13 @@ body.aurOn .headline .flip{font-size:.74em}
 #vMatch .mscore:empty{visibility:hidden}
 #vMatch .mcap{display:none}
 /* before / during the scan the score line becomes an amber flashing prompt */
-#vMatch .mscore.pr{font-size:34px;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6);display:flex;align-items:center;justify-content:center;animation:cxf 1s steps(1) infinite}
+#vMatch .mscore.pr{font-size:34px;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6);display:flex;align-items:center;justify-content:center}
 #vMatch .mtick{position:absolute;left:0;right:0;border-top:2px dashed rgba(255,255,255,.45)}
 #vMatch .mscore{font-size:76px;font-weight:900;line-height:1;min-height:76px;text-shadow:0 0 12px rgba(var(--rgb),.6)}
 #vMatch .mword{font-size:28px;font-weight:900;letter-spacing:.05em;min-height:34px;white-space:nowrap;text-align:center}
 #vMatch .mcharge{font-size:18px;letter-spacing:.04em;color:#fff;opacity:.9;min-height:22px;max-width:360px;text-align:center}
 #vMatch .mword:empty,#vMatch .mcharge:empty{visibility:hidden}
-#vMatch.done .mcharge{animation:wblink .9s steps(1) infinite}
+body.blkOff :is(#citOv .cx,#citOv .cp,#askId,#vMatch .mscore.pr,#panel.pass #resFoot,#vMatch.done .mcharge){opacity:0}
 /* bottom row */
 #ss .bot{display:flex;gap:12px;height:96px;flex:none}
 #lights{width:120px;gap:16px}
@@ -305,9 +304,7 @@ body.aurOn .headline .flip{font-size:.74em}
 #citOv #citIc{padding:34px;overflow:visible}
 #cit .cbtn svg,#tcCit svg{overflow:visible}
 /* the cross-out flashes over the topic icon */
-#citOv .cx{animation:cxf 1s steps(1) infinite}
-@keyframes cxf{0%,49%{opacity:1}50%,100%{opacity:0}}
-#citOv .cp{font-size:26px;font-weight:900;letter-spacing:.04em;white-space:nowrap;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6);animation:cxf 1s steps(1) infinite}
+#citOv .cp{font-size:26px;font-weight:900;letter-spacing:.04em;white-space:nowrap;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6)}
 #citOv .cp:empty{display:none}
 #citOv .cic svg{filter:none}
 #citOv #citIc{fill:#fff;color:#fff}
@@ -739,16 +736,29 @@ function humStop(){
 const FLIP_EN=3000,FLIP_AUR=1000,FLIP_AUR_C=600;
 let protectUntil=0;const protectReveal=()=>{protectUntil=Date.now()+1500};
 const FA=t=>`<span class="fxa"><span class="e">${t}</span><span class="a" aria-hidden="true">${t}</span></span>`;
-function flipCycle(){
+/* ONE MASTER CLOCK (500 ms ticks) drives both the blinkers and the Aurebesh flips, so they stay in step.
+   Shared beat (4 s): blinkers on 1 s / off 1 s / on 1 s / off 1 s; flippers go Aurebesh in the last off-second
+   (ordinary ~0.8 s, critical ~0.5 s) - 1 flip per 2 blinks.
+   Citation screen (2 s): blinkers 0.5 on / 0.5 off; Aurebesh in every second off-half.
+   Nothing both blinks and flips. 90 ms dim either side of a switch. */
+let tileRipple=null;
+function aurPulse(ms,critMs){
   const b=document.body,pane=[document.getElementById("info"),document.getElementById("enl")].filter(Boolean),crit=Date.now()>=protectUntil;
   b.classList.add("glitch");if(crit)b.classList.add("glitchC");pane.forEach(x=>x.classList.add("glitch"));
   setTimeout(()=>{b.classList.add("aurOn");if(crit)b.classList.add("aurC");b.classList.remove("glitch","glitchC");pane.forEach(x=>{x.classList.add("aurOn");x.classList.remove("glitch")})},90);
-  if(crit)setTimeout(()=>{b.classList.add("glitchC");setTimeout(()=>b.classList.remove("aurC","glitchC"),90)},90+FLIP_AUR_C);
-  setTimeout(()=>{b.classList.add("glitch");pane.forEach(x=>x.classList.add("glitch"));
-    setTimeout(()=>{b.classList.remove("aurOn","glitch","aurC");pane.forEach(x=>x.classList.remove("aurOn","glitch"))},90)},90+FLIP_AUR);
-  setTimeout(flipCycle,FLIP_EN+FLIP_AUR);
+  if(crit&&critMs<ms)setTimeout(()=>{b.classList.add("glitchC");setTimeout(()=>b.classList.remove("aurC","glitchC"),90)},90+critMs);
+  setTimeout(()=>{b.classList.add("glitch");if(crit&&critMs>=ms)b.classList.add("glitchC");pane.forEach(x=>x.classList.add("glitch"));
+    setTimeout(()=>{b.classList.remove("aurOn","glitch","aurC","glitchC");pane.forEach(x=>x.classList.remove("aurOn","glitch"))},90)},90+ms);
 }
-setTimeout(flipCycle,FLIP_EN);
+const BEAT=500;let beat0=performance.now(),tick=0;
+function masterClock(){
+  const b=document.body,ov=document.getElementById("citOv"),cit=ov&&ov.classList.contains("on");
+  if(cit){const p=tick%4;b.classList.toggle("blkOff",p%2===1);if(p===3)aurPulse(320,320)}
+  else{const p=tick%8;b.classList.toggle("blkOff",p===2||p===3||p===6||p===7);if(p===6){aurPulse(820,510);if(tileRipple)tileRipple()}}
+  tick++;const now=performance.now();if(beat0+tick*BEAT<now-BEAT)beat0=now-tick*BEAT;   /* resync after the app was in the background */
+  setTimeout(masterClock,Math.max(0,beat0+tick*BEAT-now));
+}
+setTimeout(masterClock,BEAT);
 /* ID + droid results: English only (no flip). Big lines fill the width; a line starting "~" is a small caption. */
 function setHeadline(lines){if(!M.wanted){$("#resHead").innerHTML=lines.map(l=>l[0]==="~"
     ?`<div class="rsmall">${FA(l.slice(1))}</div>`
@@ -979,7 +989,7 @@ function reveal(result){
     const fit=(t,max,w)=>Math.min(max,Math.floor(w/(t.length*.86)));
     const fl=t=>`<span class="flip" data-t="${t}">${t}</span>`;
     $("#resTop").innerHTML=fl(M.top);$("#resFoot").innerHTML=fl(M.foot);$("#resFoot").style.fontSize=fit(M.foot,18,340)+"px";}
-  if(!M.wanted){$("#resFoot").innerHTML=FA("MOVE ALONG");$("#resFoot").style.fontSize="24px"}
+  if(!M.wanted){$("#resFoot").textContent="MOVE ALONG";$("#resFoot").style.fontSize="24px"}
   protectReveal();
   if(M.targets&&result==="fail"){const t=TARGETS[nextTarget];M.failImg=t[0];M.failHead=t[1]}
   /* full-screen flash: red straight away on a fail; green lands with the third bar on a pass */
@@ -1038,7 +1048,7 @@ function holdEnd(){
     state="result";$("#vMatch").classList.add("done");
     /* X% · SUSPECT MATCH · white line carries the verdict */
     $("#mWord").innerHTML=FA("SUSPECT MATCH");protectReveal();
-    $("#mCharge").innerHTML=FA(["NOT A MATCH · MOVE ALONG","LOW MATCH · MOVE ALONG","POSSIBLE MATCH · HELD FOR QUESTIONING","WANTED · "+rnd(sp.crimes)][b]);
+    $("#mCharge").textContent=(["NOT A MATCH · MOVE ALONG","LOW MATCH · MOVE ALONG","POSSIBLE MATCH · HELD FOR QUESTIONING","WANTED · "+rnd(sp.crimes)][b]);
     const f=$("#flash");f.style.background=["var(--grn-flash)","#C98A12","#D9600F","var(--red-flash)"][b];f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
     if(b===3)SFX.fail();
     else if(b===2){const r=play("processing");if(r)later(()=>{try{const t=AC.currentTime;r.g.gain.setValueAtTime(r.g.gain.value,t);r.g.gain.exponentialRampToValueAtTime(.0001,t+.15);r.src.stop(t+.2)}catch(e){}},650)}
@@ -1140,13 +1150,13 @@ showSuspect();
   const swap={tcDroid:()=>{di=step(d,di)},tcQr:()=>{qi=step(q,qi)},tcEnl:()=>{ei=step(en,ei)},tcCit:()=>{ci=step(ct,ci)},
     tcFace:()=>{oi=(oi+1)%order.length;const nx=faces[1-fi];nx.src=order[oi];faces[fi].classList.remove("on");nx.classList.add("on");fi=1-fi}};
   const tas=[...document.querySelectorAll("#grid .ta")];
-  setInterval(()=>{
+  tileRipple=()=>{
     if(cur!=="menu")return;
     tas.forEach((t,n)=>setTimeout(()=>{
       t.classList.remove("fz");void t.offsetWidth;t.classList.add("fz");
       const c=t.querySelector(".tcyc");if(c&&swap[c.id])setTimeout(swap[c.id],120);
     },n*90));
-  },4000);
+  };
 })();
 
 /* ============================================================
@@ -1233,7 +1243,7 @@ const CITES=[
     close();
     {const ws=c[0].split(" "),lw=Math.max(...ws.map(w=>w.length));   /* two-word titles go on two lines, sized by the longer word */
     $("#citW").innerHTML=ws.map(FA).join("<br>");protectReveal();$("#citW").style.fontSize=Math.min(ws.length>1?64:80,Math.floor(336/(lw*.88)))+"px";}
-    $("#citP").innerHTML=c[4]?FA(c[4]):"";$("#citP").style.fontSize=c[4]?Math.min(26,Math.floor(336/(c[4].length*.86)))+"px":"";$("#citR").innerHTML=FA(c[2]);
+    $("#citP").textContent=c[4]||"";$("#citP").style.fontSize=c[4]?Math.min(26,Math.floor(336/(c[4].length*.86)))+"px":"";$("#citR").innerHTML=FA(c[2]);
     $("#citIc").innerHTML=CIC[c[3]];
     ov.classList.add("on");head("CITATION");
     const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
