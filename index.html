@@ -292,11 +292,10 @@ body.aurOn .headline .flip{font-size:.74em}
 
 /* full-screen flash */
 /* ===== CITATIONS ===== */
-#cit .clist{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(6,1fr);gap:8px}
-#cit .cbtn:last-child:nth-child(odd){grid-column:1/-1}
-#cit .cbtn svg{width:78px;height:78px;fill:var(--c);filter:drop-shadow(0 0 3px rgba(var(--rgb),.5))}
+#cit .clist{flex:1;min-height:0;display:flex;flex-direction:column;gap:7px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#cit .cbtn svg{width:46px;height:46px;flex:none;fill:var(--c)}
 #cit .cbtn image{filter:brightness(0) invert(.92)}
-#cit .cbtn{display:flex;align-items:center;justify-content:center;gap:16px;padding:0;background:none;border:2px solid rgba(var(--rgb),.4);border-radius:4px;color:var(--c);font-family:Orb;font-weight:700;font-size:19px;letter-spacing:.1em;text-align:left}
+#cit .cbtn{display:flex;align-items:center;justify-content:flex-start;gap:18px;padding:0 16px;flex:1 0 56px;min-height:56px;background:none;border:2px solid rgba(var(--rgb),.4);border-radius:4px;color:var(--c);font-family:Orb;font-weight:700;font-size:19px;letter-spacing:.1em;text-align:left}
 #cit .cbtn:active{background:rgba(var(--rgb),.15)}
 #citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:space-evenly;gap:14px;padding:10px 22px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
 #citOv.on{display:flex}
@@ -309,8 +308,9 @@ body.aurOn .headline .flip{font-size:.74em}
 @keyframes cxf{0%,49%{opacity:1}50%,100%{opacity:0}}
 #citOv .cp{font-size:26px;font-weight:900;letter-spacing:.04em;white-space:nowrap;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6);animation:cxf 1s steps(1) infinite}
 #citOv .cp:empty{display:none}
-#citOv .cic svg{fill:var(--red);filter:drop-shadow(0 0 4px var(--red))}
-#citOv .cic image{filter:url(#tRed)}
+#citOv .cic svg{filter:none}
+#citOv #citIc{fill:#fff;color:#fff}
+#citOv .cic image{filter:brightness(0) invert(1)}
 /* citation text: own flip timer, mostly English so the crowd can read it */
 .fx3{display:inline-grid;justify-items:center;align-items:center;transition:opacity .08s}.fx3>span{grid-area:1/1}
 .fx3>.a{font-family:Aur;font-weight:400;font-size:.86em;letter-spacing:.03em;visibility:hidden}
@@ -573,7 +573,7 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
 <section id="cit" class="screen">
   <div class="top">
     <button class="home" data-home><img class="emb" src="emblems/imperial.png" alt=""></button>
-    <div class="box amb en" style="flex:1;height:86px;display:flex;align-items:center;justify-content:center;font-size:20px"><span class="fx2"><span class="e">CITATIONS</span><span class="a" aria-hidden="true">CITATIONS</span></span></div>
+    <div class="box amb en" style="flex:1;height:86px;display:flex;align-items:center;justify-content:center;font-size:20px"><span id="citHead"></span></div>
   </div>
   <div style="flex:1;min-height:0;position:relative;display:flex">
     <div class="clist" id="clist"></div>
@@ -801,15 +801,15 @@ const TILES=[["scan","ss","id"],["droid","ss","droid"],["wanted","gal"],["cite",
 const TBR=`<svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none"><path class="md" d="M1 14V1h13M86 1h13v13M99 86v13H86M14 99H1V86" vector-effect="non-scaling-stroke"/></svg>`;
 /* topic icons (simple solid silhouettes, 100×100) shown alternately with the Imperial cog */
 const CIC={
- car:`<path d="M14 58l8-20c2-5 6-8 12-8h32c6 0 10 3 12 8l8 20c5 1 8 5 8 10v10c0 3-2 5-5 5h-5a11 11 0 0 1-22 0H38a11 11 0 0 1-22 0h-5c-3 0-5-2-5-5V68c0-5 3-9 8-10zm14-1h44l-6-15c-1-2-3-3-5-3H39c-2 0-4 1-5 3z"/><circle cx="27" cy="83" r="6" fill="#000"/><circle cx="73" cy="83" r="6" fill="#000"/>`,
+ car:`<path d="M8 62c0-6 4-9 9-10l10-14c3-4 7-6 12-6h22c5 0 9 2 12 6l10 13c7 1 11 5 11 11v8c0 2-2 4-4 4h-6a12 12 0 0 0-24 0H40a12 12 0 0 0-24 0h-4c-2 0-4-2-4-4z"/><path d="M33 39h12v13H25zM51 39h11c2 0 4 1 5 2l8 11H51z" fill="#000"/><circle cx="28" cy="74" r="9"/><circle cx="72" cy="74" r="9"/><circle cx="28" cy="74" r="3.5" fill="#000"/><circle cx="72" cy="74" r="3.5" fill="#000"/>`,
  loiter:`<circle cx="36" cy="16" r="10"/><path d="M24 30h24c4 0 7 3 7 7v26h-8v31h-9V66h-4v28h-9V63h-8V37c0-4 3-7 7-7z"/><circle cx="70" cy="38" r="25" fill="#000"/><circle cx="70" cy="38" r="21"/><path d="M70 24v15l9 7" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round"/>`,
  rebel:`<image href="emblems/rebel.png" x="6" y="6" width="88" height="88"/>`,
  jedi:`<image href="emblems/jedi_yoda.png" x="-22" y="-16" width="144" height="132"/>`,
  saber:`<image href="emblems/saber.png" x="2" y="2" width="96" height="96"/>`,
  dog:`<path d="M20 48c0-4 3-6 7-6h38l6 6v16h-4v24h-8V66H33v22h-8V64c-4-2-5-8-5-16z"/><circle cx="74" cy="38" r="12"/><path d="M66 30l3-16 9 12z"/><rect x="78" y="36" width="16" height="10" rx="4"/><path d="M22 47 9 30l5-4 12 15z"/>`,
  jester:`<image href="emblems/jarjar_icon.png" x="4" y="4" width="92" height="92"/>`,
- trolley:`<path d="M3 13h17l5 11h-7l-2-4H3z"/><path d="M16 21h7l17 47h-7z"/><path d="M26 27h70l-9 36H38z"/><g stroke="#000" stroke-width="3.5"><path d="M44 30l4 30M58 30l2 30M72 30l-1 30M86 30l-4 30M30 41h64M34 52h58"/></g><rect x="36" y="68" width="54" height="7" rx="2"/><circle cx="42" cy="86" r="8"/><circle cx="82" cy="86" r="8"/>`,
- question:`<path d="M14 10h72c6 0 10 4 10 10v46c0 6-4 10-10 10H48L26 94l4-18H14C8 76 4 72 4 66V20c0-6 4-10 10-10z"/><path d="M38 32c0-8 6-13 13-13s13 5 13 12c0 10-13 11-13 21" fill="none" stroke="#000" stroke-width="9" stroke-linecap="round"/><circle cx="51" cy="64" r="5.5" fill="#000"/>`,
+ trolley:`<path d="M4 14h15l4 10h-5l-2-5H4z"/><path d="M15 19h6l16 46h-6z"/><path d="M22 26h72l-10 34H35z"/><path d="M40 33l3 21M56 33l1 21M72 33l-2 21M27 43h62" stroke="#000" stroke-width="5"/><rect x="33" y="65" width="56" height="7" rx="3"/><circle cx="40" cy="84" r="8"/><circle cx="80" cy="84" r="8"/>`,
+ question:`<circle cx="50" cy="50" r="46"/><path d="M35 37c0-10 7-16 15-16s15 6 15 15c0 12-15 12-15 25" fill="none" stroke="#000" stroke-width="11" stroke-linecap="round"/><circle cx="50" cy="78" r="7" fill="#000"/>`,
  fist:`<rect x="18" y="34" width="64" height="44" rx="12"/><g stroke="#000" stroke-width="4"><rect x="18" y="20" width="17" height="30" rx="8"/><rect x="34" y="16" width="17" height="34" rx="8"/><rect x="50" y="16" width="17" height="34" rx="8"/><rect x="66" y="20" width="17" height="30" rx="8"/><rect x="16" y="50" width="44" height="17" rx="8.5"/></g><rect x="32" y="76" width="38" height="20" rx="3"/><path d="M8 26 2 22M8 40H1M8 54l-6 3M92 26l6-4M92 40h7M92 54l6 3" stroke="currentColor" stroke-linecap="round" stroke-width="5"/>`,
  pram:`<path d="M12 22h8l5 14h59c3 0 5 3 4 6-3 16-17 28-34 28H48c-14 0-25-9-28-22l-8-26z"/><path d="M54 8a34 34 0 0 1 32 26H54z" opacity=".85"/><circle cx="34" cy="84" r="9"/><circle cx="72" cy="84" r="9"/>`
 };
@@ -1216,10 +1216,11 @@ const CITES=[
 ];
 (function buildCites(){
   const fx=t=>`<span class="fx3"><span class="e">${t}</span><span class="a" aria-hidden="true">${t}</span></span>`;
-  $("#clist").innerHTML=CITES.map((c,i)=>`<button class="cbtn" data-i="${i}" aria-label="${c[0]}"><svg viewBox="0 0 100 100">${CIC[c[3]]}</svg></button>`).join("");
+  $("#clist").innerHTML=CITES.map((c,i)=>`<button class="cbtn" data-i="${i}"><svg viewBox="0 0 100 100">${CIC[c[3]]}</svg><span>${c[0]}</span></button>`).join("");
   /* citation screen: English only; big word · topic icon with flashing cross-out · problem line (if any) · order */
   let snd=null;const ov=$("#citOv");
-  const close=()=>{ov.classList.remove("on");if(snd&&AC){try{snd.src.stop()}catch(e){}snd=null}};
+  const head=t=>{$("#citHead").innerHTML=`<span class="fx2"><span class="e">${t}</span><span class="a" aria-hidden="true">${t}</span></span>`};head("CITATIONS");
+  const close=()=>{ov.classList.remove("on");head("CITATIONS");if(snd&&AC){try{snd.src.stop()}catch(e){}snd=null}};
   $$("#clist .cbtn").forEach(b=>b.addEventListener("click",()=>{
     const c=CITES[+b.dataset.i];
     close();
@@ -1227,7 +1228,7 @@ const CITES=[
     $("#citW").innerHTML=ws.map(FA).join("<br>");protectReveal();$("#citW").style.fontSize=Math.min(ws.length>1?64:80,Math.floor(336/(lw*.88)))+"px";}
     $("#citP").innerHTML=c[4]?FA(c[4]):"";$("#citP").style.fontSize=c[4]?Math.min(26,Math.floor(336/(c[4].length*.86)))+"px":"";$("#citR").innerHTML=FA(c[2]);
     $("#citIc").innerHTML=CIC[c[3]];
-    ov.classList.add("on");
+    ov.classList.add("on");head("CITATION");
     const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
     snd=play("alert_loop");if(!snd)SFX.klaxon();
   }));
