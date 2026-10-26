@@ -269,7 +269,12 @@ body.aurOn .headline .flip{font-size:.74em}
 #lights{width:120px;gap:16px}
 #lights i{width:28px;height:28px;border-radius:3px;border:2px solid rgba(var(--rgb),.35)}
 #lights i.on{background:var(--c);border-color:var(--c);box-shadow:0 0 6px rgba(var(--rgb),.7)}
-#bStart{flex:1}
+#bStart{flex:1;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#bStart svg{opacity:.35;transition:opacity .2s}
+#ss.scanning #bStart svg{opacity:1;filter:drop-shadow(0 0 8px rgba(var(--rgb),.75))}
+#ss.scanning #bStart:active{background:rgba(var(--rgb),.2)}
+/* the rings are decoration now: no centre disc, no tap target */
+#vbtn,#vtap{display:none!important}
 #catch{position:absolute;inset:0;z-index:20;display:none}
 #ss.result #catch{display:block}
 #ss.busy .bot .btn,#ss.busy .home{pointer-events:none}
@@ -520,13 +525,8 @@ body.aurOn .fx2>.e{visibility:hidden}body.aurOn .fx2>.a{visibility:visible}body.
 
   <div class="bot">
     <button class="box btn" id="lights" aria-label="next result"><i id="lPass"></i><i id="lFail"></i></button>
-    <button class="box btn" id="bStart" aria-label="start / stop">
-      <svg width="40" height="40" viewBox="0 0 40 40" id="icStart">
-        <path class="ln" d="M8 22a12 12 0 0 1 24 0"/><path class="md" d="M2 22a18 18 0 0 1 36 0"/><rect class="fl" x="16" y="26" width="8" height="8"/>
-      </svg>
-      <svg width="36" height="36" viewBox="0 0 36 36" id="icStop" style="display:none">
-        <rect class="ln" x="3" y="3" width="30" height="30" rx="2"/><rect class="fl" x="11" y="11" width="14" height="14"/>
-      </svg>
+    <button class="box btn" id="bStart" aria-label="verdict">
+      <svg width="52" height="52" viewBox="0 0 52 52" id="icVerdict"><circle class="md" cx="26" cy="26" r="22"/><circle class="fl" cx="26" cy="26" r="12"/></svg>
     </button>
   </div>
   <div id="catch"></div>
@@ -885,18 +885,18 @@ function setPanel(cls){const p=$("#panel");p.classList.remove("fail","pass");if(
 function resetScanner(){
   clearTimers();humStop();SFX.failStop();procStop();cancelAnimationFrame(holdRaf);$("#panel").classList.remove("mb0","mb1","mb2","mb3");$("#vRes").classList.remove("hold");clearInterval(aurT);stopCycle();state="idle";
   $("#ss").classList.remove("result","busy","scanning");setPanel(null);view("vRet");
-  $("#icStart").style.display="";$("#icStop").style.display="none";
+
   setStatus("READY");
 }
 function startScan(){
   /* tallies: when either row filled up last time, both rows start again */
   {const[p,f]=M.k;if(S[p]>=10||S[f]>=10){S[p]=0;S[f]=0;save();paintTally()}}
   state="scanning";$("#ss").classList.add("scanning");
-  $("#icStart").style.display="none";$("#icStop").style.display="";
+
   setStatus("SCANNING");SFX.failStop();humStart();
   aurT=setInterval(()=>{$("#cxAur").textContent=Array.from({length:2},()=>rnd(T.codes)+" "+(Math.random()*90+10|0)).join(" ")},650);
 }
-$("#bStart").addEventListener("click",()=>{SFX.tap();if(state==="scanning")resetScanner();else if(state==="idle")startScan()});
+
 
 /* ID card details */
 $("#portrait").innerHTML=`<path class="md" d="M2 22V2h22M96 2h22v22M118 128v20H96M24 148H2V128"/><path class="ln" d="${segs(60,62,34,6,22,-90)}"/><path class="md" d="M60 40l20 22-20 22-20-22Z"/><rect class="fl" x="56" y="58" width="8" height="8"/><path class="dm" d="M8 40v44M4 44h8M4 54h8M4 64h8M4 74h8"/>`;
@@ -917,7 +917,8 @@ const METER=`<g class="meter"><path class="md" d="M2 14V2h12M86 2h12v12M98 86v12
 function fillBar(id){const r=$("#"+id);if(!r)return;r.classList.remove("e");r.classList.add("fl")}
 
 /* VERDICT — the glowing centre button */
-$("#vtap").addEventListener("click",()=>{
+/* VERDICT is the bottom-right button (scanning is always on while a scanner is open) */
+$("#bStart").addEventListener("click",()=>{
   if(state!=="scanning"||M.wanted)return;
   SFX.tap();humStop();clearInterval(aurT);
   state="processing";$("#ss").classList.remove("scanning");$("#ss").classList.add("busy");
@@ -995,10 +996,10 @@ function holdEnd(){
   {const[pk,fk,c]=M.k;S[c]++;if(b===3)S[fk]=Math.min(10,S[fk]+1);else S[pk]=Math.min(10,S[pk]+1);save();paintTally();}
   $("#ss").classList.remove("busy");later(()=>$("#ss").classList.add("result"),300);
 }
-$("#vtap").addEventListener("pointerdown",holdStart);
+$("#bStart").addEventListener("pointerdown",holdStart);
 /* release is caught on the whole window: the button itself is hidden once the match screen appears */
 ["pointerup","pointercancel"].forEach(ev=>window.addEventListener(ev,holdEnd));
-$("#vtap").addEventListener("contextmenu",e=>{if(M.wanted)e.preventDefault()});
+$("#bStart").addEventListener("contextmenu",e=>{if(M.wanted)e.preventDefault()});
 
 /* tap anywhere: clear the result and go straight into the next scan */
 $("#catch").addEventListener("click",()=>{SFX.tap();resetScanner();startScan()});
