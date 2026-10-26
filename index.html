@@ -85,15 +85,18 @@ body.glitch .flip{opacity:.15}
 /* ============ MENU ============ */
 #menu .head{height:304px;flex:none;padding:16px;display:flex;flex-direction:column}
 #menu .h-aur{font-size:30px;white-space:nowrap;overflow:hidden;height:40px}
-#menu .mid{display:flex;gap:16px;margin-top:18px}
+#menu .mid{display:flex;gap:16px;margin-top:18px;position:relative}
 #menu .bars{flex:1;display:flex;flex-direction:column;gap:12px;padding-top:6px;min-width:0}
 .brow{display:flex;gap:10px;height:14px}
 .bar{height:14px;border-radius:2px;background:var(--c);box-shadow:0 0 4px rgba(var(--rgb),.5);transition:width 1.4s ease-in-out,opacity .2s}
 .bar.d{background:rgba(var(--rgb),.3);box-shadow:none}
 .bar.ping{background:#fff;box-shadow:0 0 10px #fff}
-#menu .embwrap{width:170px;height:170px;flex:none;animation:pulse 4s ease-in-out infinite;position:relative}
-#bigClock{display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;font-size:66px;line-height:1.05;text-shadow:0 0 8px rgba(var(--rgb),.6)}
-#menu .embwrap.clk .emb{visibility:hidden}#menu .embwrap.clk #bigClock{display:flex}
+#menu .embwrap{width:170px;height:170px;flex:none;touch-action:none;animation:pulse 4s ease-in-out infinite;position:relative}
+#bigClock{display:none;position:absolute;left:0;top:0;bottom:0;right:186px;flex-direction:column;align-items:center;justify-content:center;font-size:66px;line-height:1.05;text-shadow:0 0 8px rgba(var(--rgb),.6)}
+#menu.stats .bars{visibility:hidden}#menu.stats #bigClock{display:flex}
+/* hidden stats: small count in each tile's corner while the cog is held (+3 s) */
+.tcount{display:none;position:absolute;right:10px;bottom:8px;font-family:Orb;font-weight:700;font-size:14px;letter-spacing:.06em;color:var(--c);opacity:.6}
+#menu.stats .tcount{display:block}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.82}}
 #menu .low{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px}
 #menu .low .aur{font-size:20px;white-space:nowrap;overflow:hidden}
@@ -443,7 +446,7 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
         <div class="brow"><div class="bar" style="width:40px"></div><div class="bar" style="width:40px"></div><div class="bar d" style="width:50px"></div></div>
         <div class="aur dimtxt" id="mAur2" style="font-size:22px;margin-top:10px;white-space:nowrap;overflow:hidden">ID 7</div>
       </div>
-      <div class="embwrap"><img class="emb" src="emblems/imperial.png" alt=""><div class="aur" id="bigClock"></div></div>
+      <div class="aur" id="bigClock"></div><div class="embwrap"><img class="emb" src="emblems/imperial.png" alt=""></div>
     </div>
     <div class="low"><div class="aur dimtxt" id="mAur3">SECTOR SEVEN</div><div class="pips" id="mPips"><i class="on"></i><i></i><i class="on"></i></div></div>
   </div>
@@ -852,7 +855,7 @@ const tileArt=k=>k==="droid"?`<div class="tcyc" id="tcDroid">${["emblems/r2.png"
   :k==="signup"?`<div class="tcyc" id="tcEnl">${["signup","research","build","submit","cleared"].map((n,i)=>`<img src="emblems/enlist/${n}.png" class="${i?"":"on"}" alt="">`).join("")}</div>`
   :k==="qr"?`<div class="tcyc" id="tcQr"><svg class="lay on" viewBox="-3 -3 86 86">${IC.qr}</svg><img src="emblems/cogbird.png" alt=""></div>`
   :`<svg viewBox="0 0 80 80">${IC[k]}</svg>`;
-$("#grid").innerHTML=TILES.map(([k,to,m])=>`<button class="tile ${to?"live":"off"}" ${to?`data-to="${to}" data-mode="${m||""}"`:""}><span class="ta">${tileArt(k)}</span></button>`).join("");
+$("#grid").innerHTML=TILES.map(([k,to,m])=>`<button class="tile ${to?"live":"off"}" data-k="${k}" ${to?`data-to="${to}" data-mode="${m||""}"`:""}><span class="ta">${tileArt(k)}</span><span class="tcount"></span></button>`).join("");
 $$(".tile.live").forEach(t=>t.addEventListener("click",()=>{SFX.open();go(t.dataset.to,t.dataset.mode)}));
 
 setInterval(()=>{
@@ -866,11 +869,21 @@ const aurClock=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return p(d
 let clockUntil=0;
 setInterval(()=>{if(cur!=="menu")return;const el=Math.random()<.5?$("#mAur3"):$("#mAur2");if(el.id==="mAur2"&&Date.now()<clockUntil)return;
   el.style.opacity=.2;setTimeout(()=>{el.textContent=rnd(T.aurWords);el.style.opacity=""},120)},5200);
-/* hidden clock: tap the cog — for 2 s the emblem becomes the time in big Aurebesh numerals (hours over minutes) */
-$("#menu .embwrap").addEventListener("click",()=>{if(Date.now()<clockUntil)return;clockUntil=Date.now()+2000;
-  const d=new Date(),p=n=>String(n).padStart(2,"0"),w=$("#menu .embwrap");
-  $("#bigClock").innerHTML=`<div>${p(d.getHours())}</div><div>${p(d.getMinutes())}</div>`;w.classList.add("clk");
-  setTimeout(()=>w.classList.remove("clk"),2000);});
+/* hidden stats: HOLD the cog ~0.6 s -> the data bars become the time (big Aurebesh, hours over minutes)
+   and each tile shows how many times it was used since the last reset. Stays up 3 s after letting go. */
+(function(){
+  const w=$("#menu .embwrap"),mn=$("#menu");let tm=null,hideT=null,shown=false;
+  const TK={scan:()=>S.count,droid:()=>S.dcount,wanted:()=>S.supT,cite:()=>S.citT,signup:()=>S.use.enl||0,qr:()=>S.use.info||0};
+  const show=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");
+    $("#bigClock").innerHTML=`<div>${p(d.getHours())}</div><div>${p(d.getMinutes())}</div>`;
+    $$("#grid .tile").forEach(t=>{const f=TK[t.dataset.k];t.querySelector(".tcount").textContent=f?f():""});
+    clearTimeout(hideT);mn.classList.add("stats");shown=true;clockUntil=Date.now()+60000};
+  const hide=()=>{mn.classList.remove("stats");shown=false;clockUntil=0};
+  w.addEventListener("pointerdown",()=>{clearTimeout(tm);tm=setTimeout(()=>{tm=null;show()},600)});
+  const up=()=>{if(tm){clearTimeout(tm);tm=null}if(shown){clearTimeout(hideT);hideT=setTimeout(hide,3000)}};
+  ["pointerup","pointercancel","pointerleave"].forEach(e=>w.addEventListener(e,up));
+  w.addEventListener("contextmenu",e=>e.preventDefault());
+})();
 
 /* hidden control: long-press top-left data bar -> settings */
 (function(){
