@@ -95,7 +95,7 @@ body.glitch .flip{opacity:.15}
 #bigClock{display:none;position:absolute;left:0;top:0;bottom:0;right:186px;flex-direction:column;align-items:center;justify-content:center;font-family:Orb;font-weight:900;font-size:76px;line-height:1;letter-spacing:.02em;text-shadow:0 0 8px rgba(var(--rgb),.6)}
 #menu.stats .bars{visibility:hidden}#menu.stats #bigClock{display:flex}
 /* hidden stats: small count in each tile's corner while the cog is held (+3 s) */
-#menu.stats #grid .tile[data-k="scan"] .ta,#menu.stats #grid .tile[data-k="droid"] .ta,#menu.stats #grid .tile[data-k="wanted"] .ta,#menu.stats #grid .tile[data-k="cite"] .ta{transform:translate(-30%,-24%) scale(.55)}   /* icon tucks into the corner so the count has room */
+#menu.stats #grid .tile[data-k="scan"] .ta,#menu.stats #grid .tile[data-k="droid"] .ta,#menu.stats #grid .tile[data-k="wanted"] .ta,#menu.stats #grid .tile[data-k="cite"] .ta,#menu.stats #grid .tile[data-k="insp"] .ta{transform:translate(-30%,-24%) scale(.55)}   /* icon tucks into the corner so the count has room */
 .tcount{display:none;position:absolute;right:12px;bottom:12px;font-family:Orb;font-weight:900;font-size:44px;line-height:1;color:var(--c);text-shadow:0 0 8px rgba(var(--rgb),.6)}
 #menu.stats .tcount{display:block}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.82}}
@@ -360,7 +360,7 @@ body.blkOff :is(#citOv .cx,#citOv .cp,#askId,#vMatch .mscore.pr,#panel.pass #res
 #iRes .iHr{width:320px;border-top:2px solid rgba(var(--red-rgb),.45)}
 #iRes .iFin{display:flex;flex-direction:column;align-items:center;gap:8px;visibility:hidden}
 #iRes .iFail{white-space:nowrap;border:3px solid var(--red);padding:6px 16px;box-shadow:0 0 10px rgba(var(--red-rgb),.5)}#iOv.done .iFin{visibility:visible}
-#iRes .iPun{font-size:20px;font-weight:900;letter-spacing:.06em;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6)}
+#iRes .iPun{max-width:340px;text-align:center;line-height:1.25;font-size:20px;font-weight:900;letter-spacing:.06em;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6)}
 #iRes .iLog span.new,#iRes .iLog b.new{opacity:1;text-shadow:0 0 8px #fff}
 #iRes .iVerd{font-size:18px;line-height:1.35;letter-spacing:.04em;color:#fff;max-width:360px}
 #iRes .iLog{display:grid;grid-template-columns:1fr auto;gap:4px 18px;width:320px;font-size:13px;letter-spacing:.08em;color:#fff;text-align:left;min-height:160px;align-content:start}
@@ -652,7 +652,7 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
         <div class="en iLbl">INSPECTION SCORE</div><div class="en iScore" id="iScore"></div>
         <div class="iFin"><div class="en iFail" id="iFail"></div></div>
         <div class="iHr"></div><div class="en iLbl">FAULTS RECORDED</div><div class="en iLog" id="iLog"></div><div class="iHr"></div>
-        <div class="iFin"><div class="en iLbl">VERDICT</div><div class="en iVerd" id="iVerd"></div><div class="en iLbl">PUNISHMENT</div><div class="en iPun" id="iPun"></div><div class="en tref" id="iRef"></div></div>
+        <div class="iFin"><div class="en iLbl">RECOMMENDATION</div><div class="en iPun" id="iPun"></div><div class="en tref" id="iRef"></div></div>
       </div>
     </div>
   </div>
@@ -738,7 +738,7 @@ try{Object.assign(S,JSON.parse(localStorage.getItem("datapad")||"{}"))}catch(e){
 const save=()=>{try{localStorage.setItem("datapad",JSON.stringify(S))}catch(e){}};
 /* TROOP COUNTERS: everything counts from the last reset (settings RESET, or automatically after 8 h of no use) */
 S.citT=S.citT||0;S.citN=S.citN||{};S.supT=S.supT||0;S.supN=S.supN||{};S.use=S.use||{};S.last=S.last||0;
-function resetAll(){S.sector=1+Math.floor(Math.random()*12);S.count=0;S.dcount=0;S.wcount=0;S.citT=0;S.citN={};S.supT=0;S.supN={};S.use={};save()}
+function resetAll(){S.sector=1+Math.floor(Math.random()*12);S.inspT=0;S.count=0;S.dcount=0;S.wcount=0;S.citT=0;S.citN={};S.supT=0;S.supN={};S.use={};save()}
 function touch(){const now=Date.now();if(S.last&&now-S.last>8*3600e3)resetAll();S.last=now;save()}
 const ref3=n=>String(n%1000).padStart(3,"0");
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -967,7 +967,7 @@ setInterval(()=>{if(cur!=="menu")return;const el=Math.random()<.5?$("#mAur3"):$(
    and each tile shows how many times it was used since the last reset. Stays up 3 s after letting go. */
 (function(){
   const w=$("#menu .embwrap"),mn=$("#menu");let tm=null,hideT=null,shown=false;
-  const TK={scan:()=>S.count,droid:()=>S.dcount,wanted:()=>S.supT,cite:()=>S.citT};   /* Enlist + Connect: no count shown */
+  const TK={scan:()=>S.count,droid:()=>S.dcount,wanted:()=>S.supT,cite:()=>S.citT,insp:()=>S.inspT||0};   /* Enlist + Connect: no count shown */
   const show=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");
     $("#bigClock").innerHTML=`<div>${p(d.getHours())}</div><div>${p(d.getMinutes())}</div>`;
     $$("#grid .tile").forEach(t=>{const f=TK[t.dataset.k];t.querySelector(".tcount").textContent=f?f():""});
@@ -1413,7 +1413,9 @@ const CITES=[
   $("#ilist").innerHTML=FAULTS.map((f,i)=>f.length===1?`<div class="en ihd">${f[0]}</div>`:`<button class="ibtn" data-i="${i}"><span>${f[0]}</span><i></i></button>`).join("");
   $$("#ilist .ibtn").forEach(b=>b.addEventListener("click",()=>{SFX.tap();b.classList.toggle("on")}));
   const rnd2=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
-  const BANDS=[[-20,"BARELY ADEQUATE. STILL A DISGRACE","EXTRA DRILL"],[-45,"A DISGRACE TO THE EMPIRE","KITCHEN DUTY"],[-75,"REASSIGNED TO SANITATION","LATRINE DUTY"],[-1e9,"REPORT TO THE KESSEL MINES","CONFINED TO BARRACKS"]];
+  /* one random RECOMMENDATION per inspection, not tied to the score (never the same twice in a row) */
+  const RECS=["REPORT TO THE KESSEL MINES","REASSIGN TO SANITATION","TRANSFER TO HOTH","TRASH COMPACTOR DUTY","REPORT TO LORD VADER","GUARD THE EXHAUST PORT","FEED THE RANCOR","SARLACC PIT PATROL","WAMPA WATCH ON HOTH","TRANSFER TO TATOOINE","TRANSFER TO DAGOBAH","EWOK PATROL ON ENDOR","GUARD THE SHIELD GENERATOR","CLEAN THE BANTHA STABLES","SCAN EVERY ESCAPE POD","MOUSE DROID MAINTENANCE","JOIN THE SANDTROOPERS"];
+  let lastRec=-1;const pickRec=()=>{let i;do{i=Math.floor(Math.random()*RECS.length)}while(i===lastRec);lastRec=i;return RECS[i]};
   let tms=[];const later2=(f,ms)=>tms.push(setTimeout(f,ms));
   /* VERDICT: QI-style tally. Score on top counts down as each fault drops in (tick each), then the verdict + punishment land with a falling tone */
   $("#iGo").addEventListener("click",()=>{if(ov.classList.contains("on"))return;
@@ -1421,9 +1423,9 @@ const CITES=[
     lines.sort((a,b)=>b[1]-a[1]);let show=lines;
     if(lines.length>8){const rest=lines.slice(7);show=lines.slice(0,7).concat([[`+ ${rest.length} MORE`,rest.reduce((t,l)=>t+l[1],0)]])}
     show=show.concat([["GENERAL DISAPPOINTMENT",rnd2(3,9)]]);
-    const tot=show.reduce((t,l)=>t+l[1],0),band=BANDS.find(v=>-tot>v[0]);
-    $("#iScore").textContent="0";$("#iLog").innerHTML="";$("#iFail").innerHTML=FA("INSPECTION FAILED");$("#iVerd").textContent=band[1];$("#iPun").textContent=band[2];
-    {const d=new Date(),p=n=>String(n).padStart(2,"0");$("#iRef").textContent="INSPECTED "+p(d.getHours())+":"+p(d.getMinutes())+" · SECTOR "+(S.sector||7);}
+    touch();S.inspT=(S.inspT||0)+1;save();
+    $("#iScore").textContent="0";$("#iLog").innerHTML="";$("#iFail").innerHTML=FA("INSPECTION FAILED");$("#iPun").textContent=pickRec();
+    {const d=new Date(),p=n=>String(n).padStart(2,"0");$("#iRef").textContent="CASE "+ref3(S.inspT)+" · "+p(d.getHours())+":"+p(d.getMinutes())+" · SECTOR "+(S.sector||7);}
     inspHead("INSPECTION REPORT");
     ov.classList.add("on","res");ov.classList.remove("done");
     const step=Math.min(250,2000/show.length);let run=0;
