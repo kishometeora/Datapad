@@ -106,6 +106,8 @@ body.glitch .flip{opacity:.15}
 .tile{background:#000;display:flex;align-items:center;justify-content:center;border:0}
 .tile svg{width:100px;height:100px}
 .tile svg.tsus{width:120px;height:120px}
+.tile svg.tcite{width:112px;height:112px}
+.tile img.tim{width:104px;height:104px;object-fit:contain}   /* single fixed icons (no cycling) */
 #tcCit image{filter:brightness(0) invert(.92)}
 .tile.off svg{opacity:.22}
 .tile{position:relative}
@@ -922,11 +924,11 @@ const CIC={
  freighter:`<path d="M4 26h62v46H4z"/><path d="M68 40h14c3 0 5 1 7 4l7 11v17H68z"/><path d="M73 45h9l6 10H73z" fill="#000"/><rect x="10" y="32" width="50" height="22" rx="2" fill="#000"/><path d="M15 38h40M15 46h28" stroke="currentColor" stroke-width="4"/><circle cx="22" cy="78" r="10"/><circle cx="78" cy="78" r="10"/><circle cx="22" cy="78" r="4" fill="#000"/><circle cx="78" cy="78" r="4" fill="#000"/>`,
  pram:`<path d="M12 22h8l5 14h59c3 0 5 3 4 6-3 16-17 28-34 28H48c-14 0-25-9-28-22l-8-26z"/><path d="M54 8a34 34 0 0 1 32 26H54z" opacity=".85"/><circle cx="34" cy="84" r="9"/><circle cx="72" cy="84" r="9"/>`
 };
-const tileArt=k=>k==="droid"?`<div class="tcyc" id="tcDroid">${["emblems/r2.png","emblems/c3po_solid.png","emblems/deathstar.png"].map((s,i)=>`<img src="${s}" class="${i?"":"on"}" alt="">`).join("")}</div>`
+const tileArt=k=>k==="droid"?`<img class="tim" src="emblems/r2.png" alt="">`
   :k==="wanted"?`<svg class="tsus" viewBox="0 0 100 100" style="fill:var(--c);stroke:var(--c);color:var(--c)"><path d="M10 28V10h18M72 10h18v18M90 72v18H72M28 90H10V72" fill="none" stroke-width="6"/><g stroke="none"><circle cx="50" cy="40" r="14"/><path d="M24 82c0-16 11-26 26-26s26 10 26 26z"/></g><path d="M4 40h92" stroke-width="3" stroke="#000"/><path d="M4 40h16M80 40h16" stroke-width="3"/></svg>`
-  :k==="cite"?`<div class="tcyc" id="tcCit">${["car","dog","jedi","jester","saber","pram","trolley","outpost","rebel","fist","cargo","loiter","freighter","question","phone"].map((n,i)=>`<svg class="lay${i?"":" on"}" viewBox="0 0 100 100"><g transform="translate(50 50) scale(.62) translate(-50 -50)" style="fill:var(--c);color:var(--c)">${CIC[n]}</g><circle cx="50" cy="50" r="44" fill="none" style="stroke:var(--c)" stroke-width="7"/><path d="M24 24 76 76" stroke="#000" stroke-width="15"/><path d="M19 19 81 81" style="stroke:var(--c)" stroke-width="7"/></svg>`).join("")}</div>`
-  :k==="signup"?`<div class="tcyc" id="tcEnl">${["signup","research","build","submit","cleared"].map((n,i)=>`<img src="emblems/enlist/${n}.png" class="${i?"":"on"}" alt="">`).join("")}</div>`
-  :k==="qr"?`<div class="tcyc" id="tcQr"><svg class="lay on" viewBox="-3 -3 86 86">${IC.qr}</svg><img src="emblems/cogbird.png" alt=""></div>`
+  :k==="cite"?`<svg class="tcite" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" style="stroke:var(--c)" stroke-width="7"/><path d="M19 19 81 81" style="stroke:var(--c)" stroke-width="7"/></svg>`
+  :k==="signup"?`<img class="tim" src="emblems/enlist/signup.png" alt="">`
+  :k==="qr"?`<svg viewBox="-3 -3 86 86">${IC.qr}</svg>`
   :k==="blank"?""
   :`<svg viewBox="0 0 80 80">${IC[k]}</svg>`;
 $("#grid").innerHTML=TILES.map(([k,to,m])=>`<button class="tile ${to?"live":"off"}" data-k="${k}" ${to?`data-to="${to}" data-mode="${m||""}"`:""}><span class="ta">${tileArt(k)}</span><span class="tcount"></span></button>`).join("");
