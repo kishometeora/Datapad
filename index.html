@@ -813,8 +813,8 @@ function go(id,mode){
   const n=$("#"+id);n.classList.add("on","enter");setTimeout(()=>n.classList.remove("enter"),300);
   cur=id;
   if(id==="set")openSettings();
-  if(id==="info"){ishow(START,false);touch();S.use.info=(S.use.info||0)+1;save()}
-  if(id==="enl"){eshow(0,false);touch();S.use.enl=(S.use.enl||0)+1;save()}
+  if(id==="info")ishow(START,false);
+  if(id==="enl")eshow(0,false);
   if(cur!=="cit"&&window.citClose)citClose();
   if(id==="ss"){resetScanner();startScan()}   /* every scanner starts scanning as soon as it opens */
 }
@@ -884,7 +884,7 @@ setInterval(()=>{if(cur!=="menu")return;const el=Math.random()<.5?$("#mAur3"):$(
    and each tile shows how many times it was used since the last reset. Stays up 3 s after letting go. */
 (function(){
   const w=$("#menu .embwrap"),mn=$("#menu");let tm=null,hideT=null,shown=false;
-  const TK={scan:()=>S.count,droid:()=>S.dcount,wanted:()=>S.supT,cite:()=>S.citT,signup:()=>S.use.enl||0,qr:()=>S.use.info||0};
+  const TK={scan:()=>S.count,droid:()=>S.dcount,wanted:()=>S.supT,cite:()=>S.citT};   /* Enlist + Connect: no count shown */
   const show=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");
     $("#bigClock").innerHTML=`<div>${p(d.getHours())}</div><div>${p(d.getMinutes())}</div>`;
     $$("#grid .tile").forEach(t=>{const f=TK[t.dataset.k];t.querySelector(".tcount").textContent=f?f():""});
