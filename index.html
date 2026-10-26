@@ -153,7 +153,7 @@ body.glitch .flip{opacity:.15}
 /* ===== WANTED: scanner mode ===== */
 #ss[data-mode="wanted"] .cx,#ss[data-mode="wanted"] #bgGrid,#ss[data-mode="wanted"] .bioframe{display:none}
 #ss[data-mode="wanted"] #scanSvg{top:50%;height:50%}
-#ss[data-mode="wanted"] #vtap{top:75%;width:92px;height:92px}
+#ss[data-mode="wanted"] #vtap{top:75%;width:110px;height:110px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #wPortrait{display:none;position:absolute;left:0;right:0;top:0;height:50%;background:none;border:0;padding:16px 16px 6px}
 #ss[data-mode="wanted"] #wPortrait{display:block}
 #wPortrait img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 4px rgba(var(--rgb),.55))}
@@ -238,6 +238,23 @@ body.aurOn .headline .flip{font-size:.74em}
 .meter rect{transition:fill .15s}
 .meter rect.e{fill:transparent;stroke:rgba(var(--rgb),.35);stroke-width:1.2}
 #panel{color:var(--c)}
+/* ===== WANTED: one result screen built around a match score ===== */
+#panel.mb0{--c:var(--grn);--rgb:var(--grn-rgb)}#panel.mb1{--c:var(--amb);--rgb:var(--amb-rgb)}
+#panel.mb2{--c:#FF7A1A;--rgb:255,122,26}#panel.mb3{--c:var(--red);--rgb:var(--red-rgb)}
+#ss[data-mode="wanted"] #lights{visibility:hidden}
+#vMatch{padding:20px 16px 22px;justify-content:space-evenly}
+#vMatch .mrow{display:flex;align-items:stretch;gap:18px;height:330px}
+#vMatch .mpic{position:relative;width:240px;flex:none}
+#vMatch .mpic img{position:absolute;inset:10px;width:calc(100% - 20px);height:calc(100% - 20px);object-fit:contain;filter:drop-shadow(0 0 3px rgba(var(--rgb),.5))}
+#panel.mb3 #vMatch .mpic img{filter:url(#tRedP) drop-shadow(0 0 1.5px rgba(255,59,48,.8))}
+#vMatch .mbar{position:relative;width:56px;border:2px solid rgba(var(--rgb),.5);border-radius:4px;overflow:hidden}
+#vMatch .mfill{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--c);box-shadow:0 0 10px rgba(var(--rgb),.7)}
+#vMatch .mtick{position:absolute;left:0;right:0;border-top:2px dashed rgba(255,255,255,.45)}
+#vMatch .mscore{font-size:76px;font-weight:900;line-height:1;text-shadow:0 0 12px rgba(var(--rgb),.6)}
+#vMatch .mword{font-size:28px;font-weight:900;letter-spacing:.05em;min-height:34px;white-space:nowrap;text-align:center}
+#vMatch .mcharge{font-size:18px;letter-spacing:.04em;color:#fff;opacity:.9;min-height:22px;max-width:360px;text-align:center}
+#vMatch .mword:empty,#vMatch .mcharge:empty{visibility:hidden}
+#vMatch.done .mword{animation:wblink .9s steps(1) infinite}
 /* bottom row */
 #ss .bot{display:flex;gap:12px;height:96px;flex:none}
 #lights{width:120px;gap:16px}
@@ -472,6 +489,15 @@ body.aurOn .fx2>.e{visibility:hidden}body.aurOn .fx2>.a{visibility:visible}body.
     </div>
 
     <!-- result -->
+    <div class="view" id="vMatch">
+      <div class="mrow">
+        <div class="mpic"><svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%"><path class="md" d="M1 10V1h10M89 1h10v9M99 90v9H89M11 99H1V90" vector-effect="non-scaling-stroke"/></svg><img id="mImg" src="suspects/_placeholder.png" alt=""></div>
+        <div class="mbar"><div class="mfill" id="mFill"></div><i class="mtick" style="bottom:25%"></i><i class="mtick" style="bottom:50%"></i><i class="mtick" style="bottom:75%"></i></div>
+      </div>
+      <div class="en mscore" id="mScore">0%</div>
+      <div class="en mword" id="mWord"></div>
+      <div class="en mcharge" id="mCharge"></div>
+    </div>
     <div class="view" id="vRes">
       <div class="en" id="resTop"></div>
       <svg class="sym" viewBox="0 0 100 100" id="resSym"></svg>
@@ -836,7 +862,7 @@ $("#lights").addEventListener("click",()=>{if(state==="processing")return;next=n
 function view(id){$$("#ss .view").forEach(v=>v.classList.toggle("on",v.id===id))}
 function setPanel(cls){const p=$("#panel");p.classList.remove("fail","pass");if(cls)p.classList.add(cls)}
 function resetScanner(){
-  clearTimers();humStop();SFX.failStop();procStop();$("#vRes").classList.remove("hold");clearInterval(aurT);stopCycle();state="idle";
+  clearTimers();humStop();SFX.failStop();procStop();cancelAnimationFrame(holdRaf);$("#panel").classList.remove("mb0","mb1","mb2","mb3");$("#vRes").classList.remove("hold");clearInterval(aurT);stopCycle();state="idle";
   $("#ss").classList.remove("result","busy","scanning");setPanel(null);view("vRet");
   $("#icStart").style.display="";$("#icStop").style.display="none";
   setStatus("READY");
@@ -871,7 +897,7 @@ function fillBar(id){const r=$("#"+id);if(!r)return;r.classList.remove("e");r.cl
 
 /* VERDICT — the glowing centre button */
 $("#vtap").addEventListener("click",()=>{
-  if(state!=="scanning")return;
+  if(state!=="scanning"||M.wanted)return;
   SFX.tap();humStop();clearInterval(aurT);
   state="processing";$("#ss").classList.remove("scanning");$("#ss").classList.add("busy");
   setStatus("ANALYSING");
@@ -915,6 +941,44 @@ function reveal(result){
   $("#ss").classList.remove("busy");
   later(()=>$("#ss").classList.add("result"),result==="pass"?600:300);   /* tap-for-next only after the finale */
 }
+/* ============================================================
+   WANTED: hold VERDICT — the match bar rises while held (0→100% over 3 s); let go to lock the score.
+   0–24 NO MATCH (green) · 25–49 LOW MATCH (amber) · 50–74 POSSIBLE MATCH (orange) · 75+ WANTED (red) + a charge
+   ============================================================ */
+const MATCH_MS=3000,BANDS=[[0,"NO MATCH"],[25,"LOW MATCH"],[50,"POSSIBLE MATCH"],[75,"WANTED"]];
+let holdT0=0,holdRaf=0,holdPct=0,holdCross=0;
+const band=p=>p>=75?3:p>=50?2:p>=25?1:0;
+function paintMatch(p){$("#mFill").style.height=p+"%";$("#mScore").textContent=Math.round(p)+"%";
+  const pn=$("#panel");[0,1,2,3].forEach(b=>pn.classList.toggle("mb"+b,b===band(p)))}
+function holdStart(e){
+  if(!M.wanted||state!=="scanning")return;e.preventDefault();
+  state="holding";clearInterval(aurT);SFX.tap();setStatus("ANALYSING");
+  const sp=SUSPECTS[S.suspect];$("#mImg").src=sp.src;$("#mWord").textContent="";$("#mCharge").textContent="";$("#vMatch").classList.remove("done");
+  holdPct=0;holdCross=0;paintMatch(0);view("vMatch");$("#ss").classList.remove("scanning");$("#ss").classList.add("busy");
+  holdT0=performance.now();
+  const tick=t=>{holdPct=Math.min(100,(t-holdT0)/MATCH_MS*100);paintMatch(holdPct);
+    while(holdCross<3&&holdPct>=[25,50,75][holdCross]){holdCross++;play("armed")||SFX.pass1()}
+    if(state==="holding")holdRaf=requestAnimationFrame(tick)};
+  holdRaf=requestAnimationFrame(tick);
+}
+function holdEnd(){
+  if(state!=="holding")return;cancelAnimationFrame(holdRaf);humStop();
+  let p=Math.round(holdPct);if(p<4)p=3+Math.floor(Math.random()*6);   /* a quick tap still shows a small score */
+  paintMatch(p);const b=band(p),sp=SUSPECTS[S.suspect];
+  state="result";setStatus("COMPLETE");$("#vMatch").classList.add("done");
+  $("#mWord").textContent=BANDS[b][1];$("#mCharge").textContent=b===3?rnd(sp.crimes):(b===0?"MOVE ALONG":"");
+  const f=$("#flash");f.style.background=["var(--grn-flash)","#C98A12","#D9600F","var(--red-flash)"][b];f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
+  if(b===3)SFX.fail();
+  else if(b===2){const r=play("processing");if(r)later(()=>{try{const t=AC.currentTime;r.g.gain.setValueAtTime(r.g.gain.value,t);r.g.gain.exponentialRampToValueAtTime(.0001,t+.15);r.src.stop(t+.2)}catch(e){}},650)}
+  else SFX.passSound()||SFX.calm();
+  {const[pk,fk,c]=M.k;S[c]++;if(b===3)S[fk]=Math.min(10,S[fk]+1);else S[pk]=Math.min(10,S[pk]+1);save();paintTally();}
+  $("#ss").classList.remove("busy");later(()=>$("#ss").classList.add("result"),300);
+}
+$("#vtap").addEventListener("pointerdown",holdStart);
+/* release is caught on the whole window: the button itself is hidden once the match screen appears */
+["pointerup","pointercancel"].forEach(ev=>window.addEventListener(ev,holdEnd));
+$("#vtap").addEventListener("contextmenu",e=>{if(M.wanted)e.preventDefault()});
+
 /* tap anywhere: clear the result and go straight into the next scan */
 $("#catch").addEventListener("click",()=>{SFX.tap();resetScanner();startScan()});
 
