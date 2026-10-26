@@ -291,11 +291,11 @@ body.blkOff :is(#citOv .cx,#citOv .cp,#askId,#vMatch .mscore.pr,#panel.pass #res
 
 /* full-screen flash */
 /* ===== CITATIONS ===== */
-#cit .clist{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-#cit .cbtn svg{width:40px;height:40px;flex:none;fill:var(--c)}
-#cit .cbtn span{font-size:17px;letter-spacing:.06em}
+#cit .clist{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#cit .cbtn svg{width:60px;height:60px;flex:none;fill:var(--c)}
+#cit .cbtn span{white-space:normal;text-align:left;line-height:1.2;font-size:20px;letter-spacing:.06em}
 #cit .cbtn image{filter:brightness(0) invert(.92)}
-#cit .cbtn{display:flex;align-items:center;justify-content:flex-start;gap:18px;padding:0 16px;flex:1 1 52px;min-height:44px;white-space:nowrap;background:none;border:2px solid rgba(var(--rgb),.4);border-radius:4px;color:var(--c);font-family:Orb;font-weight:700;font-size:19px;letter-spacing:.1em;text-align:left}
+#cit .cbtn{display:flex;align-items:center;justify-content:flex-start;gap:22px;padding:0 18px;flex:0 0 90px;min-height:90px;white-space:nowrap;background:none;border:2px solid rgba(var(--rgb),.4);border-radius:4px;color:var(--c);font-family:Orb;font-weight:700;font-size:19px;letter-spacing:.1em;text-align:left}
 #cit .cbtn:active{background:rgba(var(--rgb),.15)}
 #citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:space-evenly;gap:14px;padding:10px 22px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
 #citOv.on{display:flex}
