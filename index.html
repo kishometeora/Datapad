@@ -91,7 +91,9 @@ body.glitch .flip{opacity:.15}
 .bar{height:14px;border-radius:2px;background:var(--c);box-shadow:0 0 4px rgba(var(--rgb),.5);transition:width 1.4s ease-in-out,opacity .2s}
 .bar.d{background:rgba(var(--rgb),.3);box-shadow:none}
 .bar.ping{background:#fff;box-shadow:0 0 10px #fff}
-#menu .embwrap{width:170px;height:170px;flex:none;animation:pulse 4s ease-in-out infinite}
+#menu .embwrap{width:170px;height:170px;flex:none;animation:pulse 4s ease-in-out infinite;position:relative}
+#bigClock{display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;font-size:66px;line-height:1.05;text-shadow:0 0 8px rgba(var(--rgb),.6)}
+#menu .embwrap.clk .emb{visibility:hidden}#menu .embwrap.clk #bigClock{display:flex}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.82}}
 #menu .low{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:10px}
 #menu .low .aur{font-size:20px;white-space:nowrap;overflow:hidden}
@@ -402,7 +404,7 @@ body.aurOn .fx2>.e{visibility:hidden}body.aurOn .fx2>.a{visibility:visible}body.
         <div class="brow"><div class="bar" style="width:40px"></div><div class="bar" style="width:40px"></div><div class="bar d" style="width:50px"></div></div>
         <div class="aur dimtxt" id="mAur2" style="font-size:22px;margin-top:10px;white-space:nowrap;overflow:hidden">ID 7</div>
       </div>
-      <div class="embwrap"><img class="emb" src="emblems/imperial.png" alt=""></div>
+      <div class="embwrap"><img class="emb" src="emblems/imperial.png" alt=""><div class="aur" id="bigClock"></div></div>
     </div>
     <div class="low"><div class="aur dimtxt" id="mAur3">SECTOR SEVEN</div><div class="pips" id="mPips"><i class="on"></i><i></i><i class="on"></i></div></div>
   </div>
@@ -794,9 +796,11 @@ const aurClock=()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return p(d
 let clockUntil=0;
 setInterval(()=>{if(cur!=="menu")return;const el=Math.random()<.5?$("#mAur3"):$("#mAur2");if(el.id==="mAur2"&&Date.now()<clockUntil)return;
   el.style.opacity=.2;setTimeout(()=>{el.textContent=rnd(T.aurWords);el.style.opacity=""},120)},5200);
-$("#menu .embwrap").addEventListener("click",()=>{const el=$("#mAur2");if(Date.now()<clockUntil)return;const prev=el.textContent;clockUntil=Date.now()+2000;
-  el.style.opacity=.2;setTimeout(()=>{el.textContent=aurClock();el.style.opacity=""},90);
-  setTimeout(()=>{el.style.opacity=.2;setTimeout(()=>{el.textContent=prev;el.style.opacity=""},90)},2000);});
+/* hidden clock: tap the cog — for 2 s the emblem becomes the time in big Aurebesh numerals (hours over minutes) */
+$("#menu .embwrap").addEventListener("click",()=>{if(Date.now()<clockUntil)return;clockUntil=Date.now()+2000;
+  const d=new Date(),p=n=>String(n).padStart(2,"0"),w=$("#menu .embwrap");
+  $("#bigClock").innerHTML=`<div>${p(d.getHours())}</div><div>${p(d.getMinutes())}</div>`;w.classList.add("clk");
+  setTimeout(()=>w.classList.remove("clk"),2000);});
 
 /* hidden control: long-press top-left data bar -> settings */
 (function(){
