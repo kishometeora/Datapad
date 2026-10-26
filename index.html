@@ -67,12 +67,12 @@ body.glitch .flip{opacity:.15}
   padding:calc(max(env(safe-area-inset-top),20px) + 12px + var(--cal-top)) calc(18px + var(--cal-right))
           calc(max(env(safe-area-inset-bottom),12px) + 10px + var(--cal-bottom)) calc(18px + var(--cal-left))}
 .screen.on{display:flex}
-.screen.enter{animation:wipe .45s cubic-bezier(.2,.7,.2,1)}
-.screen.enter .box{animation:draw .5s ease-out both}
+.screen.enter{animation:wipe .25s cubic-bezier(.2,.7,.2,1)}
+.screen.enter .box{animation:draw .25s ease-out both}
 @keyframes wipe{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
 @keyframes draw{from{transform:scaleY(.92);opacity:0}to{transform:none;opacity:1}}
 @keyframes flick{0%,100%{opacity:1}30%{opacity:.75}34%{opacity:1}60%{opacity:.88}63%{opacity:1}}
-.screen.enter > *{animation:flick .5s steps(1)}
+.screen.enter > *{animation:flick .25s steps(1)}
 
 /* ---------- top bar (feature screens) ---------- */
 .top{display:flex;align-items:center;gap:14px;height:86px;flex:none}
@@ -609,7 +609,9 @@ function tone(f,d,{type="square",v=.06,at=0,f2=null,attack=.004}={}){
 }
 /* recorded sound set (sounds/*.mp3). Each SFX plays its file once it has loaded,
    and falls back to the old synthesised beep if it hasn't. GAIN sets each file's level. */
-let failSnd=null;
+let failSnd=null,procSnd=null;
+/* fade the processing clip out quickly when the result lands (processing is now shorter than the clip) */
+function procStop(){if(!procSnd||!AC)return;const r=procSnd,t=AC.currentTime;procSnd=null;try{r.g.gain.setValueAtTime(r.g.gain.value,t);r.g.gain.exponentialRampToValueAtTime(.0001,t+.12);r.src.stop(t+.15)}catch(e){}}
 const SND={},GAIN={tap:.5,armed:.7,screen_open:.6,processing:.7,pass:.7,fail:.7,scan_loop:.5,alert_loop:.7,holo_start:.7,holo_end:.7};
 function loadSounds(){
   Object.keys(GAIN).forEach(n=>fetch("sounds/"+n+".mp3").then(r=>r.arrayBuffer())
@@ -627,7 +629,7 @@ const SFX={
   tap:()=>play("tap")||tone(2200,.035,{v:.03}),
   armed:()=>play("armed")||tone(620,.09,{v:.05,f2:900}),
   open:()=>play("screen_open")||tone(2200,.035,{v:.03}),
-  processing:()=>{if(play("processing"))return;let t=0,gap=.24;while(t<1.75){SFX.chirp(t);t+=gap;gap=Math.max(.05,gap*.8)}},
+  processing:()=>{const r=play("processing");if(r){procSnd=r;return}let t=0,gap=.24;while(t<1.75){SFX.chirp(t);t+=gap;gap=Math.max(.05,gap*.8)}},
   passSound:()=>!!play("pass"),
   /* klaxon plays 3 times (~8 s); cut short when the next scan starts or the scanner closes */
   fail:()=>{const r=play("fail",{loop:true});if(!r)return SFX.klaxon();
@@ -686,7 +688,7 @@ function go(id,mode){
   if(cur==="ss")resetScanner();
   if(cur==="set")commitSettings();
   $("#"+cur).classList.remove("on","enter");
-  const n=$("#"+id);n.classList.add("on","enter");setTimeout(()=>n.classList.remove("enter"),600);
+  const n=$("#"+id);n.classList.add("on","enter");setTimeout(()=>n.classList.remove("enter"),300);
   cur=id;
   if(id==="set")openSettings();
   if(id==="info")ishow(START,false);
@@ -822,7 +824,7 @@ $("#lights").addEventListener("click",()=>{if(state==="processing")return;next=n
 function view(id){$$("#ss .view").forEach(v=>v.classList.toggle("on",v.id===id))}
 function setPanel(cls){const p=$("#panel");p.classList.remove("fail","pass");if(cls)p.classList.add(cls)}
 function resetScanner(){
-  clearTimers();humStop();SFX.failStop();$("#vRes").classList.remove("hold");clearInterval(aurT);stopCycle();state="idle";
+  clearTimers();humStop();SFX.failStop();procStop();$("#vRes").classList.remove("hold");clearInterval(aurT);stopCycle();state="idle";
   $("#ss").classList.remove("result","busy","scanning");setPanel(null);view("vRet");
   $("#icStart").style.display="";$("#icStop").style.display="none";
   setStatus("READY");
@@ -865,9 +867,9 @@ $("#vtap").addEventListener("click",()=>{
   paintBlocks();view("vProc");if(M.targets)startCycle();
   if(M.wanted){const wb=$("#wbars");wb.classList.remove("go");$$("#wbars b").forEach(b=>b.style.setProperty("--w",(55+Math.random()*45|0)+"%"));void wb.offsetWidth;wb.classList.add("go")}
   const sg=$$("#segs i");sg.forEach(s=>s.classList.remove("on"));
-  sg.forEach((s,i)=>later(()=>s.classList.add("on"),(i+1)*200));   /* 8 blocks done by 1.6 s */
+  sg.forEach((s,i)=>later(()=>s.classList.add("on"),(i+1)*115));   /* 8 blocks done by 0.92 s */
   SFX.processing();
-  later(()=>reveal(result),1700);   /* result lands as the processing sound ends */
+  later(()=>{procStop();reveal(result)},1000);   /* result at 1.0 s; processing clip fades out */
 });
 
 function reveal(result){
@@ -893,13 +895,13 @@ function reveal(result){
     /* pass build-up: bars fill straight away with the "armed" chirp; the headline is held back until bar 3,
        when the full pass sound, the green flash and APPROVED / MOVE ALONG all land together */
     $("#resSym").innerHTML=METER;setHeadline(M.passHead);$("#vRes").classList.add("hold");
-    later(()=>{fillBar("m1");play("armed")||SFX.pass1()},150);
-    later(()=>{fillBar("m2");play("armed")||SFX.pass2()},500);
-    later(()=>{fillBar("m3");SFX.passSound()||SFX.calm();flash("var(--grn-flash)");$("#vRes").classList.remove("hold")},850);
+    later(()=>{fillBar("m1");play("armed")||SFX.pass1()},100);
+    later(()=>{fillBar("m2");play("armed")||SFX.pass2()},300);
+    later(()=>{fillBar("m3");SFX.passSound()||SFX.calm();flash("var(--grn-flash)");$("#vRes").classList.remove("hold")},500);
   }
   rollNext();showLights();
   $("#ss").classList.remove("busy");
-  later(()=>$("#ss").classList.add("result"),result==="pass"?950:700);   /* tap-for-next only after the finale */
+  later(()=>$("#ss").classList.add("result"),result==="pass"?600:300);   /* tap-for-next only after the finale */
 }
 /* tap anywhere: clear the result and go straight into the next scan */
 $("#catch").addEventListener("click",()=>{SFX.tap();resetScanner();startScan()});
