@@ -107,6 +107,7 @@ body.glitch .flip{opacity:.15}
 .tcyc{position:relative;width:112px;height:112px}
 /* ID badge hologram "fizzle" */
 .ta{display:flex;align-items:center;justify-content:center}
+#grid .tile{color:var(--c)}   /* iOS gives buttons blue text by default; icons using currentColor would turn blue */
 .ta.fz{animation:fizzle .6s steps(1)}
 @keyframes fizzle{0%{opacity:1;transform:none}10%{opacity:.25;transform:translateX(3px)}20%{opacity:.9;transform:translateX(-2px) skewX(-6deg)}30%{opacity:.4;transform:none;filter:brightness(1.8)}45%{opacity:1;transform:translateX(1px)}60%{opacity:.6}75%{opacity:1;transform:none;filter:none}100%{opacity:1}}
 .tcyc>img,.tcyc>svg.lay{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0}
@@ -840,7 +841,7 @@ const CIC={
 };
 const tileArt=k=>k==="droid"?`<div class="tcyc" id="tcDroid">${["emblems/r2.png","emblems/c3po_solid.png","emblems/deathstar.png"].map((s,i)=>`<img src="${s}" class="${i?"":"on"}" alt="">`).join("")}</div>`
   :k==="wanted"?`<div class="tcyc face" id="tcFace">${TBR}<img class="on" alt=""><img alt=""></div>`
-  :k==="cite"?`<div class="tcyc" id="tcCit">${["car","dog","jedi","jester","saber","pram","trolley","outpost","rebel","fist","cargo","loiter","freighter","question"].map((n,i)=>`<svg class="lay${i?"":" on"}" viewBox="0 0 100 100"><g transform="translate(50 50) scale(.62) translate(-50 -50)" style="fill:var(--c)">${CIC[n]}</g><circle cx="50" cy="50" r="44" fill="none" style="stroke:var(--c)" stroke-width="7"/><path d="M24 24 76 76" stroke="#000" stroke-width="15"/><path d="M19 19 81 81" style="stroke:var(--c)" stroke-width="7"/></svg>`).join("")}</div>`
+  :k==="cite"?`<div class="tcyc" id="tcCit">${["car","dog","jedi","jester","saber","pram","trolley","outpost","rebel","fist","cargo","loiter","freighter","question"].map((n,i)=>`<svg class="lay${i?"":" on"}" viewBox="0 0 100 100"><g transform="translate(50 50) scale(.62) translate(-50 -50)" style="fill:var(--c);color:var(--c)">${CIC[n]}</g><circle cx="50" cy="50" r="44" fill="none" style="stroke:var(--c)" stroke-width="7"/><path d="M24 24 76 76" stroke="#000" stroke-width="15"/><path d="M19 19 81 81" style="stroke:var(--c)" stroke-width="7"/></svg>`).join("")}</div>`
   :k==="signup"?`<div class="tcyc" id="tcEnl">${["signup","research","build","submit","cleared"].map((n,i)=>`<img src="emblems/enlist/${n}.png" class="${i?"":"on"}" alt="">`).join("")}</div>`
   :k==="qr"?`<div class="tcyc" id="tcQr"><svg class="lay on" viewBox="-3 -3 86 86">${IC.qr}</svg><img src="emblems/cogbird.png" alt=""></div>`
   :`<svg viewBox="0 0 80 80">${IC[k]}</svg>`;
