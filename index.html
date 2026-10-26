@@ -246,7 +246,7 @@ body.aurOn .headline .flip{font-size:.74em}
 #askId{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;pointer-events:none;
   padding:10px 18px;background:rgba(0,0,0,.82);border:2px solid var(--amb);border-radius:6px;color:var(--amb);
   font-size:32px;font-weight:900;letter-spacing:.06em;white-space:nowrap;text-shadow:0 0 8px rgba(var(--amb-rgb),.6);animation:cxf 1s steps(1) infinite}
-#ss[data-mode="id"].scanning #askId{display:block}
+#ss[data-mode="id"].scanning #askId,#ss[data-mode="droid"].scanning #askId{display:block}
 /* ===== WANTED: one result screen built around a match score ===== */
 #panel.mb0{--c:var(--grn);--rgb:var(--grn-rgb)}#panel.mb1{--c:var(--amb);--rgb:var(--amb-rgb)}
 #panel.mb2{--c:#FF7A1A;--rgb:255,122,26}#panel.mb3{--c:var(--red);--rgb:var(--red-rgb)}
@@ -258,8 +258,10 @@ body.aurOn .headline .flip{font-size:.74em}
 #panel.mb3 #vMatch .mpic img{filter:url(#tRedP) drop-shadow(0 0 1.5px rgba(255,59,48,.8))}
 #vMatch .mbar{position:relative;width:56px;border:2px solid rgba(var(--rgb),.5);border-radius:4px;overflow:hidden}
 #vMatch .mfill{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--c);box-shadow:0 0 10px rgba(var(--rgb),.7)}
+#vMatch .mfill.settle{transition:height .45s cubic-bezier(.2,.7,.2,1)}
+#vMatch .mscore:empty{visibility:hidden}
 #vMatch .mtick{position:absolute;left:0;right:0;border-top:2px dashed rgba(255,255,255,.45)}
-#vMatch .mscore{font-size:76px;font-weight:900;line-height:1;text-shadow:0 0 12px rgba(var(--rgb),.6)}
+#vMatch .mscore{font-size:76px;font-weight:900;line-height:1;min-height:76px;text-shadow:0 0 12px rgba(var(--rgb),.6)}
 #vMatch .mword{font-size:28px;font-weight:900;letter-spacing:.05em;min-height:34px;white-space:nowrap;text-align:center}
 #vMatch .mcharge{font-size:18px;letter-spacing:.04em;color:#fff;opacity:.9;min-height:22px;max-width:360px;text-align:center}
 #vMatch .mword:empty,#vMatch .mcharge:empty{visibility:hidden}
@@ -725,7 +727,8 @@ function setHeadline(lines){if(!M.wanted){$("#resHead").innerHTML=lines.map(l=>l
     ?`<div class="rsmall">${l.slice(1)}</div>`
     :`<div class="rbig" style="font-size:${Math.min(76,Math.floor(340/(l.length*.86)))}px">${l}</div>`).join("");return}
   $("#resHead").innerHTML=lines.map(l=>{const fs=Math.min(46,Math.floor(330/(l.length*.86)));return `<div style="font-size:${fs}px" class="${fs<40?"sub":""}"><span class="flip" data-t="${l}">${l}</span></div>`}).join("")}
-function setStatus(t){const el=$("#statusTxt");el.dataset.t=t;el.textContent=t}
+const TITLES={id:"CHECKPOINT",droid:"DROID SEARCH",wanted:"SUSPECT SEARCH"};   /* scanners show a fixed title instead of READY / SCANNING / ANALYSING / COMPLETE */
+function setStatus(t){const el=$("#statusTxt");t=TITLES[$("#ss").dataset.mode]||t;el.dataset.t=t;el.textContent=t}
 
 /* ============================================================
    NAVIGATION + TRANSITIONS
@@ -839,7 +842,7 @@ const MODES={
   droid:{odds:1/2,k:["dp","df","dcount"],passIc:DROID_IC,failIc:`<img src="emblems/deathstar.png" alt="" style="filter:url(#tRed) drop-shadow(0 0 3px #FF3B30)">`,failImg:"emblems/deathstar.png",failHead:["PLANS","~DETECTED"],targets:true,passHead:["NOT THE","DROID"]}
 };
 let mode="id",M=MODES.id;
-function setMode(m){mode=m;M=MODES[m];$("#ss").dataset.mode=m;rollNext();if(typeof showLights==="function")showLights();$("#tPassIc").innerHTML=M.passIc;$("#tFailIc").innerHTML=M.failIc;paintTally()}
+function setMode(m){mode=m;M=MODES[m];$("#ss").dataset.mode=m;$("#askId").textContent=m==="droid"?"SEARCHING...":"PRESENT ID";setStatus("");rollNext();if(typeof showLights==="function")showLights();$("#tPassIc").innerHTML=M.passIc;$("#tFailIc").innerHTML=M.failIc;paintTally()}
 function paintTally(){
   const[p,f,c]=M.k;
   $$("#tPass .dot").forEach((d,i)=>d.classList.toggle("on",i<S[p]));
@@ -894,6 +897,7 @@ function startScan(){
   state="scanning";$("#ss").classList.add("scanning");
 
   setStatus("SCANNING");SFX.failStop();humStart();
+  if(M.wanted)wantedIdle();
   aurT=setInterval(()=>{$("#cxAur").textContent=Array.from({length:2},()=>rnd(T.codes)+" "+(Math.random()*90+10|0)).join(" ")},650);
 }
 
@@ -968,33 +972,43 @@ function reveal(result){
    0–24 NO MATCH (green) · 25–49 LOW MATCH (amber) · 50–74 POSSIBLE MATCH (orange) · 75+ WANTED (red) + a charge
    ============================================================ */
 const MATCH_MS=3000,BANDS=[[0,"NO MATCH"],[25,"LOW MATCH"],[50,"POSSIBLE MATCH"],[75,"WANTED"]];
-let holdT0=0,holdRaf=0,holdPct=0,holdCross=0;
+let holdT0=0,holdRaf=0,holdLvl=0,holdCross=0,ph1=0,ph2=0;
 const band=p=>p>=75?3:p>=50?2:p>=25?1:0;
-function paintMatch(p){$("#mFill").style.height=p+"%";$("#mScore").textContent=Math.round(p)+"%";
+function paintBar(p,showPct){$("#mFill").style.height=p+"%";$("#mScore").textContent=showPct?Math.round(p)+"%":"";
   const pn=$("#panel");[0,1,2,3].forEach(b=>pn.classList.toggle("mb"+b,b===band(p)))}
+/* suspect search opens straight on the match screen: bar at zero, no score */
+function wantedIdle(){const sp=SUSPECTS[S.suspect];$("#mImg").src=sp.src;$("#mWord").textContent="";$("#mCharge").textContent="";
+  $("#vMatch").classList.remove("done");$("#mFill").classList.remove("settle");$("#mFill").style.height="0%";$("#mScore").textContent="";
+  $("#panel").classList.remove("mb0","mb1","mb2","mb3");view("vMatch")}
+$("#vMatch .mpic").addEventListener("click",e=>{if(!M.wanted||state!=="scanning")return;e.stopPropagation();SFX.tap();go("gal")});
 function holdStart(e){
   if(!M.wanted||state!=="scanning")return;e.preventDefault();
-  state="holding";clearInterval(aurT);SFX.tap();setStatus("ANALYSING");
-  const sp=SUSPECTS[S.suspect];$("#mImg").src=sp.src;$("#mWord").textContent="";$("#mCharge").textContent="";$("#vMatch").classList.remove("done");
-  holdPct=0;holdCross=0;paintMatch(0);view("vMatch");$("#ss").classList.remove("scanning");$("#ss").classList.add("busy");
+  state="holding";SFX.tap();$("#ss").classList.remove("scanning");$("#ss").classList.add("busy");
+  holdLvl=0;holdCross=0;ph1=Math.random()*9;ph2=Math.random()*9;$("#mFill").classList.remove("settle");
   holdT0=performance.now();
-  const tick=t=>{holdPct=Math.min(100,(t-holdT0)/MATCH_MS*100);paintMatch(holdPct);
-    while(holdCross<3&&holdPct>=[25,50,75][holdCross]){holdCross++;play("armed")||SFX.pass1()}
+  /* the bar wanders up and down around a level that climbs steadily the longer you hold (100% at 3 s) */
+  const tick=t=>{const dt=t-holdT0;holdLvl=Math.min(100,dt/MATCH_MS*100);
+    const j=16*Math.sin(dt/110+ph1)+9*Math.sin(dt/43+ph2);
+    paintBar(Math.max(0,Math.min(100,holdLvl+j)),false);
+    while(holdCross<3&&holdLvl>=[25,50,75][holdCross]){holdCross++;play("armed")||SFX.pass1()}
     if(state==="holding")holdRaf=requestAnimationFrame(tick)};
   holdRaf=requestAnimationFrame(tick);
 }
 function holdEnd(){
-  if(state!=="holding")return;cancelAnimationFrame(holdRaf);humStop();
-  let p=Math.round(holdPct);if(p<4)p=3+Math.floor(Math.random()*6);   /* a quick tap still shows a small score */
-  paintMatch(p);const b=band(p),sp=SUSPECTS[S.suspect];
-  state="result";setStatus("COMPLETE");$("#vMatch").classList.add("done");
-  $("#mWord").textContent=BANDS[b][1];$("#mCharge").textContent=b===3?rnd(sp.crimes):(b===0?"MOVE ALONG":"");
-  const f=$("#flash");f.style.background=["var(--grn-flash)","#C98A12","#D9600F","var(--red-flash)"][b];f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
-  if(b===3)SFX.fail();
-  else if(b===2){const r=play("processing");if(r)later(()=>{try{const t=AC.currentTime;r.g.gain.setValueAtTime(r.g.gain.value,t);r.g.gain.exponentialRampToValueAtTime(.0001,t+.15);r.src.stop(t+.2)}catch(e){}},650)}
-  else SFX.passSound()||SFX.calm();
-  {const[pk,fk,c]=M.k;S[c]++;if(b===3)S[fk]=Math.min(10,S[fk]+1);else S[pk]=Math.min(10,S[pk]+1);save();paintTally();}
-  $("#ss").classList.remove("busy");later(()=>$("#ss").classList.add("result"),300);
+  if(state!=="holding")return;cancelAnimationFrame(holdRaf);state="settling";
+  let p=Math.round(holdLvl);if(p<4)p=3+Math.floor(Math.random()*6);   /* a quick tap still shows a small score */
+  $("#mFill").classList.add("settle");paintBar(p,false);           /* bar glides to the final score… */
+  later(()=>{                                                        /* …then the reveal */
+    const b=band(p),sp=SUSPECTS[S.suspect];paintBar(p,true);humStop();
+    state="result";$("#vMatch").classList.add("done");
+    $("#mWord").textContent=BANDS[b][1];$("#mCharge").textContent=b===3?rnd(sp.crimes):(b===0?"MOVE ALONG":"");
+    const f=$("#flash");f.style.background=["var(--grn-flash)","#C98A12","#D9600F","var(--red-flash)"][b];f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
+    if(b===3)SFX.fail();
+    else if(b===2){const r=play("processing");if(r)later(()=>{try{const t=AC.currentTime;r.g.gain.setValueAtTime(r.g.gain.value,t);r.g.gain.exponentialRampToValueAtTime(.0001,t+.15);r.src.stop(t+.2)}catch(e){}},650)}
+    else SFX.passSound()||SFX.calm();
+    {const[pk,fk,c]=M.k;S[c]++;if(b===3)S[fk]=Math.min(10,S[fk]+1);else S[pk]=Math.min(10,S[pk]+1);save();paintTally();}
+    $("#ss").classList.remove("busy");later(()=>$("#ss").classList.add("result"),300);
+  },480);
 }
 $("#bStart").addEventListener("pointerdown",holdStart);
 /* release is caught on the whole window: the button itself is hidden once the match screen appears */
