@@ -277,14 +277,19 @@ body.aurOn .headline .flip{font-size:.74em}
 #mImgG{animation:hgl 4.3s steps(1) infinite}
 @keyframes hgl{0%,100%{clip-path:inset(0 0 100% 0);transform:none}44%{clip-path:inset(38% 0 55% 0);transform:translateX(9px)}46%{clip-path:inset(62% 0 30% 0);transform:translateX(-7px)}48%{clip-path:inset(0 0 100% 0)}81%{clip-path:inset(20% 0 74% 0);transform:translateX(6px)}82%{clip-path:inset(0 0 100% 0)}}
 #panel.mb3 #vMatch .mpic img{filter:url(#tRedP) drop-shadow(0 0 1.5px rgba(255,59,48,.8))}
-#vMatch .mbar{position:relative;width:56px;border:2px solid rgba(var(--rgb),.5);border-radius:4px;overflow:hidden}
-#vMatch .mfill{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--c);box-shadow:0 0 10px rgba(var(--rgb),.7)}
+/* S3: smooth wedge - narrow at the bottom, widest at the top */
+#vMatch .mbar{position:relative;width:84px}
+#vMatch .mglow{position:absolute;inset:0;filter:drop-shadow(0 0 8px rgba(var(--rgb),.6))}
+#vMatch .mclip{position:absolute;inset:0;clip-path:polygon(70% 100%,100% 100%,100% 0,5% 0)}
+#vMatch .mout{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#vMatch .mout polygon{fill:none;stroke:rgba(var(--rgb),.5);stroke-width:2;stroke-linejoin:round}
+#vMatch .mfill{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--c)}
 #vMatch .mfill.settle{transition:height .45s cubic-bezier(.2,.7,.2,1)}
 #vMatch .mscore:empty{visibility:hidden}
 #vMatch .mcap{display:none}
 /* before / during the scan the score line becomes an amber flashing prompt */
 #vMatch .mscore.pr{font-size:34px;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6);display:flex;align-items:center;justify-content:center}
-#vMatch .mtick{position:absolute;left:0;right:0;border-top:2px dashed rgba(255,255,255,.45)}
+#vMatch .mtick{position:absolute;left:0;right:0;border-top:3px solid #000}
 #vMatch .mscore{font-size:76px;font-weight:900;line-height:1;min-height:76px;text-shadow:0 0 12px rgba(var(--rgb),.6)}
 #vMatch .mword{font-size:28px;font-weight:900;letter-spacing:.05em;min-height:34px;white-space:nowrap;text-align:center}
 #citIss{display:none;position:absolute;inset:0;z-index:4;background:#000;flex-direction:column;align-items:center;justify-content:center;gap:22px}
@@ -293,6 +298,7 @@ body.aurOn .headline .flip{font-size:.74em}
 #citIss .iB{width:300px;height:26px;border:3px solid var(--red);padding:3px}
 #citIss .iB i{display:block;height:100%;width:0;background:var(--red);box-shadow:0 0 8px rgba(var(--red-rgb),.6)}
 #citOv.iss .iB i{animation:issue .8s linear forwards}@keyframes issue{to{width:100%}}
+#vMatch #mRef{margin:-2px 0 6px;text-align:center}
 .tref{margin-top:6px;font-size:13px;letter-spacing:.14em;color:#fff;opacity:.55;min-height:16px;white-space:nowrap}
 #vMatch .mcharge{font-size:18px;letter-spacing:.04em;color:#fff;opacity:.9;min-height:22px;max-width:360px;text-align:center}
 #vMatch .mword:empty,#vMatch .mcharge:empty{visibility:hidden}
@@ -542,15 +548,15 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
 
     <!-- result -->
     <div class="view" id="vMatch">
-      <div class="en mname" id="mName"></div>
+      <div class="en mname" id="mName"></div><div class="en tref" id="mRef"></div>
       <div class="mrow">
         <div class="mpic"><svg class="br" viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%"><path class="md" d="M1 10V1h10M89 1h10v9M99 90v9H89M11 99H1V90" vector-effect="non-scaling-stroke"/></svg><div class="holo"><img id="mImg" src="suspects/_placeholder.png" alt=""><img id="mImgG" class="gl" src="suspects/_placeholder.png" alt="" aria-hidden="true"><div class="hl"></div></div></div>
-        <div class="mbar"><div class="mfill" id="mFill"></div><i class="mtick" style="bottom:25%"></i><i class="mtick" style="bottom:50%"></i><i class="mtick" style="bottom:75%"></i></div>
+        <div class="mbar"><div class="mglow"><div class="mclip"><div class="mfill" id="mFill"></div><i class="mtick" style="bottom:25%"></i><i class="mtick" style="bottom:50%"></i><i class="mtick" style="bottom:75%"></i></div></div><svg class="mout" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="70,99.5 99.5,99.5 99.5,.5 5,.5" vector-effect="non-scaling-stroke"/></svg></div>
       </div>
       <div class="en mcap" id="mCap"></div>
       <div class="en mscore" id="mScore">0%</div>
       <div class="en mword" id="mWord"></div>
-      <div class="en mcharge" id="mCharge"></div><div class="en tref" id="mRef"></div>
+      <div class="en mcharge" id="mCharge"></div>
     </div>
     <div class="view" id="vRes">
       <div class="en" id="resTop"></div>
