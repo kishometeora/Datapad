@@ -1192,7 +1192,7 @@ function holdEnd(){
     /* X% · SUSPECT MATCH · white line carries the verdict */
     $("#mWord").innerHTML=FA("SUSPECT MATCH");protectReveal();
     touch();S.supT++;S.supN[sp.src]=(S.supN[sp.src]||0)+1;$("#mRef").textContent="FILE "+ref3(S.supT)+"-"+ref3(S.supN[sp.src]);
-    $("#mCharge").textContent=(["NOT A MATCH · MOVE ALONG","LOW MATCH · MOVE ALONG","POSSIBLE MATCH · HELD FOR QUESTIONING","WANTED · "+rnd(sp.crimes)][b]);
+    $("#mCharge").textContent=["FREE TO GO","WATCH CLOSELY","HOLD FOR QUESTIONING","ARREST ON SIGHT"][b];   /* one instruction to the trooper per band */
     const f=$("#flash");f.style.background=["var(--grn-flash)","#C98A12","#D9600F","var(--red-flash)"][b];f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
     if(b===3)SFX.fail();
     else if(b===2){const r=play("processing");if(r)later(()=>{try{const t=AC.currentTime;r.g.gain.setValueAtTime(r.g.gain.value,t);r.g.gain.exponentialRampToValueAtTime(.0001,t+.15);r.src.stop(t+.2)}catch(e){}},650)}
