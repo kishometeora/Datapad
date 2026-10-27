@@ -238,6 +238,23 @@ body.glitch .flip{opacity:.15}
 /* result */
 #vRes{gap:36px;text-align:center}
 #vRes.hold #resHead,#vRes.hold #resTop,#vRes.hold #resFoot{visibility:hidden}
+/* ID + droid PASS (A3·2): a holo pass is drawn in by a green scan line (0.35 s), white cog/R2 with a flashing green tick badge */
+#passCard{display:none;position:relative;width:300px;height:440px;flex:none}
+#vRes.pc #passCard{display:block}#vRes.pc #resSym,#vRes.pc #resHead{display:none}
+#passCard .pcard{position:absolute;inset:0;border:4px solid var(--c);border-radius:14px;padding:16px 0;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;color:var(--c);text-align:center;
+  background:repeating-linear-gradient(0deg,rgba(var(--rgb),.10) 0 2px,transparent 2px 5px);box-shadow:0 0 18px rgba(var(--rgb),.4);clip-path:inset(0 0 100% 0)}
+#vRes.pcGo #passCard .pcard{animation:pcRev .35s linear forwards}@keyframes pcRev{to{clip-path:inset(0 0 0 0)}}
+#passCard .psweep{position:absolute;left:-8px;right:-8px;top:0;height:6px;background:var(--c);box-shadow:0 0 18px 6px rgba(var(--rgb),.7);border-radius:3px;opacity:0}
+#vRes.pcGo #passCard .psweep{animation:pcSw .35s linear forwards}@keyframes pcSw{0%{opacity:1;top:0}95%{opacity:1}100%{top:100%;opacity:0}}
+#passCard .ptop{font-size:24px;opacity:.85}
+#passCard .pemb{position:relative;margin-bottom:10px}
+#passCard .pico{display:block;width:140px;height:140px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(230,234,238,.5))}   /* the emblem files are already pale/white */
+#passCard .pico.r2{width:120px;height:154px}
+#passCard .ptk{position:absolute;right:-30px;bottom:-4px;width:68px;height:68px;border-radius:50%;background:#000;border:4px solid var(--c);padding:10px;box-shadow:0 0 10px rgba(var(--rgb),.7)}
+#passCard .ptk svg{display:block;width:100%;height:100%;overflow:visible}#passCard .ptk path{fill:none;stroke:var(--c);stroke-width:14;stroke-linecap:round;stroke-linejoin:round}
+#passCard .pt{font-size:44px;font-weight:900;line-height:1.05;text-shadow:0 0 12px rgba(var(--rgb),.7)}
+#passCard .pt.two{font-size:40px}
+#passCard .ps{font-size:24px;font-weight:700;letter-spacing:.1em}
 #vRes .sym{width:190px;height:190px}
 .headline{font-size:46px;line-height:1.15;min-height:110px;display:flex;flex-direction:column;justify-content:center}
 .headline > div{white-space:nowrap}
@@ -308,7 +325,7 @@ body.aurOn .headline .flip{font-size:.74em}
 .tref{margin-top:6px;font-size:13px;letter-spacing:.14em;color:#fff;opacity:.55;min-height:16px;white-space:nowrap}
 #vMatch .mcharge{font-size:21px;letter-spacing:.04em;color:#fff;opacity:.9;min-height:22px;max-width:360px;text-align:center}
 #vMatch .mword:empty,#vMatch .mcharge:empty{display:none}
-body.blkOff :is(#citOv .cx,#citOv .cp,#askId,#vMatch .mscore.pr,#panel.pass #resFoot,#vMatch.done .mcharge){opacity:0}
+body.blkOff :is(#vRes.pc #passCard .ptk,#citOv .cx,#citOv .cp,#askId,#vMatch .mscore.pr,#panel.pass #resFoot,#vMatch.done .mcharge){opacity:0}
 /* bottom row */
 #ss .bot{display:flex;gap:12px;height:96px;flex:none}
 #lights{width:120px;gap:16px}
@@ -603,6 +620,7 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
     <div class="view" id="vRes">
       <div class="en" id="resTop"></div>
       <svg class="sym" viewBox="0 0 100 100" id="resSym"></svg>
+      <div id="passCard"><div class="pcard"><div class="aur ptop">IMPERIAL PASS</div><div class="pemb"><img class="pico" id="pcIc" src="emblems/imperial.png" alt=""><div class="ptk"><svg viewBox="0 0 100 100"><path d="M18 52 40 74 84 26"/></svg></div></div><div class="en pt" id="pcT"></div><div class="en ps" id="pcS"></div></div><div class="psweep"></div></div>
       <div id="resPWrap"><img id="resPortrait" src="suspects/_placeholder.png" alt=""><svg id="neq" viewBox="0 0 200 250"><path d="M6 12H194M6 23H194M6 34H194M6 45H194M6 56H194M6 67H194M6 78H194M6 89H194M6 100H194M6 111H194M6 122H194M6 133H194M6 144H194M6 155H194M6 166H194M6 177H194M6 188H194M6 199H194M6 210H194M6 221H194M6 232H194M6 243H194" stroke="rgba(52,208,88,.28)" stroke-width="1" fill="none"/><g fill="none" stroke="#34D058" stroke-width="5" style="filter:drop-shadow(0 0 3px #34D058) drop-shadow(0 0 8px rgba(52,208,88,.6))"><circle cx="164" cy="214" r="24"/><path d="M147 231 181 197"/></g></svg></div>
       <div class="en headline" id="resHead"></div>
       <div class="en" id="resFoot"></div>
@@ -1072,7 +1090,7 @@ $("#lights").addEventListener("click",()=>{if(state==="processing")return;
 function view(id){$$("#ss .view").forEach(v=>v.classList.toggle("on",v.id===id))}
 function setPanel(cls){const p=$("#panel");p.classList.remove("fail","pass");if(cls)p.classList.add(cls)}
 function resetScanner(){
-  clearTimers();humStop();SFX.failStop();procStop();cancelAnimationFrame(holdRaf);$("#panel").classList.remove("mb0","mb1","mb2","mb3");$("#vRes").classList.remove("hold");clearInterval(aurT);stopCycle();state="idle";
+  clearTimers();humStop();SFX.failStop();procStop();cancelAnimationFrame(holdRaf);$("#panel").classList.remove("mb0","mb1","mb2","mb3");$("#vRes").classList.remove("hold","pc","pcGo");clearInterval(aurT);stopCycle();state="idle";
   $("#ss").classList.remove("result","busy","scanning");setPanel(null);view("vRet");
 
   setStatus("READY");
@@ -1146,10 +1164,17 @@ function reveal(result){
   }else{
     /* pass build-up: bars fill straight away with the "armed" chirp; the headline is held back until bar 3,
        when the full pass sound, the green flash and APPROVED / MOVE ALONG all land together */
+    if(!M.wanted){   /* A3·2 holo pass, drawn in by the scan line, lands at 0.4 s */
+      const id=mode==="id",v=$("#vRes");$("#pcIc").className="pico"+(id?"":" r2");$("#pcIc").src=id?"emblems/imperial.png":"emblems/r2.png";
+      $("#pcT").innerHTML=id?FA("CLEARED"):FA("NOT THE")+"<br>"+FA("DROID");$("#pcT").classList.toggle("two",!id);$("#pcS").textContent=id?"LEVEL 1 HUMAN":"NO RECORD";
+      v.classList.add("hold","pc");v.classList.remove("pcGo");void v.offsetWidth;
+      later(()=>{v.classList.add("pcGo");play("armed")||SFX.pass1()},40);
+      later(()=>{SFX.passSound()||SFX.calm();flash("var(--grn-flash)");v.classList.remove("hold");protectReveal()},400);
+    }else{
     $("#resSym").innerHTML=METER;setHeadline(M.passHead);$("#vRes").classList.add("hold");
     later(()=>{fillBar("m1");play("armed")||SFX.pass1()},100);
     later(()=>{fillBar("m2");play("armed")||SFX.pass2()},300);
-    later(()=>{fillBar("m3");SFX.passSound()||SFX.calm();flash("var(--grn-flash)");$("#vRes").classList.remove("hold")},500);
+    later(()=>{fillBar("m3");SFX.passSound()||SFX.calm();flash("var(--grn-flash)");$("#vRes").classList.remove("hold")},500);}
   }
   rollNext();showLights();
   $("#ss").classList.remove("busy");
