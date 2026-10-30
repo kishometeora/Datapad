@@ -390,7 +390,11 @@ body.blkOff :is(#vRes.pc #passCard .ptk,#citOv .cx,#citOv .cp,#askId,#vMatch .ms
 #iRes .iPun{max-width:360px;text-align:center;line-height:1.15;font-size:clamp(22px,3.3vh,30px);font-weight:900;letter-spacing:.06em;color:#e6eaee;text-shadow:0 0 8px rgba(230,234,238,.4)}
 #iRes .iLog span.new,#iRes .iLog b.new{opacity:1;text-shadow:0 0 8px #fff}
 #iRes .iVerd{font-size:18px;line-height:1.35;letter-spacing:.04em;color:#fff;max-width:360px}
-#iRes .iLog{display:grid;grid-template-columns:1fr auto;gap:4px 18px;width:320px;font-size:13px;line-height:1.25;letter-spacing:.08em;color:#fff;text-align:left;min-height:170px;align-content:start}
+#iRes .iLog{display:grid;grid-template-columns:1fr auto;gap:4px 18px;width:320px;font-size:13px;line-height:1.25;letter-spacing:.08em;color:#fff;text-align:left;align-content:start;will-change:transform}
+/* fault list window: if the faults don't fit, the list crawls up on its own (no swiping: a tap clears the report) */
+#iRes .iLogW{width:320px;height:clamp(130px,19vh,170px);overflow:hidden}
+#iRes .iLogW.ovf .iLog{padding:12px 0}
+#iRes .iLogW.ovf{-webkit-mask-image:linear-gradient(transparent,#000 9%,#000 91%,transparent);mask-image:linear-gradient(transparent,#000 9%,#000 91%,transparent)}
 #iRes .iLog span{opacity:.85}#iRes .iLog b{opacity:1}
 #iRes .iLog b{font-weight:700;text-align:right;color:var(--red)}
 #citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:space-evenly;gap:14px;padding:10px 22px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
@@ -679,7 +683,7 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
         <div class="iTitle"><div class="aur iAur">IMPERIAL STANDARDS DIVISION</div><div class="en iTT">INSPECTION REPORT</div><div class="en iLbl" id="iForm"></div></div><div class="iHr"></div>
         <div class="en iLbl">INSPECTION SCORE</div><div class="en iScore" id="iScore"></div>
         <div class="iFin"><div class="en iFail" id="iFail"></div></div>
-        <div class="iHr"></div><div class="en iLbl">FAULTS RECORDED</div><div class="en iLog" id="iLog"></div><div class="iHr"></div>
+        <div class="iHr"></div><div class="en iLbl">FAULTS RECORDED</div><div class="iLogW" id="iLogW"><div class="en iLog" id="iLog"></div></div><div class="iHr"></div>
         <div class="iFin"><div class="en iLbl">RECOMMENDATION</div><div class="en iPun" id="iPun"></div><div class="en tref" id="iRef"></div></div>
       </div>
     </div>
@@ -1448,12 +1452,13 @@ const CITES=[
   /* one random RECOMMENDATION per inspection, not tied to the score (never the same twice in a row) */
   const RECS=["REPORT TO THE KESSEL MINES","REASSIGN TO SANITATION","TRANSFER TO HOTH","TRASH COMPACTOR DUTY","REPORT TO LORD VADER","GUARD THE EXHAUST PORT","FEED THE RANCOR","SARLACC PIT PATROL","WAMPA WATCH ON HOTH","TRANSFER TO TATOOINE","TRANSFER TO DAGOBAH","EWOK PATROL ON ENDOR","GUARD THE SHIELD GENERATOR","CLEAN THE BANTHA STABLES","SCAN EVERY ESCAPE POD","MOUSE DROID MAINTENANCE","JOIN THE SANDTROOPERS","TRANSFER TO MUSTAFAR","MOS EISLEY PATROL","REPORT SHARED WITH DARTH VADER","RETURN TO BASIC TRAINING","DEMOTED TO CADET","STRIPPED OF RANK","PLACED ON REPORT","FINAL WARNING ISSUED","REPORT FILED WITH THE ISB","REPORT SENT TO GRAND MOFF TARKIN","REPORT FORWARDED TO THE EMPEROR","MEETING WITH LORD VADER ARRANGED","RETRAIN AT THE ACADEMY","RETURN TO CARIDA ACADEMY","RE-EDUCATION REQUIRED","REASSIGNED TO THE DEATH STAR"];
   let lastRec=-1;const pickRec=()=>{let i;do{i=Math.floor(Math.random()*RECS.length)}while(i===lastRec);lastRec=i;return RECS[i]};
-  let tms=[];const later2=(f,ms)=>tms.push(setTimeout(f,ms));
+  let tms=[],crawl=null;const later2=(f,ms)=>tms.push(setTimeout(f,ms));
   /* VERDICT: QI-style tally. Score on top counts down as each fault drops in (tick each), then the verdict + punishment land with a falling tone */
   $("#iGo").addEventListener("click",()=>{if(ov.classList.contains("on"))return;
     const lines=[];$$("#ilist .ibtn.on").forEach(b=>{const f=FAULTS[+b.dataset.i];lines.push([f[0],f[1]+rnd2(-3,3)])});
-    lines.sort((a,b)=>b[1]-a[1]);let show=lines;
-    if(lines.length>8){const rest=lines.slice(7);show=lines.slice(0,7).concat([[`+ ${rest.length} MORE`,rest.reduce((t,l)=>t+l[1],0)]])}
+    lines.sort((a,b)=>b[1]-a[1]);const show=lines;   /* every fault, worst first */
+    const W=$("#iLogW"),L=$("#iLog");if(crawl){crawl.cancel();crawl=null}L.style.transition="";L.style.transform="";W.classList.remove("ovf");
+    const follow=()=>{const d=L.scrollHeight-W.clientHeight;if(d>0){W.classList.add("ovf");L.style.transition="transform .15s";L.style.transform=`translateY(${-d}px)`}};
     touch();S.inspT=(S.inspT||0)+1;save();
     const adq=!show.length;ov.classList.toggle("adq",adq);   /* nothing ticked: a completely bland ADEQUATE */
     $("#iScore").textContent="0";$("#iLog").innerHTML=adq?`<span>NONE</span><b></b>`:"";$("#iFail").innerHTML=adq?FA("INSPECTION: ADEQUATE"):FA("INSPECTION FAILED");$("#iPun").textContent=adq?"NO FURTHER ACTION":pickRec();
@@ -1462,14 +1467,17 @@ const CITES=[
     const step=Math.min(250,2000/show.length);let run=0;
     show.forEach((l,i)=>later2(()=>{run+=l[1];$("#iScore").textContent="-"+run;
       $$("#iLog .new").forEach(e=>e.classList.remove("new"));
-      $("#iLog").insertAdjacentHTML("beforeend",`<span class="new">${l[0]}</span><b class="new">-${l[1]}</b>`);SFX.armed()},350+i*step));
+      $("#iLog").insertAdjacentHTML("beforeend",`<span class="new">${l[0]}</span><b class="new">-${l[1]}</b>`);follow();SFX.armed()},350+i*step));
     later2(()=>{$$("#iLog .new").forEach(e=>e.classList.remove("new"));ov.classList.add("done");protectReveal();
+      {const d=L.scrollHeight-W.clientHeight;L.style.transition="";L.style.transform="";   /* back to the top, hold 2 s, crawl ~22 px/s, hold 1.5 s, loop */
+       if(d>0&&L.animate){const hold=2000,run=d/22*1000,end=1500,tot=hold+run+end;
+         crawl=L.animate([{transform:"translateY(0)",offset:0},{transform:"translateY(0)",offset:hold/tot},{transform:`translateY(${-d}px)`,offset:(hold+run)/tot},{transform:`translateY(${-d}px)`,offset:1}],{duration:tot,iterations:Infinity})}}
       if(adq){SFX.tap();return}   /* no flash, no klaxon: the anticlimax is the joke */
       const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
       if(!play("fail"))SFX.klaxon();   /* one klaxon (the scanners' fail sound) */
     },350+show.length*step+250);
   });
-  const close=()=>{clearTimeout(tm);tm=null;tms.forEach(clearTimeout);tms=[];ov.classList.remove("on","proc","res","done","adq");inspHead("TROOPER INSPECTION")};
+  const close=()=>{clearTimeout(tm);tm=null;tms.forEach(clearTimeout);tms=[];if(crawl){crawl.cancel();crawl=null}ov.classList.remove("on","proc","res","done","adq");inspHead("TROOPER INSPECTION")};
   /* tap the result -> clear the checklist for the next trooper */
   ov.addEventListener("click",()=>{if(!ov.classList.contains("done"))return;SFX.tap();window.inspReset()});
   window.inspBack=close;   /* cog tap: back to the checklist, ticks kept */
