@@ -381,6 +381,7 @@ body.blkOff :is(#vRes.pc #passCard .ptk,#citOv .cx,#citOv .cp,#askId,#vMatch .ms
 #iRes .iTitle{display:flex;flex-direction:column;align-items:center;gap:2px}
 #iRes .iTT{font-size:26px;font-weight:900;letter-spacing:.05em;color:#e6eaee}
 #iRes .iScore,#iRes .iFail{color:var(--red)}
+#iOv.adq #iRes .iScore,#iOv.adq #iRes .iFail,#iOv.adq #iRes .iPun{color:#8d969c;text-shadow:none;box-shadow:none}#iOv.adq #iRes .iFail{border-color:#8d969c;font-size:19px}
 #iRes .iAur{font-size:13px;color:#8d969c;letter-spacing:.05em;white-space:nowrap}
 #iRes .iLbl{font-size:12px;font-weight:700;letter-spacing:.2em;color:#8d969c}
 #iRes .iHr{width:320px;border-top:2px solid rgba(230,234,238,.35)}
@@ -916,6 +917,7 @@ function backLevel(){
     if(M.wanted){go("gal");return}}
   if(cur==="cit"&&$("#citOv").classList.contains("on")){window.citClose();return}
   if(cur==="insp"&&$("#iOv").classList.contains("on")){window.inspBack();return}
+  if(cur==="insp"&&$$("#ilist .ibtn.on").length){window.inspReset();return}   /* 2nd tap clears the ticks; only an empty list goes home */
   go("menu");
 }
 $$("[data-home]").forEach(b=>{let tm=null;
@@ -1437,7 +1439,7 @@ const CITES=[
    ============================================================ */
 (function(){
   const FAULTS=[["KIT & ARMOUR"],["HELMET OFF",20],["PHONE OUT",15],["VOICE BOX TOO LOUD",10],["DIRTY ARMOUR",12],["DAMAGED ARMOUR",18],["UNPRESSED UNIFORM",8],["UNSHAVEN",5],
-    ["CONDUCT"],["LATE",25],["ASLEEP ON DUTY",24],["INSUBORDINATION",23],["REFUSING ORDERS",22],["DERELICTION OF DUTY",21],["LEFT POST",19],["CONDUCT UNBECOMING",18],["UNAUTHORISED DANCING",17],["DUMB INSOLENCE",14],["TALKING BACK",14],["WANDERING OFF",13],["COMPLAINING",12],["FAILED TO SALUTE",11],["SHOWING OFF",11],["MALINGERING",10],["SITTING DOWN",10],["LAUGHING",9],["LEANING ON WALL",8],["LOUNGING",7],["DAWDLING",7],["SLOUCHING",6]];   /* one-item entries are group headings */
+    ["CONDUCT"],["LATE",25],["ASLEEP ON DUTY",24],["INSUBORDINATION",23],["REFUSING ORDERS",22],["DERELICTION OF DUTY",21],["LEFT POST",19],["CONDUCT UNBECOMING",18],["UNAUTHORISED DANCING",17],["BRINGING THE EMPIRE INTO DISREPUTE",24],["DISRESPECT TO A SUPERIOR OFFICER",21],["NEGLECT OF DUTY",20],["ABSENT AT ROLL CALL",15],["DUMB INSOLENCE",14],["FAILING TO REPORT",13],["TALKING BACK",14],["WANDERING OFF",13],["COMPLAINING",12],["FAILED TO SALUTE",11],["SHOWING OFF",11],["MALINGERING",10],["SITTING DOWN",10],["LAUGHING",9],["LEANING ON WALL",8],["LOUNGING",7],["DAWDLING",7],["SLOUCHING",6],["GENERAL DISAPPOINTMENT",6]];   /* one-item entries are group headings */
   const VERDICTS=[[-20,"BARELY ADEQUATE. STILL A DISGRACE"],[-45,"A DISGRACE TO THE EMPIRE"],[-75,"REASSIGNED TO SANITATION"],[-1e9,"REPORT TO THE KESSEL MINES"]];
   const ov=$("#iOv");let tm=null;
   const inspHead=t=>{$("#inspHead").innerHTML=`<span class="fx2"><span class="e">${t}</span><span class="a" aria-hidden="true">${t}</span></span>`};inspHead("TROOPER INSPECTION");
@@ -1445,7 +1447,7 @@ const CITES=[
   $$("#ilist .ibtn").forEach(b=>b.addEventListener("click",()=>{SFX.tap();b.classList.toggle("on")}));
   const rnd2=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
   /* one random RECOMMENDATION per inspection, not tied to the score (never the same twice in a row) */
-  const RECS=["REPORT TO THE KESSEL MINES","REASSIGN TO SANITATION","TRANSFER TO HOTH","TRASH COMPACTOR DUTY","REPORT TO LORD VADER","GUARD THE EXHAUST PORT","FEED THE RANCOR","SARLACC PIT PATROL","WAMPA WATCH ON HOTH","TRANSFER TO TATOOINE","TRANSFER TO DAGOBAH","EWOK PATROL ON ENDOR","GUARD THE SHIELD GENERATOR","CLEAN THE BANTHA STABLES","SCAN EVERY ESCAPE POD","MOUSE DROID MAINTENANCE","JOIN THE SANDTROOPERS"];
+  const RECS=["REPORT TO THE KESSEL MINES","REASSIGN TO SANITATION","TRANSFER TO HOTH","TRASH COMPACTOR DUTY","REPORT TO LORD VADER","GUARD THE EXHAUST PORT","FEED THE RANCOR","SARLACC PIT PATROL","WAMPA WATCH ON HOTH","TRANSFER TO TATOOINE","TRANSFER TO DAGOBAH","EWOK PATROL ON ENDOR","GUARD THE SHIELD GENERATOR","CLEAN THE BANTHA STABLES","SCAN EVERY ESCAPE POD","MOUSE DROID MAINTENANCE","JOIN THE SANDTROOPERS","TRANSFER TO MUSTAFAR","MOS EISLEY PATROL","REPORT SHARED WITH DARTH VADER","RETURN TO BASIC TRAINING"];
   let lastRec=-1;const pickRec=()=>{let i;do{i=Math.floor(Math.random()*RECS.length)}while(i===lastRec);lastRec=i;return RECS[i]};
   let tms=[];const later2=(f,ms)=>tms.push(setTimeout(f,ms));
   /* VERDICT: QI-style tally. Score on top counts down as each fault drops in (tick each), then the verdict + punishment land with a falling tone */
@@ -1453,9 +1455,9 @@ const CITES=[
     const lines=[];$$("#ilist .ibtn.on").forEach(b=>{const f=FAULTS[+b.dataset.i];lines.push([f[0],f[1]+rnd2(-3,3)])});
     lines.sort((a,b)=>b[1]-a[1]);let show=lines;
     if(lines.length>8){const rest=lines.slice(7);show=lines.slice(0,7).concat([[`+ ${rest.length} MORE`,rest.reduce((t,l)=>t+l[1],0)]])}
-    show=show.concat([["GENERAL DISAPPOINTMENT",rnd2(3,9)]]);
     touch();S.inspT=(S.inspT||0)+1;save();
-    $("#iScore").textContent="0";$("#iLog").innerHTML="";$("#iFail").innerHTML=FA("INSPECTION FAILED");$("#iPun").textContent=pickRec();
+    const adq=!show.length;ov.classList.toggle("adq",adq);   /* nothing ticked: a completely bland ADEQUATE */
+    $("#iScore").textContent="0";$("#iLog").innerHTML=adq?`<span>NONE</span><b></b>`:"";$("#iFail").innerHTML=adq?FA("INSPECTION: ADEQUATE"):FA("INSPECTION FAILED");$("#iPun").textContent=adq?"NO FURTHER ACTION":pickRec();
     {const d=new Date(),p=n=>String(n).padStart(2,"0");$("#iForm").textContent="FORM ISD-7 · CASE "+ref3(S.inspT);$("#iRef").textContent=p(d.getHours())+":"+p(d.getMinutes())+" · SECTOR "+(S.sector||7);}
     ov.classList.add("on","res");ov.classList.remove("done");
     const step=Math.min(250,2000/show.length);let run=0;
@@ -1463,11 +1465,12 @@ const CITES=[
       $$("#iLog .new").forEach(e=>e.classList.remove("new"));
       $("#iLog").insertAdjacentHTML("beforeend",`<span class="new">${l[0]}</span><b class="new">-${l[1]}</b>`);SFX.armed()},350+i*step));
     later2(()=>{$$("#iLog .new").forEach(e=>e.classList.remove("new"));ov.classList.add("done");protectReveal();
+      if(adq){SFX.tap();return}   /* no flash, no klaxon: the anticlimax is the joke */
       const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
       if(!play("fail"))SFX.klaxon();   /* one klaxon (the scanners' fail sound) */
     },350+show.length*step+250);
   });
-  const close=()=>{clearTimeout(tm);tm=null;tms.forEach(clearTimeout);tms=[];ov.classList.remove("on","proc","res","done");inspHead("TROOPER INSPECTION")};
+  const close=()=>{clearTimeout(tm);tm=null;tms.forEach(clearTimeout);tms=[];ov.classList.remove("on","proc","res","done","adq");inspHead("TROOPER INSPECTION")};
   /* tap the result -> clear the checklist for the next trooper */
   ov.addEventListener("click",()=>{if(!ov.classList.contains("done"))return;SFX.tap();window.inspReset()});
   window.inspBack=close;   /* cog tap: back to the checklist, ticks kept */
