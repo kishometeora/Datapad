@@ -395,7 +395,7 @@ body.blkOff :is(#vRes.pc #passCard .ptk,#citOv .cx,#citOv .cp,#askId,#vMatch .ms
 #iRes .iLogW{width:320px;height:clamp(130px,19vh,170px);overflow:hidden}
 #iRes .iLogW.ovf .iLog{padding:12px 0}
 #iRes .iLogW.ovf{-webkit-mask-image:linear-gradient(transparent,#000 9%,#000 91%,transparent);mask-image:linear-gradient(transparent,#000 9%,#000 91%,transparent)}
-#iRes .iLog span{opacity:.85}#iRes .iLog b{opacity:1}
+#iRes .iLog .gap{grid-column:1/-1;height:12px}#iRes .iLog span{opacity:.85}#iRes .iLog b{opacity:1}
 #iRes .iLog b{font-weight:700;text-align:right;color:var(--red)}
 #citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:space-evenly;gap:14px;padding:10px 22px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
 #citOv.on{display:flex}
@@ -1469,9 +1469,10 @@ const CITES=[
       $$("#iLog .new").forEach(e=>e.classList.remove("new"));
       $("#iLog").insertAdjacentHTML("beforeend",`<span class="new">${l[0]}</span><b class="new">-${l[1]}</b>`);follow();SFX.armed()},350+i*step));
     later2(()=>{$$("#iLog .new").forEach(e=>e.classList.remove("new"));ov.classList.add("done");protectReveal();
-      {const d=L.scrollHeight-W.clientHeight;L.style.transition="";L.style.transform="";   /* back to the top, hold 2 s, crawl ~22 px/s, hold 1.5 s, loop */
-       if(d>0&&L.animate){const hold=2000,run=d/22*1000,end=1500,tot=hold+run+end;
-         crawl=L.animate([{transform:"translateY(0)",offset:0},{transform:"translateY(0)",offset:hold/tot},{transform:`translateY(${-d}px)`,offset:(hold+run)/tot},{transform:`translateY(${-d}px)`,offset:1}],{duration:tot,iterations:Infinity})}}
+      {const d=L.scrollHeight-W.clientHeight;L.style.transition="";L.style.transform="";   /* back to the top, hold 2 s, then crawl ~22 px/s forever: the list repeats after a gap so it loops round seamlessly */
+       if(d>0&&L.animate){const one=L.innerHTML;L.insertAdjacentHTML("beforeend",`<i class="gap"></i>`+one);
+         const P=L.querySelector(".gap").nextElementSibling.offsetTop-L.firstElementChild.offsetTop;
+         crawl=L.animate([{transform:"translateY(0)"},{transform:`translateY(${-P}px)`}],{duration:P/22*1000,delay:2000,iterations:Infinity,easing:"linear"})}}
       if(adq){SFX.tap();return}   /* no flash, no klaxon: the anticlimax is the joke */
       const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
       if(!play("fail"))SFX.klaxon();   /* one klaxon (the scanners' fail sound) */
