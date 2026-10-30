@@ -146,6 +146,7 @@ body.glitch .flip{opacity:.15}
 /* complications */
 .cx{position:absolute;height:48px;opacity:.45;transition:opacity .3s}
 #ss.scanning .cx{opacity:1}
+#citOv .cx{opacity:1;height:auto;transition:none}   /* citation cross-out: solid red (it shares the .cx name with the scanner decoration) */
 .cx .br{position:absolute;inset:0;width:100%;height:100%}
 .cx-tl{left:12px;top:12px;width:56px}.cx-tr{right:12px;top:12px;width:160px}
 .cx-bl{left:12px;bottom:12px;width:160px}.cx-br{right:12px;bottom:12px;width:76px}
@@ -374,16 +375,21 @@ body.blkOff :is(#vRes.pc #passCard .ptk,#citOv .cx,#citOv .cp,#askId,#vMatch .ms
 #iRes .iFail{font-size:25px;font-weight:900;letter-spacing:.05em;text-shadow:0 0 10px rgba(var(--red-rgb),.6)}
 #iOv.res{justify-content:stretch;padding:14px 18px}
 #iRes{gap:8px!important;height:100%;justify-content:space-evenly!important}
-#iRes .iAur{font-size:15px;color:var(--amb);opacity:.7;letter-spacing:.05em;white-space:nowrap}
-#iRes .iLbl{font-size:12px;font-weight:700;letter-spacing:.2em;color:var(--amb);opacity:.85}
-#iRes .iHr{width:320px;border-top:2px solid rgba(var(--red-rgb),.45)}
+/* design A: white official report; red only for the score, the points and the FAILED stamp */
+#iOv.res{color:#e6eaee;border-color:rgba(230,234,238,.85);box-shadow:0 0 14px rgba(230,234,238,.25),inset 0 0 18px rgba(230,234,238,.08)}
+#iRes .iTitle{display:flex;flex-direction:column;align-items:center;gap:2px}
+#iRes .iTT{font-size:26px;font-weight:900;letter-spacing:.05em;color:#e6eaee}
+#iRes .iScore,#iRes .iFail{color:var(--red)}
+#iRes .iAur{font-size:13px;color:#8d969c;letter-spacing:.05em;white-space:nowrap}
+#iRes .iLbl{font-size:12px;font-weight:700;letter-spacing:.2em;color:#8d969c}
+#iRes .iHr{width:320px;border-top:2px solid rgba(230,234,238,.35)}
 #iRes .iFin{display:flex;flex-direction:column;align-items:center;gap:8px;visibility:hidden}
 #iRes .iFail{white-space:nowrap;border:3px solid var(--red);padding:6px 16px;box-shadow:0 0 10px rgba(var(--red-rgb),.5)}#iOv.done .iFin{visibility:visible}
-#iRes .iPun{max-width:360px;text-align:center;line-height:1.15;font-size:32px;font-weight:900;letter-spacing:.06em;color:var(--amb);text-shadow:0 0 8px rgba(var(--amb-rgb),.6)}
+#iRes .iPun{max-width:360px;text-align:center;line-height:1.15;font-size:30px;font-weight:900;letter-spacing:.06em;color:#e6eaee;text-shadow:0 0 8px rgba(230,234,238,.4)}
 #iRes .iLog span.new,#iRes .iLog b.new{opacity:1;text-shadow:0 0 8px #fff}
 #iRes .iVerd{font-size:18px;line-height:1.35;letter-spacing:.04em;color:#fff;max-width:360px}
 #iRes .iLog{display:grid;grid-template-columns:1fr auto;gap:4px 18px;width:320px;font-size:14px;letter-spacing:.08em;color:#fff;text-align:left;min-height:170px;align-content:start}
-#iRes .iLog span,#iRes .iLog b{opacity:.7}
+#iRes .iLog span{opacity:.85}#iRes .iLog b{opacity:1}
 #iRes .iLog b{font-weight:700;text-align:right;color:var(--red)}
 #citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:space-evenly;gap:14px;padding:10px 22px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
 #citOv.on{display:flex}
@@ -668,7 +674,7 @@ body.aurC .fxa>.e{visibility:hidden}body.aurC .fxa>.a{visibility:visible}body.gl
     <div id="iOv">
       <div id="iProc"><div class="en iT">INSPECTING</div><div class="iB"><i></i></div></div>
       <div id="iRes">
-        <div class="aur iAur">IMPERIAL STANDARDS DIVISION</div>
+        <div class="iTitle"><div class="aur iAur">IMPERIAL STANDARDS DIVISION</div><div class="en iTT">INSPECTION REPORT</div><div class="en iLbl" id="iForm"></div></div><div class="iHr"></div>
         <div class="en iLbl">INSPECTION SCORE</div><div class="en iScore" id="iScore"></div>
         <div class="iFin"><div class="en iFail" id="iFail"></div></div>
         <div class="iHr"></div><div class="en iLbl">FAULTS RECORDED</div><div class="en iLog" id="iLog"></div><div class="iHr"></div>
@@ -1416,12 +1422,9 @@ const CITES=[
     $("#citP").textContent=c[4]||"";$("#citP").style.fontSize=c[4]?Math.min(26,Math.floor(336/(c[4].length*.86)))+"px":"";$("#citR").innerHTML=FA(c[2]);
     $("#citIc").innerHTML=CIC[c[3]];
     /* C1: 0.4 s "ISSUING CITATION" build-up, then the card lands with the red flash + alarm */
-    ov.classList.add("on","iss");head("CITATION");
-    const pr=play("processing");
-    issT=setTimeout(()=>{issT=null;ov.classList.remove("iss");protectReveal();
-      if(pr){try{pr.src.stop()}catch(e){}}
-      const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
-      snd=play("alert_loop");if(!snd)SFX.klaxon();},400);
+    ov.classList.add("on");head("CITATION");protectReveal();   /* card lands straight away with the red flash + alarm */
+    {const f=$("#flash");f.style.background="var(--red-flash)";f.classList.remove("go");void f.offsetWidth;f.classList.add("go");}
+    snd=play("alert_loop");if(!snd)SFX.klaxon();
   }));
   $("#citOv").addEventListener("click",()=>{SFX.tap();close()});
   window.citClose=close;
@@ -1452,8 +1455,7 @@ const CITES=[
     show=show.concat([["GENERAL DISAPPOINTMENT",rnd2(3,9)]]);
     touch();S.inspT=(S.inspT||0)+1;save();
     $("#iScore").textContent="0";$("#iLog").innerHTML="";$("#iFail").innerHTML=FA("INSPECTION FAILED");$("#iPun").textContent=pickRec();
-    {const d=new Date(),p=n=>String(n).padStart(2,"0");$("#iRef").textContent="CASE "+ref3(S.inspT)+" · "+p(d.getHours())+":"+p(d.getMinutes())+" · SECTOR "+(S.sector||7);}
-    inspHead("INSPECTION REPORT");
+    {const d=new Date(),p=n=>String(n).padStart(2,"0");$("#iForm").textContent="FORM ISD-7 · CASE "+ref3(S.inspT);$("#iRef").textContent=p(d.getHours())+":"+p(d.getMinutes())+" · SECTOR "+(S.sector||7);}
     ov.classList.add("on","res");ov.classList.remove("done");
     const step=Math.min(250,2000/show.length);let run=0;
     show.forEach((l,i)=>later2(()=>{run+=l[1];$("#iScore").textContent="-"+run;
