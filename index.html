@@ -371,10 +371,11 @@ body.blkOff :is(#vRes.pc #passCard .ptk,#citOv .cx,#citOv .cp,#askId,#vMatch .ms
 #iProc .iB{width:300px;height:26px;border:3px solid var(--red);padding:3px}
 #iProc .iB i{display:block;height:100%;width:0;background:var(--red);box-shadow:0 0 8px rgba(var(--red-rgb),.6)}
 #iOv.proc .iB i{animation:issue .6s linear forwards}
-#iRes .iScore{font-size:104px;font-weight:900;line-height:1;text-shadow:0 0 14px rgba(var(--red-rgb),.7)}
+#iRes .iScore{font-size:clamp(70px,10.5vh,96px);font-weight:900;line-height:1;text-shadow:0 0 14px rgba(var(--red-rgb),.7)}
 #iRes .iFail{font-size:25px;font-weight:900;letter-spacing:.05em;text-shadow:0 0 10px rgba(var(--red-rgb),.6)}
 #iOv.res{justify-content:stretch;padding:14px 18px}
-#iRes{gap:8px!important;height:100%;justify-content:space-evenly!important}
+#iRes{gap:6px!important;height:100%;justify-content:space-evenly!important}
+#iRes>*{flex-shrink:0}   /* nothing squashes, so the fault list can never run over the lines */
 /* design A: white official report; red only for the score, the points and the FAILED stamp */
 #iOv.res{color:#e6eaee;border-color:rgba(230,234,238,.85);box-shadow:0 0 14px rgba(230,234,238,.25),inset 0 0 18px rgba(230,234,238,.08)}
 #iRes .iTitle{display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -385,10 +386,10 @@ body.blkOff :is(#vRes.pc #passCard .ptk,#citOv .cx,#citOv .cp,#askId,#vMatch .ms
 #iRes .iHr{width:320px;border-top:2px solid rgba(230,234,238,.35)}
 #iRes .iFin{display:flex;flex-direction:column;align-items:center;gap:8px;visibility:hidden}
 #iRes .iFail{white-space:nowrap;border:3px solid var(--red);padding:6px 16px;box-shadow:0 0 10px rgba(var(--red-rgb),.5)}#iOv.done .iFin{visibility:visible}
-#iRes .iPun{max-width:360px;text-align:center;line-height:1.15;font-size:30px;font-weight:900;letter-spacing:.06em;color:#e6eaee;text-shadow:0 0 8px rgba(230,234,238,.4)}
+#iRes .iPun{max-width:360px;text-align:center;line-height:1.15;font-size:clamp(22px,3.3vh,30px);font-weight:900;letter-spacing:.06em;color:#e6eaee;text-shadow:0 0 8px rgba(230,234,238,.4)}
 #iRes .iLog span.new,#iRes .iLog b.new{opacity:1;text-shadow:0 0 8px #fff}
 #iRes .iVerd{font-size:18px;line-height:1.35;letter-spacing:.04em;color:#fff;max-width:360px}
-#iRes .iLog{display:grid;grid-template-columns:1fr auto;gap:4px 18px;width:320px;font-size:14px;letter-spacing:.08em;color:#fff;text-align:left;min-height:170px;align-content:start}
+#iRes .iLog{display:grid;grid-template-columns:1fr auto;gap:4px 18px;width:320px;font-size:13px;line-height:1.25;letter-spacing:.08em;color:#fff;text-align:left;min-height:170px;align-content:start}
 #iRes .iLog span{opacity:.85}#iRes .iLog b{opacity:1}
 #iRes .iLog b{font-weight:700;text-align:right;color:var(--red)}
 #citOv{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:space-evenly;gap:14px;padding:10px 22px;text-align:center;background:#000;color:var(--red);border:3px solid var(--red);border-radius:6px;box-shadow:0 0 14px rgba(var(--red-rgb),.5),inset 0 0 18px rgba(var(--red-rgb),.25)}
