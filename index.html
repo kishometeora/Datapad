@@ -1179,7 +1179,7 @@ function reveal(result){
        when the full pass sound, the green flash and APPROVED / MOVE ALONG all land together */
     if(!M.wanted){   /* A3·2 holo pass, drawn in by the scan line, lands at 0.4 s */
       const id=mode==="id",v=$("#vRes");$("#pcIc").className="pico"+(id?"":" r2");$("#pcIc").src=id?"emblems/imperial.png":"emblems/r2.png";
-      $("#pcT").innerHTML=id?FA("CLEARED"):FA("NOT THE")+"<br>"+FA("DROID");$("#pcT").classList.toggle("two",!id);$("#pcS").textContent=id?"LEVEL 1 HUMAN":"NO RECORD";
+      $("#pcT").innerHTML=id?FA("CLEARED"):FA("NOT THE")+"<br>"+FA("DROID");$("#pcT").classList.toggle("two",!id);$("#pcS").innerHTML=FA(id?"LEVEL 1 HUMAN":"NO RECORD");   /* flips to Aurebesh with CLEARED */
       v.classList.add("hold","pc");v.classList.remove("pcGo");void v.offsetWidth;
       later(()=>{v.classList.add("pcGo");play("armed")||SFX.pass1()},40);
       later(()=>{SFX.passSound()||SFX.calm();flash("var(--grn-flash)");v.classList.remove("hold");protectReveal()},400);
